@@ -12,100 +12,63 @@
         /* --- THEME VARIABLES --- */
         :root {
             --bg-body: #0b0c10;
-            --page-default: #ffffff;
+            --page-default: #f4e4bc;
             --gold: #d4af37;
         }
-
-        /* --- DARK MODE SETTINGS (FIXED) --- */
         body.dark-mode { --bg-body: #000000; }
-        
-        body.dark-mode .front, 
-        body.dark-mode .back { 
-            /* පිටුවේ පාට වෙනස් නොකරමු, පිටුව සුදුවටම තියලා වටේ විතරක් කලු කරමු */
-            background-color: #ffffff !important; 
-            border-color: #333 !important;
-        }
+        body.dark-mode .front, body.dark-mode .back { background-color: #1a1a1a !important; border-color: #333 !important; }
+        body.dark-mode .content-layer img { filter: invert(1) hue-rotate(180deg); mix-blend-mode: screen; }
+        body.dark-mode .content-layer div[style*="color"] { color: #e0e0e0 !important; }
 
-        /* FIX: Remove Invert & Blend Mode to fix visibility issues */
-        body.dark-mode .content-layer img { 
-            filter: brightness(0.85); /* Invert නොකර එළිය විතරක් අඩු කරනවා */
-            mix-blend-mode: normal;   /* Blend mode අයින් කලා */
-        }
-        
-        body.dark-mode .content-layer div[style*="color"] { 
-            color: #000 !important; /* අකුරු කලු පාටින්ම තියන්න */
-        }
-
-        /* --- BASE STYLES --- */
-        body {
-            background-color: var(--bg-body);
-            background-image: radial-gradient(circle at 50% 50%, #1f2833 0%, var(--bg-body) 100%);
-            color: #e0e0e0; font-family: 'Inter', sans-serif; height: 100vh; overflow: hidden;
-            transition: background 0.5s; touch-action: none;
-        }
-        /* Background Styles */
+        body { background-color: var(--bg-body); background-image: radial-gradient(circle at 50% 50%, #1f2833 0%, var(--bg-body) 100%); color: #e0e0e0; font-family: 'Inter', sans-serif; height: 100vh; overflow: hidden; transition: background 0.5s; touch-action: none; }
         body.bg-mystic { background-image: radial-gradient(circle at 50% 50%, #1f2833 0%, var(--bg-body) 100%); }
         body.bg-wood { background-color: #2c1e12; background-image: url('https://www.transparenttextures.com/patterns/wood-pattern.png'); }
         body.bg-minimal { background-image: none; background-color: #111; }
 
-        /* --- LOADING SCREEN --- */
-        #loading-screen {
-            position: fixed; inset: 0; z-index: 9999;
-            background: #000; color: #d4af37;
-            display: flex; flex-col; align-items: center; justify-content: center;
-            transition: opacity 0.5s;
-        }
+        #loading-screen { position: fixed; inset: 0; z-index: 9999; background: #000; color: #d4af37; display: flex; flex-col; align-items: center; justify-content: center; transition: opacity 0.5s; }
         .progress-bar-container { width: 200px; height: 4px; background: #333; margin-top: 20px; border-radius: 2px; overflow: hidden; }
         .progress-bar-fill { height: 100%; background: #d4af37; width: 0%; transition: width 0.3s; }
 
-        /* --- BOOK ENGINE --- */
-        .book-scene { 
-            perspective: 1500px; width: 100%; height: 100%; 
-            display: flex; align-items: center; justify-content: center; 
-            padding-bottom: 60px;
-        }
-        .book {
-            transform-style: preserve-3d; position: relative;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
-            transition: transform 0.5s;
-            aspect-ratio: 2 / 3; width: auto; height: 75vh; max-width: 95vw;
-        }
-        .page {
-            position: absolute; top:0; left:0; width: 100%; height: 100%;
-            transform-origin: left; transition: transform 1.2s cubic-bezier(0.645, 0.045, 0.355, 1);
-            transform-style: preserve-3d; border-radius: 2px 8px 8px 2px; cursor: pointer;
-            background-color: white; /* Always white page base */
-        }
-        .front, .back { 
-            position: absolute; width: 100%; height: 100%; 
-            backface-visibility: hidden; -webkit-backface-visibility: hidden; 
-            overflow: hidden; background-color: white;
-        }
+        .book-scene { perspective: 1500px; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; padding-bottom: 60px; }
+        .book { transform-style: preserve-3d; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.8); transition: transform 0.5s; aspect-ratio: 2 / 3; width: auto; height: 75vh; max-width: 95vw; }
+        .page { position: absolute; top:0; left:0; width: 100%; height: 100%; transform-origin: left; transition: transform 1.2s cubic-bezier(0.645, 0.045, 0.355, 1); transform-style: preserve-3d; border-radius: 2px 8px 8px 2px; cursor: pointer; background-color: white; }
+        .front, .back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; -webkit-backface-visibility: hidden; overflow: hidden; background-color: white; }
         .back { transform: rotateY(180deg); background-color: #f0f0f0; }
         .flipped { transform: rotateY(-180deg); }
         .hard-cover .front { border: 4px solid #5c3a21; border-radius: 4px 10px 10px 4px; }
-
-        /* Content Layer (Fixed Scaling) */
-        .content-layer { 
-            position: absolute; top: 50%; left: 50%; 
-            width: 360px; height: 540px; 
-            transform-origin: center center; 
-            pointer-events: none; 
-            background: white; 
-            display: flex; justify-content: center; align-items: center; 
-        }
-        .content-layer img { 
-            width: 100%; height: 100%; 
-            object-fit: fill; /* Ensures full cover without black bars */
-        }
+        .content-layer { position: absolute; top: 50%; left: 50%; width: 360px; height: 540px; transform-origin: center center; pointer-events: none; background: white; display: flex; justify-content: center; align-items: center; }
+        .content-layer img { width: 100%; height: 100%; object-fit: cover; }
         .content-layer * { pointer-events: auto; }
 
-        /* UI Helpers */
         .glass-panel { background: rgba(20, 20, 20, 0.9); backdrop-filter: blur(10px); border-top: 1px solid rgba(255,255,255,0.1); }
         .theme-menu { position: absolute; top: 60px; right: 20px; background: rgba(0,0,0,0.9); border: 1px solid #333; padding: 10px; border-radius: 10px; display: none; flex-direction: column; gap: 5px; z-index: 100; }
         .theme-menu.show { display: flex; }
         .theme-btn { width: 30px; height: 30px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; }
         .theme-btn.active { border-color: #d4af37; }
+
+        /* --- UNLOCK ANIMATION CSS --- */
+        @keyframes magic-unlock {
+            0% { transform: scale(1); filter: brightness(1) drop-shadow(0 0 0px gold); }
+            40% { transform: scale(1.1) rotate(2deg); filter: brightness(1.5) drop-shadow(0 0 30px gold); }
+            60% { transform: scale(1.1) rotate(-2deg); filter: brightness(1.5) drop-shadow(0 0 50px gold); }
+            100% { transform: scale(1.5); opacity: 0; filter: blur(20px); }
+        }
+        
+        @keyframes page-flash {
+            0% { background-color: white; }
+            50% { background-color: #d4af37; box-shadow: 0 0 100px #d4af37; }
+            100% { background-color: white; }
+        }
+
+        .unlock-active .lock-icon-container {
+            animation: magic-unlock 2s forwards ease-in-out;
+        }
+        .unlock-active {
+            pointer-events: none; /* Prevent clicks during animation */
+        }
+        .flash-effect {
+            animation: page-flash 1s ease-out;
+        }
     </style>
 </head>
 <body class="bg-mystic">
@@ -113,9 +76,7 @@
     <div id="loading-screen">
         <i class="fas fa-book-open fa-2x mb-4 animate-pulse"></i>
         <h2 class="font-[Cinzel] tracking-widest text-lg">OPENING ARCHIVE</h2>
-        <div class="progress-bar-container">
-            <div id="loading-bar" class="progress-bar-fill"></div>
-        </div>
+        <div class="progress-bar-container"><div id="loading-bar" class="progress-bar-fill"></div></div>
         <p id="loading-text" class="text-xs text-gray-500 mt-2 font-mono">Connecting...</p>
     </div>
 
@@ -123,24 +84,18 @@
         <div class="w-full max-w-sm text-center">
             <i class="fas fa-dragon text-5xl text-[#d4af37] mb-4"></i>
             <h1 class="text-3xl font-[Cinzel] text-white tracking-widest mb-8">MYSTERIUM</h1>
-            <button id="google-login" class="w-full bg-white text-black font-bold py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-gray-200 transition">
-                <i class="fab fa-google text-red-600"></i> Login with Google
-            </button>
+            <button id="google-login" class="w-full bg-white text-black font-bold py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-gray-200 transition"><i class="fab fa-google text-red-600"></i> Login with Google</button>
             <p id="auth-msg" class="text-red-500 text-xs mt-4"></p>
         </div>
     </div>
 
     <div id="book-container" class="hidden w-full h-full relative flex-col">
-        
         <div id="top-bar" class="absolute top-0 w-full p-4 flex justify-between items-center z-50 transition-transform duration-300">
-            <div class="bg-black/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
-                <span class="text-[#d4af37] font-[Cinzel] text-xs tracking-widest">MYSTERIUM</span>
-            </div>
+            <div class="bg-black/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10"><span class="text-[#d4af37] font-[Cinzel] text-xs tracking-widest">MYSTERIUM</span></div>
             <div class="flex gap-2 relative">
                 <button onclick="toggleTheme()" class="w-8 h-8 rounded-full bg-black/40 border border-white/10 flex items-center justify-center text-yellow-500"><i id="theme-icon" class="fas fa-sun"></i></button>
                 <button onclick="toggleBgMenu()" class="w-8 h-8 rounded-full bg-black/40 border border-white/10 flex items-center justify-center text-white"><i class="fas fa-paint-brush text-xs"></i></button>
                 <button id="logout-btn" class="w-8 h-8 rounded-full bg-red-900/40 border border-red-500/30 flex items-center justify-center text-red-400"><i class="fas fa-sign-out-alt text-xs"></i></button>
-                
                 <div id="bg-menu" class="theme-menu">
                     <button onclick="setBg('mystic')" class="theme-btn bg-gradient-to-br from-gray-700 to-black" title="Mystic"></button>
                     <button onclick="setBg('wood')" class="theme-btn bg-[#3d2817]" title="Wood"></button>
@@ -150,9 +105,7 @@
         </div>
 
         <div class="book-scene" onclick="toggleControls()">
-            <div id="the-book" class="book">
-                <div id="pages-wrapper"></div>
-            </div>
+            <div id="the-book" class="book"><div id="pages-wrapper"></div></div>
         </div>
 
         <div id="controls-bar" class="absolute bottom-0 w-full glass-panel p-4 pb-6 z-50 transition-transform duration-300 translate-y-0">
@@ -178,7 +131,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, where, orderBy, limit, startAfter } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, where, orderBy, limit, startAfter, onSnapshot } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyByyYMFzn1nHOuzxEsX44sQrIIT5AdB3Pc",
@@ -200,39 +153,94 @@
         let isLoadingMore = false;
         let totalPagesRendered = 0;
         const BATCH_SIZE = 5; 
+        let statusListener = null;
 
         // --- AUTH & INIT ---
         onAuthStateChanged(auth, async (u) => {
             if(u){
                 user = u;
                 document.getElementById('auth-section').classList.add('hidden');
-                updateLoading(10, "Checking Access...");
-                await checkAccess(u.uid);
+                updateLoading(10, "Connecting...");
                 
-                updateLoading(30, "Fetching Pages...");
-                await loadInitialPages();
+                // START REAL-TIME LISTENER
+                setupUserListener(u.uid);
                 
-                updateLoading(100, "Ready");
-                setTimeout(() => document.getElementById('loading-screen').classList.add('opacity-0', 'pointer-events-none'), 500);
-                document.getElementById('book-container').classList.remove('hidden');
-                document.getElementById('book-container').style.display='flex';
-                resizeContent();
             } else {
+                if(statusListener) statusListener(); // Unsubscribe
                 document.getElementById('loading-screen').classList.add('opacity-0', 'pointer-events-none');
                 document.getElementById('auth-section').classList.remove('hidden');
             }
         });
 
+        // --- REAL-TIME STATUS LISTENER (AUTO UNLOCK) ---
+        function setupUserListener(uid) {
+            statusListener = onSnapshot(doc(db, "users", uid), (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    const newStatus = (data.status === 'approved');
+                    
+                    // If status CHANGED from locked to unlocked
+                    if (!isUnlocked && newStatus) {
+                        isUnlocked = true;
+                        if(document.getElementById('book-container').classList.contains('hidden')) {
+                            // First load
+                            initBookLoad();
+                        } else {
+                            // Already on page -> TRIGGER ANIMATION
+                            triggerUnlockAnimation();
+                        }
+                    } else if (!newStatus) {
+                        isUnlocked = false;
+                        if(document.getElementById('book-container').classList.contains('hidden')) {
+                            initBookLoad();
+                        }
+                    } else {
+                        // Already in correct state, just load if first time
+                        if(document.getElementById('book-container').classList.contains('hidden')) initBookLoad();
+                    }
+                } else {
+                    isUnlocked = false;
+                    initBookLoad();
+                }
+            });
+        }
+
+        async function initBookLoad() {
+            updateLoading(30, "Fetching Pages...");
+            await loadInitialPages();
+            updateLoading(100, "Ready");
+            setTimeout(() => document.getElementById('loading-screen').classList.add('opacity-0', 'pointer-events-none'), 500);
+            document.getElementById('book-container').classList.remove('hidden');
+            document.getElementById('book-container').style.display='flex';
+            resizeContent();
+        }
+
+        // --- ANIMATION MAGIC ---
+        function triggerUnlockAnimation() {
+            const lockLayer = document.getElementById('active-lock-layer');
+            if(lockLayer) {
+                // Play Sound (Optional)
+                // const audio = new Audio('unlock.mp3'); audio.play().catch(e=>{});
+
+                lockLayer.classList.add('unlock-active'); // Triggers shake & glow
+                
+                // Add Flash Effect to Book
+                document.getElementById('the-book').classList.add('flash-effect');
+
+                setTimeout(async () => {
+                    // Reload pages with actual content
+                    await loadInitialPages();
+                    lockLayer.remove(); // Remove lock overlay
+                    alert("ACCESS GRANTED! Welcome to the Mysterium.");
+                }, 2000); // Wait for animation
+            } else {
+                loadInitialPages(); // Fallback
+            }
+        }
+
         function updateLoading(percent, text) {
             document.getElementById('loading-bar').style.width = percent + '%';
             document.getElementById('loading-text').innerText = text;
-        }
-
-        async function checkAccess(uid) {
-            try {
-                const d = await getDoc(doc(db, "users", uid));
-                isUnlocked = (d.exists() && d.data().status === 'approved');
-            } catch (e) { isUnlocked = false; }
         }
 
         // --- LAZY LOADING LOGIC ---
@@ -253,7 +261,7 @@
                 const q = query(collection(db, "pages"), where("pageNumber", "==", 0));
                 const snap = await getDocs(q);
                 if(!snap.empty) renderBatch([snap.docs[0].data()]);
-                renderBatch([{pageNumber:1, isDummy:true}, {pageNumber:2, isDummy:true}, {pageNumber:3, isDummy:true}]);
+                renderBatch([{pageNumber:1, isDummy:true}, {pageNumber:2, isDummy:true}]);
             }
         }
 
@@ -306,9 +314,15 @@
                     });
                 }
 
+                // UNLOCK OVERLAY (For Page 0)
                 if(data.pageNumber===0 && !isUnlocked) {
-                    front.innerHTML += `<div class="absolute inset-0 z-20 flex items-end justify-center pb-24"><div class="animate-bounce text-[#d4af37] bg-black/80 px-6 py-3 rounded-full border border-[#d4af37] shadow-lg"><i class="fas fa-lock mr-2"></i> LOCKED</div></div>`;
-                    front.onclick = () => document.getElementById('pay-modal').classList.remove('hidden');
+                    // ID ADDED FOR ANIMATION
+                    const lockDiv = document.createElement('div');
+                    lockDiv.id = 'active-lock-layer'; // Target this for animation
+                    lockDiv.className = "absolute inset-0 z-20 flex items-end justify-center pb-24 lock-icon-container";
+                    lockDiv.innerHTML = `<div class="animate-bounce text-[#d4af37] bg-black/80 px-6 py-3 rounded-full border border-[#d4af37] shadow-lg cursor-pointer"><i class="fas fa-lock mr-2"></i> LOCKED</div>`;
+                    lockDiv.onclick = () => document.getElementById('pay-modal').classList.remove('hidden');
+                    front.appendChild(lockDiv);
                 }
 
                 if(data.isDummy) {
@@ -334,56 +348,43 @@
 
         // --- CONTENT SCALING ---
         function resizeContent() {
-            const bookEl = document.getElementById('the-book');
-            if(!bookEl) return;
+            const bookEl = document.getElementById('the-book'); if(!bookEl) return;
             const layers = document.querySelectorAll('.content-layer');
-            const actualH = bookEl.offsetHeight;
-            const baseH = 540; 
-            const scaleFactor = actualH / baseH;
+            const actualH = bookEl.offsetHeight; const baseH = 540; const scaleFactor = actualH / baseH;
             layers.forEach(layer => { layer.style.transform = `translate(-50%, -50%) scale(${scaleFactor})`; });
         }
         window.addEventListener('resize', resizeContent);
 
-        // --- NAVIGATION & FETCH NEXT ---
+        // --- NAV ---
         function flipEl(el, instant=false) {
             el.classList.add('flipped');
             if(instant) { el.style.transition='none'; el.style.zIndex=1; setTimeout(()=>el.style.transition='',50); }
             else { setTimeout(() => { el.style.zIndex=1; }, 600); }
             loadMorePages();
         }
-
         function unflipEl(el, instant=false) {
             el.classList.remove('flipped');
             const z = el.dataset.pn == 1000 ? 0 : (1000 - parseInt(el.dataset.pn));
             if(instant) { el.style.transition='none'; el.style.zIndex=z; setTimeout(()=>el.style.transition='',50); }
             else { el.style.zIndex=z + 1000; setTimeout(()=>{el.style.zIndex=z;}, 1200); }
         }
-
         window.nextPage = () => { if(!isUnlocked) return document.getElementById('pay-modal').classList.remove('hidden'); const unflipped = document.querySelectorAll('.page:not(.flipped):not([data-pn="undefined"])'); if(unflipped.length > 0) flipEl(unflipped[0]); };
         window.prevPage = () => { const flipped = document.querySelectorAll('.page.flipped'); if(flipped.length > 0) unflipEl(flipped[flipped.length - 1]); };
 
-        // --- UI TOGGLES ---
         window.toggleTheme = () => { document.body.classList.toggle('dark-mode'); };
         window.toggleBgMenu = () => document.getElementById('bg-menu').classList.toggle('show');
         window.setBg = (style) => { 
             document.body.classList.remove('bg-mystic','bg-wood','bg-minimal');
             document.body.classList.add('bg-'+style);
-            localStorage.setItem('prefBg', style);
-            document.getElementById('bg-menu').classList.remove('show');
+            localStorage.setItem('prefBg', style); document.getElementById('bg-menu').classList.remove('show');
         };
         const savedBg = localStorage.getItem('prefBg'); if(savedBg) window.setBg(savedBg);
+        window.toggleControls = () => { const t = document.getElementById('top-bar'); const b = document.getElementById('controls-bar'); t.classList.toggle('-translate-y-full'); b.classList.toggle('translate-y-full'); };
 
-        window.toggleControls = () => {
-            const t = document.getElementById('top-bar'); const b = document.getElementById('controls-bar');
-            t.classList.toggle('-translate-y-full'); b.classList.toggle('translate-y-full');
-        };
-
-        // --- LOGIN & PAY ---
         document.getElementById('google-login').addEventListener('click', async () => { try{ const r=await signInWithPopup(auth,new GoogleAuthProvider()); await setDoc(doc(db,"users",r.user.uid),{email:r.user.email,status:'pending'},{merge:true}); }catch(e){alert(e.message);} });
         document.getElementById('logout-btn').addEventListener('click', ()=>signOut(auth));
         document.getElementById('send-receipt').addEventListener('click', ()=>{ const f=document.getElementById('receipt-file').files[0]; if(f&&user){ const r=new FileReader(); r.readAsDataURL(f); r.onload=async()=>{ await setDoc(doc(db,"requests",user.uid),{userId:user.uid,email:user.email,receiptImage:r.result,status:'pending'}); await setDoc(doc(db,"users",user.uid),{status:'pending'},{merge:true}); alert("Sent!"); document.getElementById('pay-modal').classList.add('hidden'); } } });
 
-        // Touch Swipe
         let ts=0; const bs=document.querySelector('.book-scene');
         bs.addEventListener('touchstart', e=>ts=e.changedTouches[0].screenX);
         bs.addEventListener('touchend', e=>{ const te=e.changedTouches[0].screenX; if(te<ts-40) window.nextPage(); if(te>ts+40) window.prevPage(); });
