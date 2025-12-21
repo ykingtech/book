@@ -3,29 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - Mysterium</title>
+    <title>Admin Dashboard - PDF Support</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Merriweather:wght@300;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Merriweather:wght@300;700&family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
     
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
         .editor-font { font-family: 'Merriweather', serif; }
-        /* Scrollbar */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
         
-        /* Editor Canvas */
         #editor-canvas {
-            width: 400px; height: 600px;
+            width: 360px; height: 540px; 
             background-color: #f4e4bc;
             position: relative; overflow: hidden;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            margin: 0 auto;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin: 0 auto; border: 1px solid #ccc;
         }
-        .draggable-item { position: absolute; cursor: move; border: 1px dashed transparent; }
+        .draggable-item { position: absolute; cursor: move; border: 1px dashed transparent; padding: 2px; }
         .draggable-item:hover { border: 1px dashed #64748b; }
-        .draggable-item.selected { border: 2px solid #4f46e5; }
+        .draggable-item.selected { border: 2px solid #4f46e5; z-index: 50; }
         .editable-text { outline: none; }
     </style>
 </head>
@@ -33,135 +32,121 @@
 
     <aside class="w-64 bg-slate-900 text-white flex flex-col shadow-xl z-20">
         <div class="p-6 border-b border-slate-700">
-            <h1 class="text-xl font-bold tracking-wider text-yellow-500"><i class="fas fa-book-open mr-2"></i>MYSTERIUM</h1>
-            <p class="text-xs text-slate-400 mt-1">Admin Control Panel</p>
+            <h1 class="text-xl font-bold tracking-wider text-yellow-500 font-[Cinzel]">MYSTERIUM</h1>
+            <p class="text-xs text-slate-400 mt-1">Admin Panel</p>
         </div>
-        
         <nav class="flex-grow p-4 space-y-2">
-            <button onclick="switchTab('requests')" id="tab-requests" class="w-full flex items-center p-3 rounded-lg hover:bg-slate-800 transition text-left text-slate-300 hover:text-white">
-                <i class="fas fa-users-cog w-6"></i>
-                <span class="font-medium">Unlock Requests</span>
-                <span id="req-badge" class="ml-auto bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full hidden">0</span>
-            </button>
             <button onclick="switchTab('editor')" id="tab-editor" class="w-full flex items-center p-3 rounded-lg bg-indigo-600 text-white shadow-md text-left">
-                <i class="fas fa-pen-nib w-6"></i>
-                <span class="font-medium">Book Editor</span>
+                <i class="fas fa-pen-nib w-6 w-6 mr-2"></i> Book Editor
+            </button>
+            <button onclick="switchTab('pdf')" id="tab-pdf" class="w-full flex items-center p-3 rounded-lg hover:bg-slate-800 transition text-left text-slate-300">
+                <i class="fas fa-file-pdf w-6 mr-2"></i> PDF Import
+            </button>
+            <button onclick="switchTab('requests')" id="tab-requests" class="w-full flex items-center p-3 rounded-lg hover:bg-slate-800 transition text-left text-slate-300">
+                <i class="fas fa-users-cog w-6 mr-2"></i> Requests <span id="req-badge" class="ml-auto bg-red-500 text-[10px] px-2 rounded-full hidden">0</span>
             </button>
         </nav>
-        
-        <div class="p-4 border-t border-slate-700 text-xs text-slate-500 text-center">
-            v2.0 Professional Build
-        </div>
     </aside>
 
     <main class="flex-grow flex flex-col overflow-hidden relative">
-        
         <header class="bg-white h-16 border-b border-slate-200 flex items-center justify-between px-8 shadow-sm z-10">
             <h2 id="page-title" class="text-lg font-bold text-slate-700">Book Editor</h2>
-            <div class="flex items-center gap-4">
-                <div class="text-sm text-slate-500">Admin Logged In</div>
-                <div class="h-8 w-8 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-bold">A</div>
-            </div>
+            <div class="h-8 w-8 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-bold">A</div>
         </header>
 
-        <div id="view-requests" class="hidden flex-grow p-8 overflow-y-auto">
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                <table class="w-full text-left text-sm">
-                    <thead class="bg-slate-50 text-slate-500 uppercase font-bold text-xs border-b">
-                        <tr>
-                            <th class="px-6 py-4">User Email</th>
-                            <th class="px-6 py-4">Date</th>
-                            <th class="px-6 py-4">Receipt</th>
-                            <th class="px-6 py-4 text-right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="requests-table-body" class="divide-y divide-slate-100">
-                        </tbody>
-                </table>
-                <div id="no-reqs-msg" class="p-8 text-center text-slate-400 hidden">No pending requests found.</div>
-            </div>
-        </div>
-
         <div id="view-editor" class="flex-grow flex overflow-hidden">
-            
-            <div class="w-80 bg-white border-r border-slate-200 p-6 overflow-y-auto shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-10">
-                
-                <div class="mb-6 p-4 bg-slate-50 rounded-lg border border-slate-200">
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Page Navigation</label>
+            <div class="w-80 bg-white border-r border-slate-200 p-6 overflow-y-auto z-10">
+                <div class="mb-6 p-4 bg-slate-50 rounded-lg border">
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Page Nav</label>
                     <div class="flex gap-2 mb-2">
-                        <button onclick="setPage(0)" class="flex-1 py-1 text-xs font-bold bg-amber-100 text-amber-800 rounded hover:bg-amber-200">Cover</button>
-                        <button onclick="setPage(1000)" class="flex-1 py-1 text-xs font-bold bg-slate-200 text-slate-700 rounded hover:bg-slate-300">Back</button>
+                        <button onclick="setPage(0)" class="flex-1 py-1 text-xs font-bold bg-amber-100 text-amber-800 rounded">Cover</button>
+                        <button onclick="setPage(1000)" class="flex-1 py-1 text-xs font-bold bg-slate-200 text-slate-700 rounded">Back</button>
                     </div>
                     <div class="flex gap-2">
-                        <input type="number" id="page-num-input" value="1" class="w-16 border rounded text-center text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none">
-                        <button id="load-page-btn" class="flex-grow bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded">LOAD / CREATE</button>
+                        <input type="number" id="page-num-input" value="1" class="w-16 border rounded text-center text-sm font-bold">
+                        <button id="load-page-btn" class="flex-grow bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded">LOAD</button>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3 mb-6">
-                    <button id="add-text-btn" class="p-4 border rounded-lg hover:bg-slate-50 hover:border-indigo-500 transition flex flex-col items-center gap-2 group">
-                        <i class="fas fa-font text-xl text-slate-400 group-hover:text-indigo-600"></i>
-                        <span class="text-xs font-bold text-slate-600">Add Text</span>
+                    <button id="add-text-btn" class="p-4 border rounded-lg hover:bg-slate-50 flex flex-col items-center gap-2">
+                        <i class="fas fa-font text-xl text-slate-400"></i><span class="text-xs font-bold text-slate-600">Text</span>
                     </button>
-                    <label class="p-4 border rounded-lg hover:bg-slate-50 hover:border-indigo-500 transition flex flex-col items-center gap-2 cursor-pointer group">
-                        <i class="fas fa-image text-xl text-slate-400 group-hover:text-indigo-600"></i>
-                        <span class="text-xs font-bold text-slate-600">Add Image</span>
+                    <label class="p-4 border rounded-lg hover:bg-slate-50 flex flex-col items-center gap-2 cursor-pointer">
+                        <i class="fas fa-image text-xl text-slate-400"></i><span class="text-xs font-bold text-slate-600">Image</span>
                         <input type="file" id="image-uploader" class="hidden" accept="image/*">
                     </label>
                 </div>
 
                 <div id="style-panel" class="mb-6 opacity-50 pointer-events-none transition-all duration-300">
-                    <div class="flex justify-between items-center mb-2">
-                        <label class="text-xs font-bold text-slate-500 uppercase">Properties</label>
-                        <button id="delete-el-btn" class="text-xs text-red-500 hover:text-red-700 font-bold">DELETE</button>
-                    </div>
-                    <div class="p-4 bg-slate-50 rounded-lg border border-slate-200 space-y-3">
+                    <div class="flex justify-between items-center mb-2"><label class="text-xs font-bold text-slate-500 uppercase">Properties</label><button id="delete-el-btn" class="text-xs text-red-500 font-bold">DEL</button></div>
+                    <div class="p-4 bg-slate-50 rounded-lg border space-y-3">
                         <div id="text-tools" class="hidden space-y-3">
-                            <select id="font-family-select" class="w-full text-xs border rounded p-1.5"><option value="'Merriweather', serif">Merriweather</option><option value="'Inter', sans-serif">Inter</option></select>
+                            <select id="font-family-select" class="w-full text-xs border rounded p-1"><option value="'Merriweather', serif">Merriweather</option><option value="'Inter', sans-serif">Inter</option><option value="'Cinzel', serif">Cinzel</option></select>
                             <div class="flex gap-2">
-                                <input type="color" id="text-color-input" class="h-8 w-8 rounded border cursor-pointer">
-                                <input type="number" id="font-size-input" class="w-full text-xs border rounded p-1.5" placeholder="Size">
-                                <button id="bold-btn" class="w-8 bg-white border rounded font-bold text-xs hover:bg-gray-100">B</button>
+                                <input type="color" id="text-color-input" class="h-8 w-8 rounded border">
+                                <input type="number" id="font-size-input" class="w-full text-xs border rounded p-1" placeholder="Size">
+                                <button id="bold-btn" class="w-8 bg-white border rounded font-bold text-xs">B</button>
                             </div>
                         </div>
-                        <div id="image-tools" class="hidden">
-                            <label class="text-[10px] text-slate-400">Scale</label>
-                            <input type="range" id="img-width-slider" min="10" max="100" class="w-full h-1 bg-slate-300 rounded-lg appearance-none cursor-pointer">
-                        </div>
+                        <div id="image-tools" class="hidden"><label class="text-[10px]">Scale</label><input type="range" id="img-width-slider" min="10" max="100" class="w-full h-1 bg-slate-300 rounded-lg"></div>
                     </div>
                 </div>
                 
-                <div class="mb-4">
-                    <label class="text-xs font-bold text-slate-500 uppercase block mb-1">Background</label>
-                    <input type="color" id="bg-color-picker" value="#f4e4bc" class="w-full h-8 rounded cursor-pointer border">
-                </div>
-
-                <button id="publish-btn" class="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-sm transition transform active:scale-95">
-                    SAVE & PUBLISH PAGE
-                </button>
+                <div class="mb-4"><label class="text-xs font-bold text-slate-500 uppercase block mb-1">Background</label><input type="color" id="bg-color-picker" value="#f4e4bc" class="w-full h-8 rounded border"></div>
+                <button id="publish-btn" class="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-sm">PUBLISH PAGE</button>
             </div>
 
             <div class="flex-grow bg-slate-100 flex items-center justify-center relative overflow-hidden">
-                <div class="absolute inset-0 opacity-5 pointer-events-none" style="background-image: radial-gradient(#64748b 1px, transparent 1px); background-size: 20px 20px;"></div>
                 <div id="editor-canvas" class="editor-font"></div>
             </div>
         </div>
 
+        <div id="view-pdf" class="hidden flex-grow p-10 flex flex-col items-center justify-center bg-slate-50">
+            <div class="bg-white p-10 rounded-2xl shadow-xl max-w-2xl w-full text-center border border-slate-200">
+                <i class="fas fa-file-pdf text-6xl text-red-500 mb-6"></i>
+                <h2 class="text-2xl font-bold text-slate-800 mb-2">Import Book from PDF</h2>
+                <p class="text-slate-500 mb-8 text-sm">
+                    Upload a PDF to automatically generate the book.<br>
+                    <span class="text-indigo-600 font-bold">Page 1 = Front Cover</span> | 
+                    <span class="text-indigo-600 font-bold">Last Page = Back Cover</span>
+                </p>
+
+                <label class="block w-full border-2 border-dashed border-slate-300 rounded-xl p-8 cursor-pointer hover:border-indigo-500 hover:bg-indigo-50 transition mb-6">
+                    <span class="text-slate-600 font-medium">Click to Select PDF File</span>
+                    <input type="file" id="pdf-upload-input" class="hidden" accept="application/pdf">
+                </label>
+
+                <div id="pdf-progress-container" class="hidden w-full bg-slate-200 rounded-full h-4 mb-4 overflow-hidden">
+                    <div id="pdf-progress-bar" class="bg-green-500 h-4 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+                <p id="pdf-status" class="text-xs text-slate-500 font-mono"></p>
+            </div>
+        </div>
+
+        <div id="view-requests" class="hidden flex-grow p-8 overflow-y-auto">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-slate-50 text-slate-500 uppercase font-bold text-xs border-b"><tr><th class="px-6 py-4">Email</th><th class="px-6 py-4">Receipt</th><th class="px-6 py-4 text-right">Actions</th></tr></thead>
+                    <tbody id="requests-table-body" class="divide-y divide-slate-100"></tbody>
+                </table>
+                <div id="no-reqs-msg" class="p-8 text-center text-slate-400 hidden">No pending requests.</div>
+            </div>
+        </div>
     </main>
 
-    <div id="receipt-modal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
-            <div class="p-4 border-b flex justify-between items-center bg-slate-50">
-                <h3 class="font-bold text-slate-700">Receipt Viewer</h3>
-                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 text-2xl">&times;</button>
-            </div>
-            <div class="p-4 bg-slate-200 flex-grow flex items-center justify-center overflow-auto">
-                <img id="modal-img" src="" class="max-w-full max-h-[60vh] object-contain shadow-lg">
-            </div>
-            <div class="p-4 border-t flex justify-end gap-3 bg-white">
-                <button onclick="closeModal()" class="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded text-sm font-bold">Close</button>
-                <button id="modal-reject-btn" class="px-4 py-2 bg-red-100 text-red-700 hover:bg-red-200 rounded text-sm font-bold">Reject</button>
-                <button id="modal-approve-btn" class="px-4 py-2 bg-green-600 text-white hover:bg-green-700 rounded text-sm font-bold">Approve Request</button>
+    <div id="processing-overlay" class="hidden fixed inset-0 bg-black/80 z-[100] flex flex-col items-center justify-center text-white">
+        <i class="fas fa-circle-notch fa-spin text-4xl mb-4"></i>
+        <p class="text-lg font-bold" id="processing-text">Processing...</p>
+    </div>
+
+    <div id="receipt-modal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg max-w-2xl w-full flex flex-col overflow-hidden shadow-2xl h-[80vh]">
+            <div class="p-4 bg-slate-50 flex justify-between"><h3 class="font-bold">Receipt</h3><button onclick="closeModal()">&times;</button></div>
+            <div class="p-4 bg-slate-200 flex-grow flex items-center justify-center overflow-auto"><img id="modal-img" src="" class="max-h-full object-contain"></div>
+            <div class="p-4 bg-white flex justify-end gap-3">
+                <button id="modal-reject-btn" class="px-4 py-2 bg-red-100 text-red-700 rounded font-bold">Reject</button>
+                <button id="modal-approve-btn" class="px-4 py-2 bg-green-600 text-white rounded font-bold">Approve</button>
             </div>
         </div>
     </div>
@@ -170,6 +155,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
         import { getFirestore, collection, doc, setDoc, getDocs, query, where, onSnapshot, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
+        // INIT FIREBASE
         const firebaseConfig = {
             apiKey: "AIzaSyByyYMFzn1nHOuzxEsX44sQrIIT5AdB3Pc",
             authDomain: "book-8cd24.firebaseapp.com",
@@ -179,217 +165,193 @@
             appId: "1:747560284834:web:30f6080e8d4fbf9025ddfb",
             measurementId: "G-FFFS1HS4GY"
         };
-
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // --- TAB SWITCHING ---
+        // SETUP PDF.JS
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        // --- NAVIGATION ---
         window.switchTab = (tab) => {
-            document.getElementById('view-editor').classList.add('hidden');
-            document.getElementById('view-requests').classList.add('hidden');
-            
-            document.getElementById('tab-editor').className = "w-full flex items-center p-3 rounded-lg hover:bg-slate-800 transition text-left text-slate-300";
-            document.getElementById('tab-requests').className = "w-full flex items-center p-3 rounded-lg hover:bg-slate-800 transition text-left text-slate-300";
-
-            if(tab === 'editor') {
-                document.getElementById('view-editor').classList.remove('hidden');
-                document.getElementById('view-editor').classList.add('flex');
-                document.getElementById('tab-editor').className = "w-full flex items-center p-3 rounded-lg bg-indigo-600 text-white shadow-md text-left";
-                document.getElementById('page-title').innerText = "Book Editor";
-            } else {
-                document.getElementById('view-requests').classList.remove('hidden');
-                document.getElementById('tab-requests').className = "w-full flex items-center p-3 rounded-lg bg-indigo-600 text-white shadow-md text-left";
-                document.getElementById('page-title').innerText = "Unlock Requests";
-            }
-        };
-
-        // --- REQUESTS LOGIC ---
-        const reqTable = document.getElementById('requests-table-body');
-        const reqBadge = document.getElementById('req-badge');
-
-        onSnapshot(collection(db, "requests"), snap => {
-            reqTable.innerHTML = '';
-            let count = 0;
-            let hasPending = false;
-
-            snap.forEach(d => {
-                const req = d.data();
-                if(req.status === 'pending') {
-                    hasPending = true;
-                    count++;
-                    const row = document.createElement('tr');
-                    row.className = "hover:bg-slate-50 transition border-b border-slate-100";
-                    row.innerHTML = `
-                        <td class="px-6 py-4 font-medium text-slate-900">${req.email}</td>
-                        <td class="px-6 py-4 text-slate-500">${new Date(req.timestamp?.seconds * 1000 || Date.now()).toLocaleDateString()}</td>
-                        <td class="px-6 py-4">
-                            <button onclick="window.viewReceipt('${req.receiptImage}', '${req.userId}')" class="flex items-center gap-2 text-indigo-600 hover:text-indigo-800 font-bold text-xs bg-indigo-50 px-3 py-1.5 rounded">
-                                <i class="fas fa-eye"></i> View Receipt
-                            </button>
-                        </td>
-                        <td class="px-6 py-4 text-right">
-                            <button onclick="window.approve('${req.userId}')" class="text-green-600 hover:text-green-800 mr-3" title="Approve"><i class="fas fa-check-circle text-xl"></i></button>
-                            <button onclick="window.reject('${req.userId}')" class="text-red-500 hover:text-red-700" title="Reject"><i class="fas fa-times-circle text-xl"></i></button>
-                        </td>
-                    `;
-                    reqTable.appendChild(row);
-                }
+            ['editor', 'requests', 'pdf'].forEach(t => {
+                document.getElementById('view-' + t).classList.add('hidden');
+                const btn = document.getElementById('tab-' + t);
+                btn.className = "w-full flex items-center p-3 rounded-lg hover:bg-slate-800 transition text-left text-slate-300";
+                if(t === 'editor') btn.innerHTML = '<i class="fas fa-pen-nib w-6 mr-2"></i> Book Editor'; 
             });
 
-            if(!hasPending) {
-                document.getElementById('no-reqs-msg').classList.remove('hidden');
-            } else {
-                document.getElementById('no-reqs-msg').classList.add('hidden');
-            }
-
-            reqBadge.innerText = count;
-            reqBadge.classList.toggle('hidden', count === 0);
-        });
-
-        // Modal Functions
-        window.viewReceipt = (img, uid) => {
-            document.getElementById('receipt-modal').classList.remove('hidden');
-            document.getElementById('modal-img').src = img;
+            document.getElementById('view-' + tab).classList.remove('hidden');
+            if(tab === 'editor') document.getElementById('view-' + tab).classList.add('flex');
             
-            // Bind actions to modal buttons
-            document.getElementById('modal-approve-btn').onclick = () => { window.approve(uid); closeModal(); };
-            document.getElementById('modal-reject-btn').onclick = () => { window.reject(uid); closeModal(); };
-        };
-        window.closeModal = () => document.getElementById('receipt-modal').classList.add('hidden');
-
-        // Actions
-        window.approve = async (uid) => {
-            if(!confirm("Approve this user?")) return;
-            await updateDoc(doc(db, "users", uid), { status: "approved" });
-            await updateDoc(doc(db, "requests", uid), { status: "approved" });
-        };
-        window.reject = async (uid) => {
-            if(!confirm("Reject this request?")) return;
-            await deleteDoc(doc(db, "requests", uid));
-        };
-
-
-        // --- EDITOR LOGIC (Simplified for length, functionality preserved) ---
-        let selectedEl = null;
-        const canvas = document.getElementById('editor-canvas');
-        const stylePanel = document.getElementById('style-panel');
-
-        // Page Helpers
-        window.setPage = (n) => { document.getElementById('page-num-input').value = n; loadPageBtn.click(); };
-        
-        // Load Page
-        const loadPageBtn = document.getElementById('load-page-btn');
-        loadPageBtn.addEventListener('click', async () => {
-            const pg = parseInt(document.getElementById('page-num-input').value);
-            const q = query(collection(db, 'pages'), where('pageNumber', '==', pg));
-            const snap = await getDocs(q);
-            canvas.innerHTML = '';
-            if(!snap.empty){
-                const d = snap.docs[0].data();
-                canvas.style.backgroundColor = d.backgroundColor || '#f4e4bc';
-                document.getElementById('bg-color-picker').value = rgbToHex(canvas.style.backgroundColor);
-                d.elements.forEach(el => addItemToCanvas(el.type, el.content, el.style, el.left, el.top));
-            } else {
-                canvas.style.backgroundColor = '#f4e4bc';
-            }
-        });
-
-        // Add Items
-        const addItemToCanvas = (type, content, style={}, left='50px', top='50px') => {
-            const div = document.createElement('div');
-            div.className = 'draggable-item'; div.dataset.type = type;
-            div.style.left = left; div.style.top = top;
+            const activeBtn = document.getElementById('tab-' + tab);
+            activeBtn.className = "w-full flex items-center p-3 rounded-lg bg-indigo-600 text-white shadow-md text-left";
             
-            if(type === 'text') {
-                div.innerHTML = `<div contenteditable="true" class="editable-text" style="color:${style.color||'#000'}; font-size:${style.fontSize||'24px'}; font-family:${style.fontFamily||'Merriweather'}; font-weight:${style.fontWeight||'normal'}">${content}</div>`;
-            } else {
-                div.innerHTML = `<img src="${content}" style="width:${style.width||'50%'}; pointer-events:none;">`;
-            }
-            
-            canvas.appendChild(div);
-            selectItem(div);
+            const titles = { editor: "Book Editor", pdf: "PDF Import", requests: "Requests" };
+            document.getElementById('page-title').innerText = titles[tab];
         };
 
-        // Inputs
-        document.getElementById('add-text-btn').addEventListener('click', () => addItemToCanvas('text', 'New Text'));
-        document.getElementById('image-uploader').addEventListener('change', e => {
-            const f = e.target.files[0];
-            if(f && f.size < 700000) {
-                const r = new FileReader(); r.readAsDataURL(f);
-                r.onload = () => addItemToCanvas('image', r.result);
-            } else alert("Image too big (<700KB)");
-            e.target.value='';
-        });
+        // --- PDF LOGIC (THE MAGIC PART) ---
+        document.getElementById('pdf-upload-input').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
 
-        // Publish
-        document.getElementById('publish-btn').addEventListener('click', async () => {
-            const pg = parseInt(document.getElementById('page-num-input').value);
-            const els = [];
-            canvas.querySelectorAll('.draggable-item').forEach(el => {
-                const obj = { left: el.style.left, top: el.style.top, type: el.dataset.type };
-                if(el.dataset.type === 'text'){
-                    const t = el.querySelector('.editable-text');
-                    obj.content = t.innerText;
-                    obj.style = { color: t.style.color, fontSize: t.style.fontSize, fontFamily: t.style.fontFamily, fontWeight: t.style.fontWeight };
-                } else {
-                    obj.content = el.querySelector('img').src;
-                    obj.style = { width: el.querySelector('img').style.width };
+            const progressContainer = document.getElementById('pdf-progress-container');
+            const progressBar = document.getElementById('pdf-progress-bar');
+            const statusText = document.getElementById('pdf-status');
+            
+            progressContainer.classList.remove('hidden');
+            statusText.innerText = "Initializing PDF Engine...";
+
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+                const totalPages = pdf.numPages;
+
+                if(!confirm(`Found ${totalPages} pages. Proceed to generate book? \n\nPage 1 -> Front Cover\nPage ${totalPages} -> Back Cover`)) {
+                    progressContainer.classList.add('hidden');
+                    return;
                 }
+
+                // Process pages one by one
+                for (let i = 1; i <= totalPages; i++) {
+                    statusText.innerText = `Processing Page ${i} of ${totalPages}...`;
+                    const percent = ((i / totalPages) * 100) + '%';
+                    progressBar.style.width = percent;
+
+                    const page = await pdf.getPage(i);
+                    const viewport = page.getViewport({ scale: 1.5 }); // Scale 1.5 for good quality mobile view
+                    
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d');
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+
+                    await page.render({ canvasContext: context, viewport: viewport }).promise;
+                    const imgData = canvas.toDataURL('image/jpeg', 0.8); // 80% Quality JPEG
+
+                    // Determine DB Page Number
+                    let dbPageNum;
+                    if (i === 1) dbPageNum = 0; // Front Cover
+                    else if (i === totalPages) dbPageNum = 1000; // Back Cover
+                    else dbPageNum = i - 1; // Content
+
+                    // Save to Firestore
+                    await setDoc(doc(db, 'pages', 'page_' + dbPageNum), {
+                        pageNumber: dbPageNum,
+                        backgroundColor: '#ffffff',
+                        elements: [{
+                            type: 'image',
+                            content: imgData,
+                            style: { width: '100%', height: '100%', top: '0', left: '0' },
+                            // Important: Set left/top to 0 so it covers the whole page in user app
+                            left: '0px', top: '0px'
+                        }]
+                    });
+                }
+
+                statusText.innerText = "Upload Complete!";
+                alert("Book Generated Successfully from PDF!");
+                window.switchTab('editor'); // Go to editor to see result
+
+            } catch (error) {
+                console.error(error);
+                alert("Error processing PDF: " + error.message);
+            } finally {
+                e.target.value = ''; // Reset input
+            }
+        });
+
+
+        // --- EXISTING EDITOR LOGIC ---
+        // (This code remains mostly the same, ensuring compatibility)
+        let selectedEl=null; const canvas=document.getElementById('editor-canvas'); const stylePanel=document.getElementById('style-panel');
+        window.setPage=(n)=>{ document.getElementById('page-num-input').value=n; document.getElementById('load-page-btn').click(); };
+
+        document.getElementById('load-page-btn').addEventListener('click', async () => {
+            const pg=parseInt(document.getElementById('page-num-input').value);
+            const snap=await getDocs(query(collection(db,'pages'),where('pageNumber','==',pg)));
+            canvas.innerHTML='';
+            if(!snap.empty){
+                const d=snap.docs[0].data();
+                canvas.style.backgroundColor=d.backgroundColor||'#f4e4bc';
+                document.getElementById('bg-color-picker').value=rgbToHex(canvas.style.backgroundColor);
+                d.elements.forEach(el=>addItem(el.type,el.content,el.style,el.left,el.top));
+            } else canvas.style.backgroundColor='#f4e4bc';
+        });
+
+        const addItem = (type, content, style={}, left='50px', top='50px') => {
+            const div=document.createElement('div'); div.className='draggable-item'; div.dataset.type=type; div.style.left=left; div.style.top=top;
+            if(type==='text') div.innerHTML=`<div contenteditable="true" class="editable-text" style="color:${style.color||'#000'}; font-size:${style.fontSize||'24px'}; font-family:${style.fontFamily||'Merriweather'}; font-weight:${style.fontWeight||'normal'}">${content}</div>`;
+            else div.innerHTML=`<img src="${content}" style="width:${style.width||'100%'}; pointer-events:none;">`;
+            canvas.appendChild(div); selectItem(div);
+        };
+
+        const processImage = (file) => {
+            return new Promise((resolve) => {
+                const reader = new FileReader(); reader.readAsDataURL(file);
+                reader.onload = (e) => {
+                    const img = new Image(); img.src = e.target.result;
+                    img.onload = () => {
+                        const c = document.createElement('canvas');
+                        let w = img.width; let h = img.height;
+                        const MAX = 1000;
+                        if(w>h){ if(w>MAX){ h*=MAX/w; w=MAX; }} else { if(h>MAX){ w*=MAX/h; h=MAX; }}
+                        c.width=w; c.height=h;
+                        c.getContext('2d').drawImage(img,0,0,w,h);
+                        resolve(c.toDataURL('image/jpeg', 0.8));
+                    }
+                }
+            });
+        };
+
+        document.getElementById('add-text-btn').addEventListener('click', ()=>addItem('text','Text'));
+        document.getElementById('image-uploader').addEventListener('change', async e=>{ const f=e.target.files[0]; if(f){ try{const d=await processImage(f); addItem('image',d);}catch(e){}} e.target.value=''; });
+
+        document.getElementById('publish-btn').addEventListener('click', async () => {
+            const pg=parseInt(document.getElementById('page-num-input').value); const els=[];
+            canvas.querySelectorAll('.draggable-item').forEach(el=>{
+                const obj={left:el.style.left,top:el.style.top,type:el.dataset.type};
+                if(el.dataset.type==='text'){ const t=el.querySelector('.editable-text'); obj.content=t.innerText; obj.style={color:t.style.color,fontSize:t.style.fontSize,fontFamily:t.style.fontFamily,fontWeight:t.style.fontWeight}; }
+                else { obj.content=el.querySelector('img').src; obj.style={width:el.querySelector('img').style.width}; }
                 els.push(obj);
             });
-            await setDoc(doc(db, 'pages', 'page_'+pg), { pageNumber: pg, backgroundColor: canvas.style.backgroundColor, elements: els });
-            alert("Published!");
+            await setDoc(doc(db,'pages','page_'+pg),{pageNumber:pg,backgroundColor:canvas.style.backgroundColor,elements:els}); alert("Published!");
         });
 
-        // Canvas Interaction
+        // Drag Logic (Updated)
         let activeDrag=null, startX, startY, offX, offY;
         canvas.addEventListener('mousedown', e => {
             if(e.target.isContentEditable) return;
             const item = e.target.closest('.draggable-item');
-            if(item){
-                activeDrag=item; selectItem(item);
-                offX=item.offsetLeft; offY=item.offsetTop;
-                startX=e.clientX; startY=e.clientY;
+            if(item) {
+                e.preventDefault(); activeDrag=item; selectItem(item);
+                const rect = item.getBoundingClientRect();
+                offX = e.clientX - rect.left; offY = e.clientY - rect.top;
                 document.addEventListener('mousemove', drag); document.addEventListener('mouseup', stopDrag);
-            } else if(e.target===canvas) selectItem(null);
+            } else if(e.target === canvas) selectItem(null);
         });
-        function drag(e) { if(activeDrag){ activeDrag.style.left=(offX+e.clientX-startX)+'px'; activeDrag.style.top=(offY+e.clientY-startY)+'px'; }}
+        function drag(e) { if(activeDrag){ const cr = canvas.getBoundingClientRect(); activeDrag.style.left=(e.clientX-cr.left-offX)+'px'; activeDrag.style.top=(e.clientY-cr.top-offY)+'px'; } }
         function stopDrag() { activeDrag=null; document.removeEventListener('mousemove', drag); document.removeEventListener('mouseup', stopDrag); }
 
-        function selectItem(el) {
-            selectedEl = el;
-            if(el) {
-                el.classList.add('selected');
-                stylePanel.classList.remove('opacity-50', 'pointer-events-none');
-                updateTools();
-                // Deselect others
-                Array.from(canvas.children).forEach(c => { if(c!==el) c.classList.remove('selected'); });
-            } else {
-                stylePanel.classList.add('opacity-50', 'pointer-events-none');
-                Array.from(canvas.children).forEach(c => c.classList.remove('selected'));
-            }
-        }
-        
-        function updateTools() {
-            const type = selectedEl.dataset.type;
-            document.getElementById('text-tools').classList.toggle('hidden', type!=='text');
-            document.getElementById('image-tools').classList.toggle('hidden', type!=='image');
-        }
+        function selectItem(el){ selectedEl=el; if(el){ el.classList.add('selected'); stylePanel.classList.remove('opacity-50','pointer-events-none'); document.getElementById('text-tools').classList.toggle('hidden',el.dataset.type!=='text'); document.getElementById('image-tools').classList.toggle('hidden',el.dataset.type!=='image'); Array.from(canvas.children).forEach(c=>{if(c!==el)c.classList.remove('selected');}); } else { stylePanel.classList.add('opacity-50','pointer-events-none'); Array.from(canvas.children).forEach(c=>c.classList.remove('selected')); } }
 
-        // Tools Listeners
-        document.getElementById('delete-el-btn').addEventListener('click', () => { selectedEl?.remove(); selectItem(null); });
-        document.getElementById('text-color-input').addEventListener('input', e => selectedEl && (selectedEl.querySelector('.editable-text').style.color=e.target.value));
-        document.getElementById('font-size-input').addEventListener('input', e => selectedEl && (selectedEl.querySelector('.editable-text').style.fontSize=e.target.value+'px'));
-        document.getElementById('img-width-slider').addEventListener('input', e => selectedEl && (selectedEl.querySelector('img').style.width=e.target.value+'%'));
-        document.getElementById('bg-color-picker').addEventListener('input', e => canvas.style.backgroundColor=e.target.value);
-        document.getElementById('bold-btn').addEventListener('click', () => { 
-            if(selectedEl) { 
-                const t = selectedEl.querySelector('.editable-text'); 
-                t.style.fontWeight = t.style.fontWeight==='bold'?'normal':'bold'; 
-            }
-        });
-
+        document.getElementById('delete-el-btn').addEventListener('click', ()=>{selectedEl?.remove(); selectItem(null);});
+        document.getElementById('text-color-input').addEventListener('input', e=>selectedEl&&(selectedEl.querySelector('.editable-text').style.color=e.target.value));
+        document.getElementById('font-size-input').addEventListener('input', e=>selectedEl&&(selectedEl.querySelector('.editable-text').style.fontSize=e.target.value+'px'));
+        document.getElementById('img-width-slider').addEventListener('input', e=>selectedEl&&(selectedEl.querySelector('img').style.width=e.target.value+'%'));
+        document.getElementById('bg-color-picker').addEventListener('input', e=>canvas.style.backgroundColor=e.target.value);
         function rgbToHex(c){ if(!c || c.startsWith('#')) return c||'#f4e4bc'; const a=c.replace(/[^\d,]/g,'').split(','); return "#"+((1<<24)+(+a[0]<<16)+(+a[1]<<8)+ +a[2]).toString(16).slice(1); }
+
+        // REQUESTS
+        onSnapshot(collection(db, "requests"), snap => {
+            const tbody = document.getElementById('requests-table-body'); tbody.innerHTML=''; let count=0;
+            snap.forEach(d => { const req = d.data(); if(req.status === 'pending') { count++; tbody.innerHTML += `<tr class="border-b"><td class="px-6 py-4">${req.email}</td><td class="px-6 py-4"><button onclick="viewReceipt('${req.receiptImage}', '${req.userId}')" class="text-blue-500 font-bold">View</button></td><td class="px-6 py-4 text-right"><button onclick="approve('${req.userId}')" class="text-green-500 mr-2">Approve</button><button onclick="reject('${req.userId}')" class="text-red-500">Reject</button></td></tr>`; } });
+            document.getElementById('no-reqs-msg').classList.toggle('hidden', count>0); document.getElementById('req-badge').innerText=count; document.getElementById('req-badge').classList.toggle('hidden', count===0);
+        });
+        window.viewReceipt = (img, uid) => { document.getElementById('receipt-modal').classList.remove('hidden'); document.getElementById('modal-img').src = img; document.getElementById('modal-approve-btn').onclick = () => { approve(uid); closeModal(); }; document.getElementById('modal-reject-btn').onclick = () => { reject(uid); closeModal(); }; };
+        window.closeModal = () => document.getElementById('receipt-modal').classList.add('hidden');
+        window.approve = async (uid) => { if(confirm("Approve?")) { await updateDoc(doc(db,"users",uid),{status:"approved"}); await updateDoc(doc(db,"requests",uid),{status:"approved"}); } };
+        window.reject = async (uid) => { if(confirm("Reject?")) await deleteDoc(doc(db,"requests",uid)); };
     </script>
 </body>
 </html>
