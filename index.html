@@ -376,4 +376,5 @@
         document.getElementById('send-receipt').addEventListener('click', ()=>{ const f=document.getElementById('receipt-file').files[0]; if(f&&user) { const r=new FileReader(); r.readAsDataURL(f); r.onload=async()=>{ await setDoc(doc(db,"requests",user.uid),{userId:user.uid,email:user.email,receiptImage:r.result,status:'pending',timestamp:new Date()}); await setDoc(doc(db,"users",user.uid),{status:'pending'},{merge:true}); alert("Verification Sent!"); document.getElementById('pay-modal').classList.add('hidden'); } } });
     </script>
 </body>
+
 </html>
