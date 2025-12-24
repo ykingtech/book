@@ -268,9 +268,9 @@
                 let autoStatus = 'rejected';
                 let reason = '';
 
-                // --- CHECK 1: AMOUNT (200) ---
-                const hasAmount = text.includes('200');
-                if(!hasAmount) reason += 'Amount 200 not found. ';
+                // --- CHECK 1: AMOUNT (100) ---
+                const hasAmount = text.includes('100');
+                if(!hasAmount) reason += 'Amount 100 not found. ';
 
                 // --- CHECK 2: DATE (Advanced: Dots & Slashes) ---
                 const today = new Date();
