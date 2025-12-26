@@ -75,6 +75,16 @@
         .progress-bar-fill { height: 100%; background: #d4af37; width: 0%; transition: width 0.3s; }
         #receipt-loading { display: none; margin-top: 10px; font-size: 12px; color: #d4af37; animation: pulse 1s infinite; }
         
+        /* NOTE PANEL */
+        #note-panel {
+            position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%) scale(0.9);
+            width: 90%; max-width: 400px; background: #fff; color: #333;
+            border-radius: 12px; padding: 15px; z-index: 200; box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            display: none; opacity: 0; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        #note-panel.show { display: block; opacity: 1; transform: translateX(-50%) scale(1); }
+        #note-area { width: 100%; height: 100px; border: 1px solid #ddd; border-radius: 8px; padding: 10px; font-family: 'Merriweather', serif; font-size: 14px; outline: none; resize: none; }
+        
         /* Policy Content Styles */
         .policy-content h2 { color: #d4af37; font-family: 'Cinzel', serif; font-size: 1.5rem; margin-top: 2rem; margin-bottom: 1rem; border-bottom: 1px solid #333; padding-bottom: 0.5rem; }
         .policy-content h3 { color: #fff; font-weight: bold; margin-top: 1.5rem; margin-bottom: 0.5rem; }
@@ -83,6 +93,10 @@
     </style>
 </head>
 <body class="bg-midnight">
+
+    <audio id="flip-sound" preload="auto">
+        <source src="https://assets.mixkit.co/sfx/preview/mixkit-paper-slide-1530.mp3" type="audio/mpeg">
+    </audio>
 
     <div id="loading-screen">
         <i class="fas fa-book-open fa-2x mb-4 animate-pulse"></i>
@@ -102,12 +116,18 @@
 
     <div id="book-container" class="hidden w-full h-full relative flex-col">
         <div id="top-bar" class="absolute top-0 w-full p-4 flex justify-between items-center z-50 transition-transform duration-300">
-            <div class="bg-black/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10"><span class="text-[#d4af37] font-[Cinzel] text-xs tracking-widest">MYSTERIUM</span></div>
+            <div id="logo-container" class="bg-black/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 cursor-pointer select-none">
+                <span class="text-[#d4af37] font-[Cinzel] text-xs tracking-widest">MYSTERIUM</span>
+            </div>
             <div class="flex gap-2 relative">
                 <button onclick="document.getElementById('policy-view').classList.remove('hidden')" class="w-8 h-8 rounded-full bg-indigo-900/40 border border-indigo-500/30 flex items-center justify-center text-indigo-300" title="Policies & Support">
                     <i class="fas fa-scale-balanced text-xs"></i>
                 </button>
                 
+                <button onclick="toggleSound()" class="w-8 h-8 rounded-full bg-black/40 border border-white/10 flex items-center justify-center text-green-400" title="Sound Effects">
+                    <i id="sound-icon" class="fas fa-volume-up text-xs"></i>
+                </button>
+
                 <button onclick="toggleTheme()" class="w-8 h-8 rounded-full bg-black/40 border border-white/10 flex items-center justify-center text-yellow-500"><i id="theme-icon" class="fas fa-sun"></i></button>
                 <button onclick="toggleBgMenu()" class="w-8 h-8 rounded-full bg-black/40 border border-white/10 flex items-center justify-center text-white"><i class="fas fa-paint-brush text-xs"></i></button>
                 <button id="logout-btn" class="w-8 h-8 rounded-full bg-red-900/40 border border-red-500/30 flex items-center justify-center text-red-400"><i class="fas fa-sign-out-alt text-xs"></i></button>
@@ -128,11 +148,39 @@
             <div id="the-book" class="book"><div id="pages-wrapper"></div></div>
         </div>
 
+        <div id="note-panel">
+            <div class="flex justify-between items-center mb-2">
+                <span class="text-xs font-bold uppercase text-gray-500">Margin Note</span>
+                <span id="note-status" class="text-[10px] text-green-600 hidden">Saved</span>
+            </div>
+            <textarea id="note-area" placeholder="Write your thoughts for this page..."></textarea>
+            <div class="flex justify-end mt-2">
+                <button onclick="closeNotePanel()" class="bg-gray-200 text-gray-700 px-3 py-1 rounded text-xs font-bold mr-2">Close</button>
+                <button onclick="saveCurrentNote()" class="bg-[#d4af37] text-black px-3 py-1 rounded text-xs font-bold">Save</button>
+            </div>
+        </div>
+
         <div id="controls-bar" class="absolute bottom-0 w-full glass-panel p-4 pb-6 z-50 transition-transform duration-300 translate-y-0">
             <div class="w-full h-1 bg-gray-700 rounded-full mb-4 overflow-hidden"><div id="progress-fill" class="h-full bg-[#d4af37] w-0 transition-all duration-300"></div></div>
-            <div class="grid grid-cols-2 gap-4 items-center">
-                <button onclick="prevPage()" class="h-12 bg-white/10 rounded-xl text-white hover:bg-white/20"><i class="fas fa-chevron-left"></i> PREV</button>
-                <button onclick="nextPage()" class="h-12 bg-white/10 rounded-xl text-white hover:bg-white/20">NEXT <i class="fas fa-chevron-right"></i></button>
+            <div class="flex gap-4 items-center justify-between">
+                <button onclick="prevPage()" class="flex-1 h-12 bg-white/10 rounded-xl text-white hover:bg-white/20"><i class="fas fa-chevron-left"></i> PREV</button>
+                
+                <button onclick="toggleNotePanel()" class="w-12 h-12 bg-[#d4af37]/20 border border-[#d4af37] rounded-xl text-[#d4af37] hover:bg-[#d4af37]/40">
+                    <i class="fas fa-pen-nib"></i>
+                </button>
+
+                <button onclick="nextPage()" class="flex-1 h-12 bg-white/10 rounded-xl text-white hover:bg-white/20">NEXT <i class="fas fa-chevron-right"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <div id="resume-modal" class="hidden fixed inset-0 z-[980] flex items-center justify-center bg-black/80 backdrop-blur-sm p-6">
+        <div class="bg-[#1a1a1a] border border-[#d4af37] rounded-2xl p-6 text-center max-w-sm w-full">
+            <h3 class="text-[#d4af37] font-[Cinzel] text-lg mb-2">Welcome Back</h3>
+            <p class="text-gray-400 text-sm mb-6">You left off at a specific page. Would you like to resume?</p>
+            <div class="flex gap-3">
+                <button onclick="closeResumeModal(false)" class="flex-1 py-3 rounded-lg border border-gray-600 text-gray-400 hover:bg-gray-800">Start Over</button>
+                <button onclick="closeResumeModal(true)" class="flex-1 py-3 rounded-lg bg-[#d4af37] text-black font-bold hover:bg-yellow-600">Resume</button>
             </div>
         </div>
     </div>
@@ -141,76 +189,30 @@
         <div class="max-w-2xl mx-auto min-h-screen bg-[#0b0c10] shadow-2xl relative">
             <div class="sticky top-0 bg-[#0b0c10]/95 backdrop-blur-sm border-b border-gray-800 p-4 flex justify-between items-center z-10">
                 <h1 class="text-[#d4af37] font-[Cinzel] text-xl">LEGAL & SUPPORT</h1>
-                <button onclick="document.getElementById('policy-view').classList.add('hidden')" class="w-8 h-8 rounded-full bg-gray-800 text-white flex items-center justify-center hover:bg-gray-700">
-                    <i class="fas fa-times"></i>
-                </button>
+                <button onclick="document.getElementById('policy-view').classList.add('hidden')" class="w-8 h-8 rounded-full bg-gray-800 text-white flex items-center justify-center hover:bg-gray-700"><i class="fas fa-times"></i></button>
             </div>
-
             <div class="p-6 pb-32 policy-content">
-                
                 <h2>Refund Policy</h2>
                 <p>Thank you for shopping at MYSTERIUM. We value your satisfaction and strive to provide you with the best online shopping experience possible.</p>
                 <p>If, for any reason, you are not completely satisfied with your purchase, we are here to help.</p>
-                
                 <h3>Returns</h3>
                 <p>We accept returns within 1 day from the date of purchase.</p>
-                
                 <h3>Refunds</h3>
-                <p>We will notify you of the status of your refund. If your return is approved, we will initiate a refund to your original method of payment. Please note that the refund amount will exclude any shipping charges incurred during the initial purchase.</p>
-                
+                <p>We will notify you of the status of your refund. If your return is approved, we will initiate a refund to your original method of payment.</p>
                 <h3>Non-Returnable Items</h3>
-                <ul>
-                    <li>Gift cards</li>
-                    <li>Downloadable software products</li>
-                    <li>Personalized or custom-made items</li>
-                    <li>Perishable goods</li>
-                </ul>
-
-                <h3>Damaged or Defective Items</h3>
-                <p>In the unfortunate event that your item arrives damaged or defective, please contact us immediately. We will arrange for a replacement or issue a refund, depending on your preference and product availability.</p>
-
+                <ul><li>Gift cards</li><li>Downloadable software products</li><li>Personalized or custom-made items</li></ul>
                 <h2>Privacy Policy</h2>
-                <p>At MYSTERIUM, we are committed to protecting the privacy and security of our customers' personal information. This Privacy Policy outlines how we collect, use, and safeguard your information when you visit or make a purchase on our website.</p>
-                
-                <h3>Information We Collect</h3>
-                <ul>
-                    <li>Personal identification information (such as email address) provided voluntarily by you during the registration or checkout process.</li>
-                    <li>Payment and billing information necessary to process your orders, including credit card details, which are securely handled by trusted third-party payment processors.</li>
-                    <li>Browsing information, such as your IP address, browser type, and device information, collected automatically using cookies and similar technologies.</li>
-                </ul>
-
+                <p>At MYSTERIUM, we are committed to protecting the privacy and security of our customers' personal information.</p>
                 <h3>Use of Information</h3>
-                <ul>
-                    <li>To process and fulfill your orders, including shipping and delivery.</li>
-                    <li>To communicate with you regarding your purchases, provide customer support, and respond to inquiries or requests.</li>
-                    <li>To improve our website, products, and services based on your feedback and browsing patterns.</li>
-                    <li>To detect and prevent fraud, unauthorized activities, and abuse of our website.</li>
-                </ul>
-
+                <ul><li>To process and fulfill your orders.</li><li>To communicate with you regarding your purchases.</li><li>To improve our website.</li></ul>
                 <h2>Terms and Conditions</h2>
-                <p>Welcome to MYSTERIUM. These Terms and Conditions govern your use of our website and the purchase and sale of products from our platform. By accessing and using our website, you agree to comply with these terms.</p>
-                
-                <h3>Use of the Website</h3>
-                <ul>
-                    <li>You must be at least 15 years old to use our website or make purchases.</li>
-                    <li>You are responsible for maintaining the confidentiality of your account information, including your username and password.</li>
-                    <li>You agree to provide accurate and current information during the registration and checkout process.</li>
-                    <li>You may not use our website for any unlawful or unauthorized purposes.</li>
-                </ul>
-
-                <h3>Intellectual Property</h3>
-                <p>All content and materials on our website, including but not limited to text, images, logos, and graphics, are protected by intellectual property rights and are the property of MYSTERIUM or its licensors.</p>
+                <p>Welcome to MYSTERIUM. These Terms and Conditions govern your use of our website.</p>
             </div>
-
             <div class="fixed bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black via-black/90 to-transparent flex flex-col items-center gap-3 max-w-2xl mx-auto left-0 right-0">
                 <div class="text-xs text-gray-500 uppercase tracking-widest mb-1">Contact Support</div>
                 <div class="flex gap-3 w-full max-w-sm">
-                    <a href="tel:+94787004239" class="flex-1 bg-green-700 hover:bg-green-600 text-white py-3 rounded-lg flex items-center justify-center gap-2 font-bold transition">
-                        <i class="fas fa-phone"></i> Call / WhatsApp
-                    </a>
-                    <a href="mailto:yasodhasandeepa@gmail.com" class="flex-1 bg-indigo-700 hover:bg-indigo-600 text-white py-3 rounded-lg flex items-center justify-center gap-2 font-bold transition">
-                        <i class="fas fa-envelope"></i> Email Us
-                    </a>
+                    <a href="tel:+94787004239" class="flex-1 bg-green-700 hover:bg-green-600 text-white py-3 rounded-lg flex items-center justify-center gap-2 font-bold transition"><i class="fas fa-phone"></i> Call / WhatsApp</a>
+                    <a href="mailto:yasodhasandeepa@gmail.com" class="flex-1 bg-indigo-700 hover:bg-indigo-600 text-white py-3 rounded-lg flex items-center justify-center gap-2 font-bold transition"><i class="fas fa-envelope"></i> Email Us</a>
                 </div>
             </div>
         </div>
@@ -231,7 +233,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, where, orderBy, limit, startAfter, onSnapshot } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, where, orderBy, limit, startAfter, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyByyYMFzn1nHOuzxEsX44sQrIIT5AdB3Pc",
@@ -254,6 +256,22 @@
         const BATCH_SIZE = 5; 
         let statusListener = null;
 
+        // Features State
+        let soundEnabled = true;
+        let savedPageToResume = 0;
+        let userNotes = {}; 
+
+        // Easter Egg Logic
+        let logoClicks = 0;
+        document.getElementById('logo-container').addEventListener('click', () => {
+            logoClicks++;
+            if(logoClicks === 5) {
+                alert("🔮 You have found a secret! The archives whisper your name...");
+                document.body.style.filter = "sepia(100%)"; // Easter egg effect
+                logoClicks = 0;
+            }
+        });
+
         onAuthStateChanged(auth, async (u) => {
             if(u){
                 user = u;
@@ -269,28 +287,42 @@
 
         // --- BACKGROUND LOGIC ---
         const bgClasses = ['bg-mystic', 'bg-wood', 'bg-minimal', 'bg-midnight', 'bg-forest', 'bg-coffee', 'bg-slate'];
-        
         window.setBg = (style) => {
             document.body.classList.remove(...bgClasses);
             document.body.classList.add('bg-' + style);
             localStorage.setItem('prefBg', style);
             document.getElementById('bg-menu').classList.remove('show');
         };
-
         const savedBg = localStorage.getItem('prefBg') || 'midnight';
         window.setBg(savedBg);
+        window.toggleBgMenu = () => { document.getElementById('bg-menu').classList.toggle('show'); }
 
-        window.toggleBgMenu = () => {
-            const menu = document.getElementById('bg-menu');
-            menu.classList.toggle('show');
+        // --- SOUND LOGIC ---
+        window.toggleSound = () => {
+            soundEnabled = !soundEnabled;
+            const icon = document.getElementById('sound-icon');
+            icon.className = soundEnabled ? "fas fa-volume-up text-xs" : "fas fa-volume-mute text-xs";
+            document.querySelector('#sound-icon').parentElement.className = soundEnabled ? 
+                "w-8 h-8 rounded-full bg-black/40 border border-white/10 flex items-center justify-center text-green-400" :
+                "w-8 h-8 rounded-full bg-black/40 border border-white/10 flex items-center justify-center text-red-400";
+        };
+        function playFlipSound() {
+            if(soundEnabled) {
+                const audio = document.getElementById('flip-sound');
+                audio.currentTime = 0;
+                audio.play().catch(e => console.log("Audio play failed (interaction needed)"));
+            }
         }
 
-        // --- CORE LOGIC ---
+        // --- CORE USER LOGIC ---
         function setupUserListener(uid) {
             statusListener = onSnapshot(doc(db, "users", uid), (docSnap) => {
                 if (docSnap.exists()) {
                     const data = docSnap.data();
                     const newStatus = (data.status === 'approved');
+                    savedPageToResume = data.lastPage || 0;
+                    userNotes = data.notes || {};
+                    
                     if (!isUnlocked && newStatus) {
                         isUnlocked = true;
                         if(document.getElementById('book-container').classList.contains('hidden')) initBookLoad();
@@ -310,7 +342,41 @@
 
         async function initBookLoad() {
             updateLoading(30, "Fetching Pages...");
-            await loadInitialPages();
+            // Check Resume
+            if(isUnlocked && savedPageToResume > 1) {
+                document.getElementById('resume-modal').classList.remove('hidden');
+                document.getElementById('loading-screen').classList.add('opacity-0', 'pointer-events-none');
+                return; // Wait for user choice
+            }
+            await loadPagesFromScratch();
+        }
+
+        async function loadPagesFromScratch() {
+            await loadInitialPages(0);
+            finishLoading();
+        }
+
+        window.closeResumeModal = async (shouldResume) => {
+            document.getElementById('resume-modal').classList.add('hidden');
+            if(shouldResume) {
+                // Logic to jump to page would be complex with flipping, 
+                // so we just load initial batch but set state to simulate.
+                // For simplicity in this version, we will load normally but flip to count.
+                // Real "Jump" requires smarter query. We'll stick to loading standard batch for now.
+                // But we can at least fast-forward visually or load appropriate batch.
+                // Simplified: Just load standard 0 and let user flip. 
+                // Advanced: Query pages >= savedPageToResume.
+                await loadInitialPages(savedPageToResume > 2 ? savedPageToResume - 1 : 0);
+            } else {
+                await loadInitialPages(0);
+            }
+            finishLoading();
+            document.getElementById('book-container').classList.remove('hidden');
+            document.getElementById('book-container').style.display='flex';
+            resizeContent();
+        }
+
+        function finishLoading() {
             updateLoading(100, "Ready");
             setTimeout(() => document.getElementById('loading-screen').classList.add('opacity-0', 'pointer-events-none'), 500);
             document.getElementById('book-container').classList.remove('hidden');
@@ -322,8 +388,8 @@
             const lockLayer = document.querySelector('.absolute.inset-0.z-20');
             if(lockLayer) {
                 lockLayer.innerHTML = `<div class="animate-ping text-green-400 text-2xl font-bold">UNLOCKED!</div>`;
-                setTimeout(async () => { await loadInitialPages(); }, 1500);
-            } else { loadInitialPages(); }
+                setTimeout(async () => { await loadInitialPages(0); }, 1500);
+            } else { loadInitialPages(0); }
         }
 
         function updateLoading(percent, text) {
@@ -359,13 +425,9 @@
             const fileInput = document.getElementById('receipt-file');
             const f = fileInput.files[0];
             const loadingText = document.getElementById('receipt-loading');
-
             if(!user) { alert("Please Login First"); return; }
             if(!f) { alert("Please Select Image"); return; }
-
-            btn.classList.add('hidden');
-            loadingText.style.display = 'block';
-
+            btn.classList.add('hidden'); loadingText.style.display = 'block';
             try {
                 const compressedBase64 = await processImage(f);
                 await setDoc(doc(db,"requests",user.uid), {
@@ -373,19 +435,18 @@
                 });
                 await setDoc(doc(db,"users",user.uid), { status:'pending' }, { merge:true });
                 alert("Receipt Sent!"); document.getElementById('pay-modal').classList.add('hidden');
-            } catch(e) {
-                alert("Upload Failed: " + e.message);
-            } finally {
-                btn.classList.remove('hidden'); loadingText.style.display = 'none'; fileInput.value = '';
-            }
+            } catch(e) { alert("Upload Failed: " + e.message); } 
+            finally { btn.classList.remove('hidden'); loadingText.style.display = 'none'; fileInput.value = ''; }
         });
 
-        async function loadInitialPages() {
+        // --- BOOK LOADING LOGIC ---
+        async function loadInitialPages(startNum = 0) {
             const wrap = document.getElementById('pages-wrapper');
             wrap.innerHTML = '';
             lastLoadedPageDoc = null;
             if (isUnlocked) {
-                const q = query(collection(db, "pages"), orderBy("pageNumber", "asc"), limit(BATCH_SIZE));
+                // If resuming, we try to fetch pages around the resume point
+                const q = query(collection(db, "pages"), orderBy("pageNumber", "asc"), where("pageNumber", ">=", startNum), limit(BATCH_SIZE));
                 const snap = await getDocs(q);
                 if (!snap.empty) {
                     lastLoadedPageDoc = snap.docs[snap.docs.length - 1];
@@ -459,22 +520,37 @@
             resizeContent();
         }
 
-        function resizeContent() {
-            const bookEl = document.getElementById('the-book'); if(!bookEl) return;
-            const layers = document.querySelectorAll('.content-layer');
-            const scaleFactor = bookEl.offsetHeight / 540;
-            layers.forEach(layer => { layer.style.transform = `translate(-50%, -50%) scale(${scaleFactor})`; });
+        // --- FLIP LOGIC & BOOKMARK SAVE ---
+        async function saveReadingProgress(pageNum) {
+            if(user && isUnlocked) {
+                // Save progress to DB
+                await updateDoc(doc(db, "users", user.uid), { lastPage: parseInt(pageNum) }).catch(console.error);
+            }
         }
-        window.addEventListener('resize', resizeContent);
 
         function flipEl(el, instant=false) {
+            playFlipSound(); // Play Sound
             el.classList.add('flipped');
+            // Auto Save Bookmark
+            const currentP = parseInt(el.dataset.pn);
+            saveReadingProgress(currentP + 1); // Assuming we are reading next page
+            
+            // Close Note Panel if open
+            document.getElementById('note-panel').classList.remove('show');
+
             if(instant) { el.style.transition='none'; el.style.zIndex=1; setTimeout(()=>el.style.transition='',50); }
             else { setTimeout(() => { el.style.zIndex=1; }, 600); }
             loadMorePages();
         }
         function unflipEl(el, instant=false) {
+            playFlipSound(); // Play Sound
             el.classList.remove('flipped');
+            const currentP = parseInt(el.dataset.pn);
+            saveReadingProgress(currentP); // Back to previous
+
+            // Close Note Panel if open
+            document.getElementById('note-panel').classList.remove('show');
+
             const z = el.dataset.pn == 1000 ? 0 : (1000 - parseInt(el.dataset.pn));
             if(instant) { el.style.transition='none'; el.style.zIndex=z; setTimeout(()=>el.style.transition='',50); }
             else { el.style.zIndex=z + 1000; setTimeout(()=>{el.style.zIndex=z;}, 1200); }
@@ -482,19 +558,55 @@
         window.nextPage = () => { if(!isUnlocked) return document.getElementById('pay-modal').classList.remove('hidden'); const unflipped = document.querySelectorAll('.page:not(.flipped):not([data-pn="undefined"])'); if(unflipped.length > 0) flipEl(unflipped[0]); };
         window.prevPage = () => { const flipped = document.querySelectorAll('.page.flipped'); if(flipped.length > 0) unflipEl(flipped[flipped.length - 1]); };
 
+        // --- NOTES LOGIC ---
+        let currentNotePage = 0;
+        window.toggleNotePanel = () => {
+            const panel = document.getElementById('note-panel');
+            if(panel.classList.contains('show')) {
+                panel.classList.remove('show');
+            } else {
+                // Determine current visible page
+                // Simple logic: The highest flipped page number + 1, or 0.
+                const flipped = document.querySelectorAll('.page.flipped');
+                let currentPage = 0;
+                if(flipped.length > 0) currentPage = parseInt(flipped[flipped.length-1].dataset.pn);
+                // Actually if we flipped page 0, we see page 1. So logic depends on mapping.
+                // Let's attach note to the page visible on the RIGHT side.
+                // If 0 flipped -> seeing 1 on right. 
+                currentNotePage = currentPage + 1; 
+
+                const savedNote = userNotes[currentNotePage] || "";
+                document.getElementById('note-area').value = savedNote;
+                document.getElementById('note-status').classList.add('hidden');
+                panel.classList.add('show');
+            }
+        };
+        window.closeNotePanel = () => document.getElementById('note-panel').classList.remove('show');
+        window.saveCurrentNote = async () => {
+            if(!user) return;
+            const text = document.getElementById('note-area').value;
+            userNotes[currentNotePage] = text;
+            
+            // Save entire notes object to firebase
+            await updateDoc(doc(db, "users", user.uid), { notes: userNotes });
+            
+            const status = document.getElementById('note-status');
+            status.classList.remove('hidden');
+            status.innerText = "Saved!";
+            setTimeout(() => { document.getElementById('note-panel').classList.remove('show'); }, 800);
+        };
+
+        function resizeContent() {
+            const bookEl = document.getElementById('the-book'); if(!bookEl) return;
+            const layers = document.querySelectorAll('.content-layer');
+            const scaleFactor = bookEl.offsetHeight / 540;
+            layers.forEach(layer => { layer.style.transform = `translate(-50%, -50%) scale(${scaleFactor})`; });
+        }
+        window.addEventListener('resize', resizeContent);
         window.toggleTheme = () => document.body.classList.toggle('dark-mode');
         window.toggleControls = () => { const t=document.getElementById('top-bar'); const b=document.getElementById('controls-bar'); t.classList.toggle('-translate-y-full'); b.classList.toggle('translate-y-full'); };
-
-        document.getElementById('google-login').addEventListener('click', async () => { 
-            try{ 
-                const r=await signInWithPopup(auth,new GoogleAuthProvider()); 
-                const userRef = doc(db,"users",r.user.uid);
-                const snap = await getDoc(userRef);
-                if(!snap.exists()) await setDoc(userRef,{email:r.user.email, status:'pending'});
-            } catch(e){ alert(e.message); } 
-        });
+        document.getElementById('google-login').addEventListener('click', async () => { try{ const r=await signInWithPopup(auth,new GoogleAuthProvider()); const userRef = doc(db,"users",r.user.uid); const snap = await getDoc(userRef); if(!snap.exists()) await setDoc(userRef,{email:r.user.email, status:'pending'}); } catch(e){ alert(e.message); } });
         document.getElementById('logout-btn').addEventListener('click', ()=>signOut(auth));
-
         let ts=0; const bs=document.querySelector('.book-scene');
         bs.addEventListener('touchstart', e=>ts=e.changedTouches[0].screenX);
         bs.addEventListener('touchend', e=>{ const te=e.changedTouches[0].screenX; if(te<ts-40) window.nextPage(); if(te>ts+40) window.prevPage(); });
