@@ -12,7 +12,7 @@
         /* --- THEME VARIABLES --- */
         :root { --bg-body: #0b0c10; --page-default: #f4e4bc; --gold: #d4af37; }
         
-        /* DARK MODE - BOOK PAGES ONLY */
+        /* DARK MODE */
         body.dark-mode .front, body.dark-mode .back { background-color: #121212 !important; border-color: #333 !important; }
         body.dark-mode .content-layer img { filter: invert(1) hue-rotate(180deg); mix-blend-mode: screen; }
         body.dark-mode .content-layer div[style*="color"] { color: #e0e0e0 !important; }
@@ -24,8 +24,6 @@
             transition: background 0.5s ease-in-out; touch-action: none;
             background-size: cover; background-position: center;
         }
-
-        /* Background Classes */
         body.bg-mystic { background-image: radial-gradient(circle at 50% 50%, #1f2833 0%, #0b0c10 100%); }
         body.bg-wood { background-color: #2c1e12; background-image: url('https://www.transparenttextures.com/patterns/wood-pattern.png'); }
         body.bg-minimal { background-image: none; background-color: #050505; }
@@ -50,52 +48,62 @@
 
         .glass-panel { background: rgba(20, 20, 20, 0.85); backdrop-filter: blur(12px); border-top: 1px solid rgba(255,255,255,0.08); }
         
-        /* MENU & MODALS */
+        /* THEME MENU */
         .theme-menu { 
             position: absolute; top: 60px; right: 10px; 
-            background: rgba(15, 15, 15, 0.95); 
-            border: 1px solid #333; 
-            padding: 15px; border-radius: 16px; 
-            display: none; 
-            grid-template-columns: repeat(4, 1fr); 
-            gap: 10px; z-index: 100; 
+            background: rgba(15, 15, 15, 0.95); border: 1px solid #333; 
+            padding: 15px; border-radius: 16px; display: none; 
+            grid-template-columns: repeat(4, 1fr); gap: 10px; z-index: 100; 
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
         .theme-menu.show { display: grid; }
-        .theme-btn { 
-            width: 36px; height: 36px; border-radius: 50%; 
-            border: 2px solid rgba(255,255,255,0.1); 
-            cursor: pointer; transition: transform 0.2s;
-        }
+        .theme-btn { width: 36px; height: 36px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.1); cursor: pointer; transition: transform 0.2s; }
         .theme-btn:active { transform: scale(0.9); }
-        .theme-btn.active { border-color: #d4af37; box-shadow: 0 0 10px rgba(212, 175, 55, 0.3); }
 
+        /* LOADING & NOTE PANEL */
         #loading-screen { position: fixed; inset: 0; z-index: 9999; background: #000; color: #d4af37; display: flex; flex-col; align-items: center; justify-content: center; transition: opacity 0.5s; }
         .progress-bar-container { width: 200px; height: 4px; background: #333; margin-top: 20px; border-radius: 2px; overflow: hidden; }
         .progress-bar-fill { height: 100%; background: #d4af37; width: 0%; transition: width 0.3s; }
-        #receipt-loading { display: none; margin-top: 10px; font-size: 12px; color: #d4af37; animation: pulse 1s infinite; }
         
-        /* NOTE PANEL */
         #note-panel {
             position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%) scale(0.9);
             width: 90%; max-width: 400px; background: #fff; color: #333;
             border-radius: 12px; padding: 15px; z-index: 200; box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-            display: none; opacity: 0; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: none; opacity: 0; transition: all 0.3s;
         }
         #note-panel.show { display: block; opacity: 1; transform: translateX(-50%) scale(1); }
         #note-area { width: 100%; height: 100px; border: 1px solid #ddd; border-radius: 8px; padding: 10px; font-family: 'Merriweather', serif; font-size: 14px; outline: none; resize: none; }
+
+        /* --- WIZARD CHARACTER STYLES --- */
+        #wizard-container {
+            position: fixed; bottom: 100px; left: 20px; z-index: 80;
+            display: flex; flex-direction: column; align-items: flex-start;
+            pointer-events: none; opacity: 0; transform: translateY(20px);
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        #wizard-container.active { opacity: 1; transform: translateY(0); }
         
-        /* Policy Content Styles */
-        .policy-content h2 { color: #d4af37; font-family: 'Cinzel', serif; font-size: 1.5rem; margin-top: 2rem; margin-bottom: 1rem; border-bottom: 1px solid #333; padding-bottom: 0.5rem; }
-        .policy-content h3 { color: #fff; font-weight: bold; margin-top: 1.5rem; margin-bottom: 0.5rem; }
+        .wizard-bubble {
+            background: white; color: #000; padding: 10px 15px; border-radius: 15px 15px 15px 0;
+            font-family: 'Inter', sans-serif; font-size: 0.85rem; font-weight: 600;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3); margin-bottom: 10px;
+            max-width: 200px; position: relative;
+        }
+        .wizard-avatar {
+            width: 60px; height: 60px; background: #2a2a2a; border: 2px solid #d4af37;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 30px; color: #d4af37; box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+        }
+
+        /* Policy Styles */
+        .policy-content h2 { color: #d4af37; font-family: 'Cinzel', serif; font-size: 1.5rem; margin-top: 2rem; border-bottom: 1px solid #333; }
         .policy-content p, .policy-content li { color: #ccc; font-size: 0.9rem; line-height: 1.6; margin-bottom: 0.8rem; }
-        .policy-content ul { list-style-type: disc; padding-left: 1.5rem; }
     </style>
 </head>
 <body class="bg-midnight">
 
     <audio id="flip-sound" preload="auto">
-        <source src="https://assets.mixkit.co/sfx/preview/mixkit-paper-slide-1530.mp3" type="audio/mpeg">
+        <source src="https://assets.mixkit.co/active_storage/sfx/2578/2578-preview.mp3" type="audio/mpeg">
     </audio>
 
     <div id="loading-screen">
@@ -110,8 +118,12 @@
             <i class="fas fa-dragon text-5xl text-[#d4af37] mb-4"></i>
             <h1 class="text-3xl font-[Cinzel] text-white tracking-widest mb-8">MYSTERIUM</h1>
             <button id="google-login" class="w-full bg-white text-black font-bold py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-gray-200 transition"><i class="fab fa-google text-red-600"></i> Login with Google</button>
-            <p id="auth-msg" class="text-red-500 text-xs mt-4"></p>
         </div>
+    </div>
+
+    <div id="wizard-container">
+        <div id="wizard-text" class="wizard-bubble">Keep going, knowledge awaits!</div>
+        <div class="wizard-avatar"><i class="fas fa-hat-wizard"></i></div>
     </div>
 
     <div id="book-container" class="hidden w-full h-full relative flex-col">
@@ -120,26 +132,25 @@
                 <span class="text-[#d4af37] font-[Cinzel] text-xs tracking-widest">MYSTERIUM</span>
             </div>
             <div class="flex gap-2 relative">
-                <button onclick="document.getElementById('policy-view').classList.remove('hidden')" class="w-8 h-8 rounded-full bg-indigo-900/40 border border-indigo-500/30 flex items-center justify-center text-indigo-300" title="Policies & Support">
-                    <i class="fas fa-scale-balanced text-xs"></i>
-                </button>
+                <button onclick="document.getElementById('policy-view').classList.remove('hidden')" class="w-8 h-8 rounded-full bg-indigo-900/40 border border-indigo-500/30 flex items-center justify-center text-indigo-300"><i class="fas fa-scale-balanced text-xs"></i></button>
                 
-                <button onclick="toggleSound()" class="w-8 h-8 rounded-full bg-black/40 border border-white/10 flex items-center justify-center text-green-400" title="Sound Effects">
-                    <i id="sound-icon" class="fas fa-volume-up text-xs"></i>
+                <button onclick="toggleWizard()" class="w-8 h-8 rounded-full bg-black/40 border border-white/10 flex items-center justify-center text-purple-400" title="Toggle Guide">
+                    <i id="wizard-icon" class="fas fa-hat-wizard text-xs"></i>
                 </button>
 
-                <button onclick="toggleTheme()" class="w-8 h-8 rounded-full bg-black/40 border border-white/10 flex items-center justify-center text-yellow-500"><i id="theme-icon" class="fas fa-sun"></i></button>
+                <button onclick="toggleSound()" class="w-8 h-8 rounded-full bg-black/40 border border-white/10 flex items-center justify-center text-green-400"><i id="sound-icon" class="fas fa-volume-up text-xs"></i></button>
+                <button onclick="toggleTheme()" class="w-8 h-8 rounded-full bg-black/40 border border-white/10 flex items-center justify-center text-yellow-500"><i class="fas fa-sun text-xs"></i></button>
                 <button onclick="toggleBgMenu()" class="w-8 h-8 rounded-full bg-black/40 border border-white/10 flex items-center justify-center text-white"><i class="fas fa-paint-brush text-xs"></i></button>
                 <button id="logout-btn" class="w-8 h-8 rounded-full bg-red-900/40 border border-red-500/30 flex items-center justify-center text-red-400"><i class="fas fa-sign-out-alt text-xs"></i></button>
                 
                 <div id="bg-menu" class="theme-menu">
-                    <button onclick="setBg('mystic')" class="theme-btn bg-gradient-to-br from-[#1f2833] to-[#0b0c10]" title="Mystic"></button>
-                    <button onclick="setBg('midnight')" class="theme-btn bg-gradient-to-br from-[#0f2027] to-[#2c5364]" title="Midnight"></button>
-                    <button onclick="setBg('forest')" class="theme-btn bg-gradient-to-br from-[#134e5e] to-[#71b280]" title="Forest"></button>
-                    <button onclick="setBg('coffee')" class="theme-btn bg-[#3e2723]" title="Coffee"></button>
-                    <button onclick="setBg('slate')" class="theme-btn bg-[#37474f]" title="Slate"></button>
-                    <button onclick="setBg('wood')" class="theme-btn bg-[#5c3a21]" title="Wood"></button>
-                    <button onclick="setBg('minimal')" class="theme-btn bg-black border-white" title="Minimal"></button>
+                    <button onclick="setBg('mystic')" class="theme-btn bg-gradient-to-br from-[#1f2833] to-[#0b0c10]"></button>
+                    <button onclick="setBg('midnight')" class="theme-btn bg-gradient-to-br from-[#0f2027] to-[#2c5364]"></button>
+                    <button onclick="setBg('forest')" class="theme-btn bg-gradient-to-br from-[#134e5e] to-[#71b280]"></button>
+                    <button onclick="setBg('coffee')" class="theme-btn bg-[#3e2723]"></button>
+                    <button onclick="setBg('slate')" class="theme-btn bg-[#37474f]"></button>
+                    <button onclick="setBg('wood')" class="theme-btn bg-[#5c3a21]"></button>
+                    <button onclick="setBg('minimal')" class="theme-btn bg-black border-white"></button>
                 </div>
             </div>
         </div>
@@ -153,7 +164,7 @@
                 <span class="text-xs font-bold uppercase text-gray-500">Margin Note</span>
                 <span id="note-status" class="text-[10px] text-green-600 hidden">Saved</span>
             </div>
-            <textarea id="note-area" placeholder="Write your thoughts for this page..."></textarea>
+            <textarea id="note-area" placeholder="Write your thoughts..."></textarea>
             <div class="flex justify-end mt-2">
                 <button onclick="closeNotePanel()" class="bg-gray-200 text-gray-700 px-3 py-1 rounded text-xs font-bold mr-2">Close</button>
                 <button onclick="saveCurrentNote()" class="bg-[#d4af37] text-black px-3 py-1 rounded text-xs font-bold">Save</button>
@@ -164,11 +175,7 @@
             <div class="w-full h-1 bg-gray-700 rounded-full mb-4 overflow-hidden"><div id="progress-fill" class="h-full bg-[#d4af37] w-0 transition-all duration-300"></div></div>
             <div class="flex gap-4 items-center justify-between">
                 <button onclick="prevPage()" class="flex-1 h-12 bg-white/10 rounded-xl text-white hover:bg-white/20"><i class="fas fa-chevron-left"></i> PREV</button>
-                
-                <button onclick="toggleNotePanel()" class="w-12 h-12 bg-[#d4af37]/20 border border-[#d4af37] rounded-xl text-[#d4af37] hover:bg-[#d4af37]/40">
-                    <i class="fas fa-pen-nib"></i>
-                </button>
-
+                <button onclick="toggleNotePanel()" class="w-12 h-12 bg-[#d4af37]/20 border border-[#d4af37] rounded-xl text-[#d4af37]"><i class="fas fa-pen-nib"></i></button>
                 <button onclick="nextPage()" class="flex-1 h-12 bg-white/10 rounded-xl text-white hover:bg-white/20">NEXT <i class="fas fa-chevron-right"></i></button>
             </div>
         </div>
@@ -177,10 +184,10 @@
     <div id="resume-modal" class="hidden fixed inset-0 z-[980] flex items-center justify-center bg-black/80 backdrop-blur-sm p-6">
         <div class="bg-[#1a1a1a] border border-[#d4af37] rounded-2xl p-6 text-center max-w-sm w-full">
             <h3 class="text-[#d4af37] font-[Cinzel] text-lg mb-2">Welcome Back</h3>
-            <p class="text-gray-400 text-sm mb-6">You left off at a specific page. Would you like to resume?</p>
+            <p class="text-gray-400 text-sm mb-6">Resume from where you left off?</p>
             <div class="flex gap-3">
-                <button onclick="closeResumeModal(false)" class="flex-1 py-3 rounded-lg border border-gray-600 text-gray-400 hover:bg-gray-800">Start Over</button>
-                <button onclick="closeResumeModal(true)" class="flex-1 py-3 rounded-lg bg-[#d4af37] text-black font-bold hover:bg-yellow-600">Resume</button>
+                <button onclick="closeResumeModal(false)" class="flex-1 py-3 rounded-lg border border-gray-600 text-gray-400">No</button>
+                <button onclick="closeResumeModal(true)" class="flex-1 py-3 rounded-lg bg-[#d4af37] text-black font-bold">Resume</button>
             </div>
         </div>
     </div>
@@ -189,30 +196,17 @@
         <div class="max-w-2xl mx-auto min-h-screen bg-[#0b0c10] shadow-2xl relative">
             <div class="sticky top-0 bg-[#0b0c10]/95 backdrop-blur-sm border-b border-gray-800 p-4 flex justify-between items-center z-10">
                 <h1 class="text-[#d4af37] font-[Cinzel] text-xl">LEGAL & SUPPORT</h1>
-                <button onclick="document.getElementById('policy-view').classList.add('hidden')" class="w-8 h-8 rounded-full bg-gray-800 text-white flex items-center justify-center hover:bg-gray-700"><i class="fas fa-times"></i></button>
+                <button onclick="document.getElementById('policy-view').classList.add('hidden')" class="w-8 h-8 rounded-full bg-gray-800 text-white flex items-center justify-center"><i class="fas fa-times"></i></button>
             </div>
             <div class="p-6 pb-32 policy-content">
-                <h2>Refund Policy</h2>
-                <p>Thank you for shopping at MYSTERIUM. We value your satisfaction and strive to provide you with the best online shopping experience possible.</p>
-                <p>If, for any reason, you are not completely satisfied with your purchase, we are here to help.</p>
-                <h3>Returns</h3>
-                <p>We accept returns within 1 day from the date of purchase.</p>
-                <h3>Refunds</h3>
-                <p>We will notify you of the status of your refund. If your return is approved, we will initiate a refund to your original method of payment.</p>
-                <h3>Non-Returnable Items</h3>
-                <ul><li>Gift cards</li><li>Downloadable software products</li><li>Personalized or custom-made items</li></ul>
-                <h2>Privacy Policy</h2>
-                <p>At MYSTERIUM, we are committed to protecting the privacy and security of our customers' personal information.</p>
-                <h3>Use of Information</h3>
-                <ul><li>To process and fulfill your orders.</li><li>To communicate with you regarding your purchases.</li><li>To improve our website.</li></ul>
-                <h2>Terms and Conditions</h2>
-                <p>Welcome to MYSTERIUM. These Terms and Conditions govern your use of our website.</p>
+                <h2>Refund Policy</h2><p>We accept returns within 1 day. Contact us immediately for defects.</p>
+                <h2>Privacy Policy</h2><p>We protect your data and only use it to fulfill orders.</p>
+                <h2>Terms</h2><p>By using this site, you agree to our terms.</p>
             </div>
             <div class="fixed bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black via-black/90 to-transparent flex flex-col items-center gap-3 max-w-2xl mx-auto left-0 right-0">
-                <div class="text-xs text-gray-500 uppercase tracking-widest mb-1">Contact Support</div>
                 <div class="flex gap-3 w-full max-w-sm">
-                    <a href="tel:+94787004239" class="flex-1 bg-green-700 hover:bg-green-600 text-white py-3 rounded-lg flex items-center justify-center gap-2 font-bold transition"><i class="fas fa-phone"></i> Call / WhatsApp</a>
-                    <a href="mailto:yasodhasandeepa@gmail.com" class="flex-1 bg-indigo-700 hover:bg-indigo-600 text-white py-3 rounded-lg flex items-center justify-center gap-2 font-bold transition"><i class="fas fa-envelope"></i> Email Us</a>
+                    <a href="tel:+94787004239" class="flex-1 bg-green-700 text-white py-3 rounded-lg flex items-center justify-center gap-2 font-bold"><i class="fas fa-phone"></i> Call</a>
+                    <a href="mailto:yasodhasandeepa@gmail.com" class="flex-1 bg-indigo-700 text-white py-3 rounded-lg flex items-center justify-center gap-2 font-bold"><i class="fas fa-envelope"></i> Email</a>
                 </div>
             </div>
         </div>
@@ -225,7 +219,7 @@
             <p class="text-gray-400 text-sm mb-4">Upload payment receipt (Rs. 100) <br>8025211913<br>commercial bank<br> Kurunegala <br> K.M.H.Y.S kariyawasam.</p>
             <input type="file" id="receipt-file" accept="image/*" class="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:bg-[#d4af37] file:text-black hover:file:bg-white mb-4">
             <button id="send-receipt" class="w-full bg-[#d4af37] text-black font-bold py-3 rounded-xl">SUBMIT</button>
-            <p id="receipt-loading">Compressing & Uploading...</p>
+            <p id="receipt-loading" class="hidden mt-2 text-[#d4af37] text-xs">Uploading...</p>
             <button onclick="document.getElementById('pay-modal').classList.add('hidden')" class="text-xs text-gray-500 mt-4 underline">Close</button>
         </div>
     </div>
@@ -256,22 +250,85 @@
         const BATCH_SIZE = 5; 
         let statusListener = null;
 
-        // Features State
+        // --- NEW FEATURES STATE ---
         let soundEnabled = true;
+        let wizardEnabled = true;
         let savedPageToResume = 0;
         let userNotes = {}; 
 
-        // Easter Egg Logic
+        // --- WIZARD LOGIC ---
+        const wizardQuotes = [
+            "Keep reading, the best is yet to come.",
+            "A reader lives a thousand lives.",
+            "Focus... the mystery deepens.",
+            "You are doing great!",
+            "Knowledge is power.",
+            "Don't stop now!",
+            "What secrets lie on the next page?",
+            "The Archive is watching..."
+        ];
+
+        window.toggleWizard = () => {
+            wizardEnabled = !wizardEnabled;
+            const icon = document.getElementById('wizard-icon');
+            const container = icon.parentElement;
+            if(wizardEnabled) {
+                container.classList.remove('text-gray-600'); container.classList.add('text-purple-400');
+                showWizardMessage("I am here to guide you!");
+            } else {
+                container.classList.remove('text-purple-400'); container.classList.add('text-gray-600');
+                document.getElementById('wizard-container').classList.remove('active');
+            }
+        };
+
+        function triggerRandomWizard() {
+            if(!wizardEnabled) return;
+            // 30% chance to show wizard on page flip
+            if(Math.random() < 0.3) {
+                const quote = wizardQuotes[Math.floor(Math.random() * wizardQuotes.length)];
+                showWizardMessage(quote);
+            }
+        }
+
+        function showWizardMessage(msg) {
+            const wiz = document.getElementById('wizard-container');
+            const txt = document.getElementById('wizard-text');
+            txt.innerText = msg;
+            wiz.classList.add('active');
+            // Auto hide after 4 seconds
+            setTimeout(() => { wiz.classList.remove('active'); }, 4000);
+        }
+
+        // --- SOUND LOGIC (FIXED) ---
+        window.toggleSound = () => {
+            soundEnabled = !soundEnabled;
+            const icon = document.getElementById('sound-icon');
+            icon.className = soundEnabled ? "fas fa-volume-up text-xs" : "fas fa-volume-mute text-xs";
+            icon.parentElement.className = soundEnabled ? 
+                "w-8 h-8 rounded-full bg-black/40 border border-white/10 flex items-center justify-center text-green-400" :
+                "w-8 h-8 rounded-full bg-black/40 border border-white/10 flex items-center justify-center text-red-400";
+        };
+        
+        function playFlipSound() {
+            if(soundEnabled) {
+                const audio = document.getElementById('flip-sound');
+                // We reset time to allow rapid replay
+                audio.currentTime = 0;
+                audio.play().catch(e => {
+                    // This catches the 'User didn't interact' error silently
+                    console.log("Audio waiting for user interaction.");
+                });
+            }
+        }
+
+        // Easter Egg
         let logoClicks = 0;
         document.getElementById('logo-container').addEventListener('click', () => {
             logoClicks++;
-            if(logoClicks === 5) {
-                alert("🔮 You have found a secret! The archives whisper your name...");
-                document.body.style.filter = "sepia(100%)"; // Easter egg effect
-                logoClicks = 0;
-            }
+            if(logoClicks === 5) { alert("🔮 Secret Found!"); document.body.style.filter = "sepia(100%)"; logoClicks = 0; }
         });
 
+        // --- FIREBASE AUTH & USER ---
         onAuthStateChanged(auth, async (u) => {
             if(u){
                 user = u;
@@ -285,36 +342,6 @@
             }
         });
 
-        // --- BACKGROUND LOGIC ---
-        const bgClasses = ['bg-mystic', 'bg-wood', 'bg-minimal', 'bg-midnight', 'bg-forest', 'bg-coffee', 'bg-slate'];
-        window.setBg = (style) => {
-            document.body.classList.remove(...bgClasses);
-            document.body.classList.add('bg-' + style);
-            localStorage.setItem('prefBg', style);
-            document.getElementById('bg-menu').classList.remove('show');
-        };
-        const savedBg = localStorage.getItem('prefBg') || 'midnight';
-        window.setBg(savedBg);
-        window.toggleBgMenu = () => { document.getElementById('bg-menu').classList.toggle('show'); }
-
-        // --- SOUND LOGIC ---
-        window.toggleSound = () => {
-            soundEnabled = !soundEnabled;
-            const icon = document.getElementById('sound-icon');
-            icon.className = soundEnabled ? "fas fa-volume-up text-xs" : "fas fa-volume-mute text-xs";
-            document.querySelector('#sound-icon').parentElement.className = soundEnabled ? 
-                "w-8 h-8 rounded-full bg-black/40 border border-white/10 flex items-center justify-center text-green-400" :
-                "w-8 h-8 rounded-full bg-black/40 border border-white/10 flex items-center justify-center text-red-400";
-        };
-        function playFlipSound() {
-            if(soundEnabled) {
-                const audio = document.getElementById('flip-sound');
-                audio.currentTime = 0;
-                audio.play().catch(e => console.log("Audio play failed (interaction needed)"));
-            }
-        }
-
-        // --- CORE USER LOGIC ---
         function setupUserListener(uid) {
             statusListener = onSnapshot(doc(db, "users", uid), (docSnap) => {
                 if (docSnap.exists()) {
@@ -340,13 +367,25 @@
             });
         }
 
+        // --- BACKGROUND ---
+        const bgClasses = ['bg-mystic', 'bg-wood', 'bg-minimal', 'bg-midnight', 'bg-forest', 'bg-coffee', 'bg-slate'];
+        window.setBg = (style) => {
+            document.body.classList.remove(...bgClasses);
+            document.body.classList.add('bg-' + style);
+            localStorage.setItem('prefBg', style);
+            document.getElementById('bg-menu').classList.remove('show');
+        };
+        const savedBg = localStorage.getItem('prefBg') || 'midnight';
+        window.setBg(savedBg);
+        window.toggleBgMenu = () => { document.getElementById('bg-menu').classList.toggle('show'); }
+
+        // --- LOADING ---
         async function initBookLoad() {
             updateLoading(30, "Fetching Pages...");
-            // Check Resume
             if(isUnlocked && savedPageToResume > 1) {
                 document.getElementById('resume-modal').classList.remove('hidden');
                 document.getElementById('loading-screen').classList.add('opacity-0', 'pointer-events-none');
-                return; // Wait for user choice
+                return;
             }
             await loadPagesFromScratch();
         }
@@ -359,21 +398,11 @@
         window.closeResumeModal = async (shouldResume) => {
             document.getElementById('resume-modal').classList.add('hidden');
             if(shouldResume) {
-                // Logic to jump to page would be complex with flipping, 
-                // so we just load initial batch but set state to simulate.
-                // For simplicity in this version, we will load normally but flip to count.
-                // Real "Jump" requires smarter query. We'll stick to loading standard batch for now.
-                // But we can at least fast-forward visually or load appropriate batch.
-                // Simplified: Just load standard 0 and let user flip. 
-                // Advanced: Query pages >= savedPageToResume.
                 await loadInitialPages(savedPageToResume > 2 ? savedPageToResume - 1 : 0);
             } else {
                 await loadInitialPages(0);
             }
             finishLoading();
-            document.getElementById('book-container').classList.remove('hidden');
-            document.getElementById('book-container').style.display='flex';
-            resizeContent();
         }
 
         function finishLoading() {
@@ -414,9 +443,9 @@
                         ctx.drawImage(img, 0, 0, w, h);
                         resolve(canvas.toDataURL('image/jpeg', 0.7));
                     };
-                    img.onerror = (err) => reject("Image load error");
+                    img.onerror = (err) => reject("Image error");
                 };
-                reader.onerror = (err) => reject("File read error");
+                reader.onerror = (err) => reject("File error");
             });
         };
 
@@ -424,10 +453,9 @@
             const btn = document.getElementById('send-receipt');
             const fileInput = document.getElementById('receipt-file');
             const f = fileInput.files[0];
-            const loadingText = document.getElementById('receipt-loading');
             if(!user) { alert("Please Login First"); return; }
             if(!f) { alert("Please Select Image"); return; }
-            btn.classList.add('hidden'); loadingText.style.display = 'block';
+            btn.classList.add('hidden'); document.getElementById('receipt-loading').style.display = 'block';
             try {
                 const compressedBase64 = await processImage(f);
                 await setDoc(doc(db,"requests",user.uid), {
@@ -435,17 +463,16 @@
                 });
                 await setDoc(doc(db,"users",user.uid), { status:'pending' }, { merge:true });
                 alert("Receipt Sent!"); document.getElementById('pay-modal').classList.add('hidden');
-            } catch(e) { alert("Upload Failed: " + e.message); } 
-            finally { btn.classList.remove('hidden'); loadingText.style.display = 'none'; fileInput.value = ''; }
+            } catch(e) { alert("Upload Failed"); } 
+            finally { btn.classList.remove('hidden'); document.getElementById('receipt-loading').style.display = 'none'; fileInput.value = ''; }
         });
 
-        // --- BOOK LOADING LOGIC ---
+        // --- PAGES LOGIC ---
         async function loadInitialPages(startNum = 0) {
             const wrap = document.getElementById('pages-wrapper');
             wrap.innerHTML = '';
             lastLoadedPageDoc = null;
             if (isUnlocked) {
-                // If resuming, we try to fetch pages around the resume point
                 const q = query(collection(db, "pages"), orderBy("pageNumber", "asc"), where("pageNumber", ">=", startNum), limit(BATCH_SIZE));
                 const snap = await getDocs(q);
                 if (!snap.empty) {
@@ -520,59 +547,46 @@
             resizeContent();
         }
 
-        // --- FLIP LOGIC & BOOKMARK SAVE ---
-        async function saveReadingProgress(pageNum) {
-            if(user && isUnlocked) {
-                // Save progress to DB
-                await updateDoc(doc(db, "users", user.uid), { lastPage: parseInt(pageNum) }).catch(console.error);
-            }
-        }
-
+        // --- FLIP ACTION ---
         function flipEl(el, instant=false) {
-            playFlipSound(); // Play Sound
-            el.classList.add('flipped');
-            // Auto Save Bookmark
-            const currentP = parseInt(el.dataset.pn);
-            saveReadingProgress(currentP + 1); // Assuming we are reading next page
+            playFlipSound(); // Sound triggers here
+            triggerRandomWizard(); // Wizard check triggers here
             
-            // Close Note Panel if open
+            el.classList.add('flipped');
+            const currentP = parseInt(el.dataset.pn);
+            if(user && isUnlocked) updateDoc(doc(db, "users", user.uid), { lastPage: currentP + 1 }).catch(()=>{});
             document.getElementById('note-panel').classList.remove('show');
 
             if(instant) { el.style.transition='none'; el.style.zIndex=1; setTimeout(()=>el.style.transition='',50); }
             else { setTimeout(() => { el.style.zIndex=1; }, 600); }
             loadMorePages();
         }
+
         function unflipEl(el, instant=false) {
-            playFlipSound(); // Play Sound
+            playFlipSound();
             el.classList.remove('flipped');
             const currentP = parseInt(el.dataset.pn);
-            saveReadingProgress(currentP); // Back to previous
-
-            // Close Note Panel if open
+            if(user && isUnlocked) updateDoc(doc(db, "users", user.uid), { lastPage: currentP }).catch(()=>{});
             document.getElementById('note-panel').classList.remove('show');
 
             const z = el.dataset.pn == 1000 ? 0 : (1000 - parseInt(el.dataset.pn));
             if(instant) { el.style.transition='none'; el.style.zIndex=z; setTimeout(()=>el.style.transition='',50); }
             else { el.style.zIndex=z + 1000; setTimeout(()=>{el.style.zIndex=z;}, 1200); }
         }
+
         window.nextPage = () => { if(!isUnlocked) return document.getElementById('pay-modal').classList.remove('hidden'); const unflipped = document.querySelectorAll('.page:not(.flipped):not([data-pn="undefined"])'); if(unflipped.length > 0) flipEl(unflipped[0]); };
         window.prevPage = () => { const flipped = document.querySelectorAll('.page.flipped'); if(flipped.length > 0) unflipEl(flipped[flipped.length - 1]); };
 
-        // --- NOTES LOGIC ---
+        // --- NOTES ---
         let currentNotePage = 0;
         window.toggleNotePanel = () => {
             const panel = document.getElementById('note-panel');
             if(panel.classList.contains('show')) {
                 panel.classList.remove('show');
             } else {
-                // Determine current visible page
-                // Simple logic: The highest flipped page number + 1, or 0.
                 const flipped = document.querySelectorAll('.page.flipped');
                 let currentPage = 0;
                 if(flipped.length > 0) currentPage = parseInt(flipped[flipped.length-1].dataset.pn);
-                // Actually if we flipped page 0, we see page 1. So logic depends on mapping.
-                // Let's attach note to the page visible on the RIGHT side.
-                // If 0 flipped -> seeing 1 on right. 
                 currentNotePage = currentPage + 1; 
 
                 const savedNote = userNotes[currentNotePage] || "";
@@ -586,16 +600,12 @@
             if(!user) return;
             const text = document.getElementById('note-area').value;
             userNotes[currentNotePage] = text;
-            
-            // Save entire notes object to firebase
             await updateDoc(doc(db, "users", user.uid), { notes: userNotes });
-            
-            const status = document.getElementById('note-status');
-            status.classList.remove('hidden');
-            status.innerText = "Saved!";
+            document.getElementById('note-status').classList.remove('hidden');
             setTimeout(() => { document.getElementById('note-panel').classList.remove('show'); }, 800);
         };
 
+        // --- UTILS ---
         function resizeContent() {
             const bookEl = document.getElementById('the-book'); if(!bookEl) return;
             const layers = document.querySelectorAll('.content-layer');
