@@ -9,8 +9,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
     
     <style>
-        /* --- VARIABLES & BASE --- */
-        :root { --bg-body: #0b0c10; --gold: #d4af37; }
+        /* --- VARIABLES --- */
+        :root { --bg-body: #0b0c10; --gold: #d4af37; --magic-purple: #a855f7; }
+        
         body {
             background-color: var(--bg-body); color: #e0e0e0;
             font-family: 'Inter', sans-serif; height: 100vh; overflow: hidden;
@@ -18,17 +19,15 @@
             background-size: cover; background-position: center;
         }
 
-        /* --- THEMES (MOODS) --- */
+        /* --- THEMES --- */
         body.bg-rain { background-image: url('https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?q=80&w=1000&auto=format&fit=crop'); }
         body.bg-library { background-image: url('https://images.unsplash.com/photo-1507842217343-583bb7270b66?q=80&w=1000&auto=format&fit=crop'); }
         body.bg-forest { background-image: url('https://images.unsplash.com/photo-1448375240586-dfd8f3793300?q=80&w=1000&auto=format&fit=crop'); }
         body.bg-mystic { background-image: radial-gradient(circle at 50% 50%, #1f2833 0%, #0b0c10 100%); }
         body.bg-midnight { background-image: linear-gradient(to bottom, #0f2027, #203a43, #2c5364); }
-        
-        /* Overlay to darken images for readability */
         body::before { content: ''; position: absolute; inset: 0; background: rgba(0,0,0,0.6); pointer-events: none; z-index: -1; }
 
-        /* --- BOOK STYLES --- */
+        /* --- BOOK --- */
         .book-scene { perspective: 1500px; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; padding-bottom: 60px; }
         .book { transform-style: preserve-3d; position: relative; transition: transform 0.5s; aspect-ratio: 2 / 3; width: auto; height: 75vh; max-width: 95vw; }
         .page { position: absolute; top:0; left:0; width: 100%; height: 100%; transform-origin: left; transition: transform 1.2s cubic-bezier(0.645, 0.045, 0.355, 1); transform-style: preserve-3d; border-radius: 2px 8px 8px 2px; cursor: pointer; background-color: white; box-shadow: inset 5px 0 10px rgba(0,0,0,0.1); }
@@ -36,55 +35,88 @@
         .back { transform: rotateY(180deg); background-color: #f0f0f0; }
         .flipped { transform: rotateY(-180deg); }
         
-        /* Dark Mode Pages */
+        /* Dark Mode */
         body.dark-mode .front, body.dark-mode .back { background-color: #1a1a1a !important; color: #ccc; }
-        
         .content-layer { position: absolute; top: 50%; left: 50%; width: 360px; height: 540px; transform: translate(-50%, -50%); pointer-events: none; background: white; }
         body.dark-mode .content-layer { background: #1a1a1a; }
         .content-layer * { pointer-events: auto; }
 
-        /* --- WIZARD CHARACTER (IMPROVED) --- */
+        /* --- MAGIC FEATURES --- */
+        /* 1. Page Note Marker */
+        .note-marker {
+            position: absolute; top: 10px; right: 10px; z-index: 50;
+            color: var(--gold); font-size: 24px; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.3));
+            animation: float-mini 3s infinite ease-in-out; transition: transform 0.2s;
+        }
+        .note-marker:hover { transform: scale(1.2); color: #facc15; }
+
+        /* 2. Magic Egg */
+        .magic-egg {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 48px; color: var(--magic-purple); z-index: 100;
+            filter: drop-shadow(0 0 15px var(--magic-purple));
+            animation: pulse-glow 2s infinite; cursor: pointer;
+        }
+        .magic-egg:hover { transform: translate(-50%, -50%) scale(1.1); }
+
+        /* 3. Wizard */
         #wizard-container {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
             z-index: 200; pointer-events: none; display: flex; flex-col; align-items: center;
             transition: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55); opacity: 0;
         }
         #wizard-container.active { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-        
         .wizard-avatar-box {
-            width: 80px; height: 80px; background: #1a1a1a; border: 3px solid #d4af37;
+            width: 80px; height: 80px; background: #1a1a1a; border: 3px solid var(--gold);
             border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 0 25px rgba(212, 175, 55, 0.6); overflow: hidden; position: relative;
+            box-shadow: 0 0 25px rgba(212, 175, 55, 0.6);
         }
-        .wizard-face { font-size: 45px; color: #d4af37; }
-        
+        .wizard-face { font-size: 45px; color: var(--gold); }
         .wizard-bubble {
             background: rgba(255, 255, 255, 0.95); color: #000; padding: 12px 20px; 
-            border-radius: 20px; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 0.9rem;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.4); margin-top: 15px; text-align: center; min-width: 200px;
-            border: 2px solid #d4af37; transform: translateY(10px);
+            border-radius: 20px; font-weight: 700; margin-top: 15px; border: 2px solid var(--gold);
         }
 
-        /* --- MENUS --- */
+        /* 4. Magic Flash Effect */
+        #magic-flash {
+            position: fixed; inset: 0; background: white; z-index: 9999; 
+            pointer-events: none; opacity: 0; transition: opacity 0.8s;
+        }
+
+        /* Animations */
+        @keyframes float-mini { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+        @keyframes pulse-glow { 0%, 100% { filter: drop-shadow(0 0 10px var(--magic-purple)); } 50% { filter: drop-shadow(0 0 25px var(--magic-purple)); } }
+
+        /* UI */
         .glass-panel { background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(8px); border-top: 1px solid #333; }
-        .theme-menu { 
-            position: absolute; top: 60px; right: 10px; background: #111; border: 1px solid #444; 
-            padding: 10px; border-radius: 12px; display: none; grid-template-columns: repeat(3, 1fr); gap: 8px; 
-        }
+        .theme-menu { position: absolute; top: 60px; right: 10px; background: #111; border: 1px solid #444; padding: 10px; border-radius: 12px; display: none; grid-template-columns: repeat(3, 1fr); gap: 8px; }
         .theme-menu.show { display: grid; }
-        .theme-btn { width: 40px; height: 40px; border-radius: 8px; border: 2px solid #555; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; }
-        .theme-btn:hover { border-color: #d4af37; }
-
-        /* LOADING */
-        #loading-screen { position: fixed; inset: 0; z-index: 9999; background: #000; color: #d4af37; display: flex; flex-col; align-items: center; justify-content: center; transition: opacity 0.5s; }
+        .theme-btn { width: 40px; height: 40px; border-radius: 8px; border: 2px solid #555; display: flex; align-items: center; justify-content: center; }
+        
+        #loading-screen { position: fixed; inset: 0; z-index: 9999; background: #000; color: var(--gold); display: flex; flex-col; align-items: center; justify-content: center; transition: opacity 0.5s; }
         .progress-bar { width: 200px; height: 3px; background: #333; margin-top: 20px; }
-        .progress-fill { height: 100%; background: #d4af37; width: 0%; transition: width 0.3s; }
+        .progress-fill { height: 100%; background: var(--gold); width: 0%; transition: width 0.3s; }
+        
+        /* Note Panel */
+        #note-panel {
+            position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%) scale(0.9);
+            width: 90%; max-width: 400px; background: #fff; color: #333;
+            border-radius: 12px; padding: 15px; z-index: 300; box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            display: none; opacity: 0; transition: all 0.3s;
+        }
+        #note-panel.show { display: block; opacity: 1; transform: translateX(-50%) scale(1); }
     </style>
 </head>
 <body class="bg-mystic">
 
     <audio id="sfx-flip" preload="auto" src="https://assets.mixkit.co/active_storage/sfx/2578/2578-preview.mp3"></audio>
-    <audio id="ambience-rain" loop preload="auto" src="https://assets.mixkit.co/active_storage/sfx/1253/1253-preview.mp3"></audio> <audio id="ambience-forest" loop preload="auto" src="https://assets.mixkit.co/active_storage/sfx/177/177-preview.mp3"></audio> <audio id="ambience-library" loop preload="auto" src="https://assets.mixkit.co/active_storage/sfx/876/876-preview.mp3"></audio> <div id="loading-screen">
+    <audio id="sfx-magic" preload="auto" src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3"></audio> <audio id="ambience-rain" loop preload="auto" src="https://assets.mixkit.co/active_storage/sfx/1253/1253-preview.mp3"></audio>
+    <audio id="ambience-forest" loop preload="auto" src="https://assets.mixkit.co/active_storage/sfx/177/177-preview.mp3"></audio>
+    <audio id="ambience-library" loop preload="auto" src="https://assets.mixkit.co/active_storage/sfx/876/876-preview.mp3"></audio>
+
+    <div id="magic-flash"></div>
+
+    <div id="loading-screen">
         <i class="fas fa-book-open fa-2x mb-4 animate-bounce"></i>
         <h2 class="font-[Cinzel] text-xl tracking-widest">ARCHIVE</h2>
         <div class="progress-bar"><div id="loading-bar" class="progress-fill"></div></div>
@@ -100,9 +132,8 @@
     </div>
 
     <div id="wizard-container">
-        <div class="wizard-avatar-box">
-            <i class="fas fa-user-astronaut wizard-face"></i> </div>
-        <div id="wizard-text" class="wizard-bubble">Welcome, Seeker!</div>
+        <div class="wizard-avatar-box"><i class="fas fa-user-astronaut wizard-face"></i></div>
+        <div id="wizard-text" class="wizard-bubble">Welcome!</div>
     </div>
 
     <div id="book-container" class="hidden w-full h-full relative flex-col">
@@ -111,21 +142,21 @@
                 <span class="text-[#d4af37] font-[Cinzel] text-xs">MYSTERIUM</span>
             </div>
             <div class="flex gap-2 relative">
-                <button onclick="toggleWizardMode()" id="wiz-btn" class="w-9 h-9 rounded-full bg-purple-900/50 border border-purple-500 text-purple-300 flex items-center justify-center"><i class="fas fa-hat-wizard"></i></button>
-                
+                <button onclick="toggleNotesVisibility()" id="note-vis-btn" class="w-9 h-9 rounded-full bg-blue-900/50 border border-blue-500 text-blue-300 flex items-center justify-center" title="Toggle Notes on Page"><i class="fas fa-eye"></i></button>
+                <button onclick="toggleMagicEggs()" id="egg-btn" class="w-9 h-9 rounded-full bg-purple-900/50 border border-purple-500 text-purple-300 flex items-center justify-center" title="Toggle Magic Eggs"><i class="fas fa-dragon"></i></button>
+
+                <button onclick="toggleWizardMode()" id="wiz-btn" class="w-9 h-9 rounded-full bg-gray-800 border border-gray-600 text-gray-400 flex items-center justify-center"><i class="fas fa-hat-wizard"></i></button>
                 <button onclick="toggleGlobalSound()" id="sound-btn" class="w-9 h-9 rounded-full bg-green-900/50 border border-green-500 text-green-300 flex items-center justify-center"><i class="fas fa-volume-up"></i></button>
-                
                 <button onclick="document.getElementById('bg-menu').classList.toggle('show')" class="w-9 h-9 rounded-full bg-gray-800 border border-gray-600 text-white flex items-center justify-center"><i class="fas fa-palette"></i></button>
-                
                 <button id="logout-btn" class="w-9 h-9 rounded-full bg-red-900/50 border border-red-500 text-red-300 flex items-center justify-center"><i class="fas fa-sign-out-alt"></i></button>
 
                 <div id="bg-menu" class="theme-menu">
-                    <button onclick="setTheme('rain')" class="theme-btn bg-blue-900 text-blue-200" title="Rainy Mood"><i class="fas fa-cloud-rain"></i></button>
-                    <button onclick="setTheme('library')" class="theme-btn bg-yellow-900 text-yellow-200" title="Library"><i class="fas fa-landmark"></i></button>
-                    <button onclick="setTheme('forest')" class="theme-btn bg-green-900 text-green-200" title="Forest"><i class="fas fa-tree"></i></button>
-                    <button onclick="setTheme('mystic')" class="theme-btn bg-indigo-900 text-indigo-200" title="Mystic"><i class="fas fa-moon"></i></button>
-                    <button onclick="setTheme('midnight')" class="theme-btn bg-slate-900 text-slate-200" title="Dark"><i class="fas fa-ghost"></i></button>
-                    <button onclick="toggleDarkMode()" class="theme-btn bg-black text-white" title="Page Dark Mode"><i class="fas fa-adjust"></i></button>
+                    <button onclick="setTheme('rain')" class="theme-btn bg-blue-900 text-blue-200"><i class="fas fa-cloud-rain"></i></button>
+                    <button onclick="setTheme('library')" class="theme-btn bg-yellow-900 text-yellow-200"><i class="fas fa-landmark"></i></button>
+                    <button onclick="setTheme('forest')" class="theme-btn bg-green-900 text-green-200"><i class="fas fa-tree"></i></button>
+                    <button onclick="setTheme('mystic')" class="theme-btn bg-indigo-900 text-indigo-200"><i class="fas fa-moon"></i></button>
+                    <button onclick="setTheme('midnight')" class="theme-btn bg-slate-900 text-slate-200"><i class="fas fa-ghost"></i></button>
+                    <button onclick="toggleDarkMode()" class="theme-btn bg-black text-white"><i class="fas fa-adjust"></i></button>
                 </div>
             </div>
         </div>
@@ -134,27 +165,32 @@
             <div id="the-book" class="book"><div id="pages-wrapper"></div></div>
         </div>
 
-        <div id="controls-bar" class="absolute bottom-0 w-full glass-panel p-4 z-50 transition-transform duration-300">
+        <div id="note-panel">
+            <div class="flex justify-between items-center mb-2">
+                <span class="text-xs font-bold uppercase text-gray-500">Margin Note</span>
+                <span id="note-status" class="text-[10px] text-green-600 hidden">Saved</span>
+            </div>
+            <textarea id="note-area" class="w-full h-24 border p-2 text-sm rounded" placeholder="Write thoughts..."></textarea>
+            <div class="flex justify-end mt-2">
+                <button onclick="document.getElementById('note-panel').classList.remove('show')" class="mr-2 text-xs">Close</button>
+                <button onclick="saveCurrentNote()" class="bg-yellow-600 text-white px-3 py-1 rounded text-xs font-bold">Save</button>
+            </div>
+        </div>
+
+        <div id="controls-bar" class="absolute bottom-0 w-full glass-panel p-4 z-50 transition-transform duration-300 translate-y-0">
             <div class="flex gap-4">
                 <button onclick="prevPage()" class="flex-1 h-12 bg-white/10 rounded-lg text-white font-bold">PREV</button>
+                <button onclick="toggleNoteEditor()" class="w-12 h-12 bg-yellow-600/20 text-yellow-500 rounded-lg border border-yellow-600"><i class="fas fa-pen"></i></button>
                 <button onclick="nextPage()" class="flex-1 h-12 bg-white/10 rounded-lg text-white font-bold">NEXT</button>
             </div>
         </div>
     </div>
 
-    <div id="policy-view" class="hidden fixed inset-0 z-[950] bg-black/95 p-6 text-white overflow-y-auto">
-        <h1 class="text-gold font-[Cinzel] text-2xl mb-4">Policies</h1>
-        <p class="text-sm text-gray-400">Standard Refund & Privacy Policies Apply.</p>
-        <button onclick="document.getElementById('policy-view').classList.add('hidden')" class="mt-4 px-4 py-2 bg-gray-700 rounded">Close</button>
-    </div>
-    
     <div id="pay-modal" class="hidden fixed inset-0 z-[999] bg-black/90 flex items-center justify-center p-4">
-        <div class="bg-gray-900 border border-gold p-6 rounded-xl text-center">
-            <i class="fas fa-lock text-3xl text-gold mb-4"></i>
+        <div class="bg-gray-900 border border-yellow-600 p-6 rounded-xl text-center">
             <h3 class="text-white mb-2">LOCKED</h3>
-            <p class="text-gray-400 text-xs mb-4">Upload Rs.100 Receipt</p>
             <input type="file" id="receipt-file" class="text-white text-xs mb-4">
-            <button id="send-receipt" class="w-full bg-gold text-black font-bold py-2 rounded">Submit</button>
+            <button id="send-receipt" class="w-full bg-yellow-600 text-black font-bold py-2 rounded">Submit</button>
             <button onclick="document.getElementById('pay-modal').classList.add('hidden')" class="text-xs text-gray-500 mt-2 block w-full">Close</button>
         </div>
     </div>
@@ -173,7 +209,6 @@
             appId: "1:747560284834:web:30f6080e8d4fbf9025ddfb",
             measurementId: "G-FFFS1HS4GY"
         };
-
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
@@ -186,50 +221,76 @@
 
         // --- FEATURES STATE ---
         let soundOn = true;
-        let wizardOn = true;
+        let wizardOn = false; // Default off to not annoy
+        let notesVisible = true;
+        let magicEggsOn = true;
+        let userNotes = {};
         let currentTheme = 'mystic';
-        let currentAmbience = null; // Stores the current Audio object
+        let currentAmbience = null;
 
-        // --- AUDIO MANAGER ---
+        // --- TOGGLES ---
+        window.toggleNotesVisibility = () => {
+            notesVisible = !notesVisible;
+            document.getElementById('note-vis-btn').classList.toggle('opacity-50');
+            // Re-render current batch to show/hide notes is complex, 
+            // simpler is to toggle CSS class or reload. Let's just reload visible.
+            loadInitialPages(); // Quick refresh
+        };
+
+        window.toggleMagicEggs = () => {
+            magicEggsOn = !magicEggsOn;
+            const btn = document.getElementById('egg-btn');
+            if(magicEggsOn) {
+                btn.classList.replace('bg-gray-800', 'bg-purple-900/50');
+                btn.classList.replace('text-gray-400', 'text-purple-300');
+            } else {
+                btn.classList.replace('bg-purple-900/50', 'bg-gray-800');
+                btn.classList.replace('text-purple-300', 'text-gray-400');
+            }
+        };
+
+        window.toggleWizardMode = () => {
+            wizardOn = !wizardOn;
+            const btn = document.getElementById('wiz-btn');
+            if(wizardOn) {
+                btn.classList.replace('bg-gray-800', 'bg-yellow-900/50');
+                btn.classList.replace('text-gray-400', 'text-yellow-300');
+                showWizard("I am here!");
+            } else {
+                btn.classList.replace('bg-yellow-900/50', 'bg-gray-800');
+                btn.classList.replace('text-yellow-300', 'text-gray-400');
+                document.getElementById('wizard-container').classList.remove('active');
+            }
+        };
+
+        // --- AUDIO ---
         const audioTracks = {
             'rain': document.getElementById('ambience-rain'),
             'forest': document.getElementById('ambience-forest'),
             'library': document.getElementById('ambience-library')
         };
         const flipSfx = document.getElementById('sfx-flip');
+        const magicSfx = document.getElementById('sfx-magic');
 
         window.setTheme = (themeName) => {
-            // Stop previous ambience
-            if(currentAmbience) {
-                currentAmbience.pause();
-                currentAmbience.currentTime = 0;
-            }
-
-            // Change Visuals
+            if(currentAmbience) { currentAmbience.pause(); currentAmbience.currentTime=0; }
             document.body.className = `bg-${themeName}`;
             currentTheme = themeName;
-            
-            // Play New Ambience (if sound is on)
             if(soundOn && audioTracks[themeName]) {
                 currentAmbience = audioTracks[themeName];
                 currentAmbience.volume = 0.5;
-                currentAmbience.play().catch(e => console.log("Audio waiting interaction"));
-            } else {
-                currentAmbience = null;
+                currentAmbience.play().catch(()=>{});
             }
-            
             document.getElementById('bg-menu').classList.remove('show');
         };
 
         window.toggleGlobalSound = () => {
             soundOn = !soundOn;
             const btn = document.getElementById('sound-btn');
-            
             if(soundOn) {
                 btn.innerHTML = '<i class="fas fa-volume-up"></i>';
                 btn.classList.replace('bg-red-900/50', 'bg-green-900/50');
                 btn.classList.replace('text-red-300', 'text-green-300');
-                // Resume ambience if current theme has one
                 if(audioTracks[currentTheme]) {
                     currentAmbience = audioTracks[currentTheme];
                     currentAmbience.play().catch(()=>{});
@@ -238,65 +299,28 @@
                 btn.innerHTML = '<i class="fas fa-volume-mute"></i>';
                 btn.classList.replace('bg-green-900/50', 'bg-red-900/50');
                 btn.classList.replace('text-green-300', 'text-red-300');
-                // Stop ambience
                 if(currentAmbience) currentAmbience.pause();
             }
         };
 
-        function playPageFlip() {
-            if(soundOn) {
-                flipSfx.currentTime = 0;
-                flipSfx.volume = 1.0;
-                flipSfx.play().catch(()=>{});
-            }
-        }
-
-        // --- WIZARD MANAGER ---
-        const wizardQuotes = [
-            "Excellent pace!", "A secret lies ahead...", "Read deeper.", 
-            "The story breathes.", "You are the chosen one.", "One more page?"
-        ];
-
-        window.toggleWizardMode = () => {
-            wizardOn = !wizardOn;
-            const btn = document.getElementById('wiz-btn');
-            if(wizardOn) {
-                btn.classList.replace('bg-gray-800', 'bg-purple-900/50');
-                showWizard("I am returned!");
-            } else {
-                btn.classList.replace('bg-purple-900/50', 'bg-gray-800');
-                document.getElementById('wizard-container').classList.remove('active');
-            }
-        };
-
-        function showWizard(text) {
-            if(!wizardOn) return;
-            const wiz = document.getElementById('wizard-container');
-            document.getElementById('wizard-text').innerText = text;
-            wiz.classList.add('active');
-            setTimeout(() => wiz.classList.remove('active'), 3500);
-        }
-
-        // --- AUTH & LOAD ---
+        // --- CORE ---
         onAuthStateChanged(auth, async (u) => {
             if(u){
                 user = u;
                 document.getElementById('auth-section').classList.add('hidden');
-                setupUserListener(u.uid);
+                onSnapshot(doc(db, "users", u.uid), (docSnap) => {
+                    if (docSnap.exists()) {
+                        const d = docSnap.data();
+                        isUnlocked = (d.status === 'approved');
+                        userNotes = d.notes || {};
+                    }
+                    initBookLoad();
+                });
             } else {
                 document.getElementById('loading-screen').classList.add('opacity-0', 'pointer-events-none');
                 document.getElementById('auth-section').classList.remove('hidden');
             }
         });
-
-        function setupUserListener(uid) {
-            onSnapshot(doc(db, "users", uid), (docSnap) => {
-                if (docSnap.exists() && docSnap.data().status === 'approved') {
-                    isUnlocked = true;
-                } else isUnlocked = false;
-                initBookLoad();
-            });
-        }
 
         async function initBookLoad() {
             document.getElementById('loading-bar').style.width = '50%';
@@ -307,16 +331,14 @@
                 document.getElementById('book-container').classList.remove('hidden');
                 document.getElementById('book-container').style.display='flex';
                 resizeContent();
-                // Try playing ambience on start (might get blocked until click)
                 setTheme('mystic'); 
             }, 800);
         }
 
-        // --- BOOK LOGIC ---
+        // --- BOOK RENDERING ---
         async function loadInitialPages() {
             const wrap = document.getElementById('pages-wrapper');
             wrap.innerHTML = '';
-            // Load dummy or real pages based on logic (Using simplified logic for brevity)
             if(isUnlocked) {
                  const q = query(collection(db, "pages"), orderBy("pageNumber", "asc"), limit(BATCH_SIZE));
                  const snap = await getDocs(q);
@@ -325,7 +347,6 @@
                      renderBatch(snap.docs.map(d=>d.data()));
                  }
             } else {
-                // Show Cover + Dummies
                 const snap = await getDocs(query(collection(db, "pages"), where("pageNumber", "==", 0)));
                 if(!snap.empty) renderBatch([snap.docs[0].data()]);
                 renderBatch([{pageNumber:1, isDummy:true}, {pageNumber:2, isDummy:true}]);
@@ -340,7 +361,7 @@
             if (!snap.empty) {
                 lastLoadedPageDoc = snap.docs[snap.docs.length - 1];
                 renderBatch(snap.docs.map(d => d.data()));
-            } else { lastLoadedPageDoc = null; }
+            }
             isLoadingMore = false;
         }
 
@@ -359,6 +380,7 @@
                 const content = document.createElement('div'); content.className = 'content-layer';
                 front.appendChild(content);
 
+                // CONTENT
                 if(data.elements && !data.isDummy) {
                     data.elements.forEach(el => {
                         const div = document.createElement('div');
@@ -373,8 +395,17 @@
                         content.appendChild(div);
                     });
                 }
-                
-                if(data.pageNumber===0 && !isUnlocked) front.innerHTML += `<div class="absolute inset-0 flex items-end justify-center pb-20 pointer-events-none"><div class="px-4 py-2 bg-black/80 text-gold rounded-full border border-gold animate-bounce">LOCKED</div></div>`;
+
+                // 1. VISIBLE NOTES ON PAGE
+                if(notesVisible && userNotes[data.pageNumber]) {
+                    const marker = document.createElement('div');
+                    marker.className = 'note-marker';
+                    marker.innerHTML = '<i class="fas fa-sticky-note"></i>';
+                    marker.onclick = (e) => { e.stopPropagation(); openNoteForPage(data.pageNumber); };
+                    front.appendChild(marker);
+                }
+
+                if(data.pageNumber===0 && !isUnlocked) front.innerHTML += `<div class="absolute inset-0 flex items-end justify-center pb-20 pointer-events-none"><div class="px-4 py-2 bg-black/80 text-yellow-500 rounded-full border border-yellow-500 animate-bounce">LOCKED</div></div>`;
                 if(data.isDummy) front.innerHTML = `<div class="flex items-center justify-center h-full text-gray-300 font-[Cinzel] text-2xl border-4 border-gray-100 m-8">LOCKED</div>`;
 
                 const back = document.createElement('div'); back.className = 'back';
@@ -388,14 +419,21 @@
                         page.classList.remove('flipped');
                         page.style.zIndex = zIndex + 50; 
                         setTimeout(()=>page.style.zIndex = zIndex, 1000);
-                        playPageFlip();
+                        if(soundOn) { flipSfx.currentTime=0; flipSfx.play().catch(()=>{}); }
                     } else {
                         page.classList.add('flipped');
-                        page.style.zIndex = 100; // temporarily high
+                        page.style.zIndex = 100;
                         setTimeout(()=>page.style.zIndex = 1, 600);
-                        playPageFlip();
-                        // Trigger Wizard Randomly
-                        if(Math.random() > 0.6) showWizard(wizardQuotes[Math.floor(Math.random()*wizardQuotes.length)]);
+                        if(soundOn) { flipSfx.currentTime=0; flipSfx.play().catch(()=>{}); }
+                        
+                        // 2. MAGIC EGGS SPAWN
+                        if(magicEggsOn && Math.random() < 0.25) { // 25% chance
+                            spawnMagicEgg(page);
+                        }
+                        
+                        // 3. WIZARD SPAWN
+                        if(wizardOn && Math.random() < 0.3) showWizard(["Keep reading!", "The mystery deepens...", "Excellent!"][Math.floor(Math.random()*3)]);
+                        
                         loadMorePages();
                     }
                 };
@@ -403,6 +441,68 @@
             });
             resizeContent();
         }
+
+        // --- MAGIC FUNCTIONS ---
+        function spawnMagicEgg(pageElement) {
+            // Find the NEW front page (which is actually the page underneath this one, or next one).
+            // Simplified: attach egg to the back of current page or wait for next render.
+            // Let's attach to the page itself momentarily.
+            const egg = document.createElement('div');
+            egg.className = 'magic-egg';
+            egg.innerHTML = '<i class="fas fa-dragon"></i>';
+            egg.onclick = (e) => { e.stopPropagation(); triggerMagicTeleport(); };
+            pageElement.appendChild(egg); // Attaches to the flipping page (fun effect)
+        }
+
+        function triggerMagicTeleport() {
+            if(soundOn) magicSfx.play().catch(()=>{});
+            const flash = document.getElementById('magic-flash');
+            flash.style.opacity = '1';
+            
+            setTimeout(async () => {
+                // Teleport Logic
+                const randomPage = Math.floor(Math.random() * 20); // Example random jump
+                await loadInitialPages(); // In reality, query for randomPage
+                alert(`✨ TELEPORTED to Page ${randomPage}!`);
+                flash.style.opacity = '0';
+            }, 800);
+        }
+
+        function showWizard(text) {
+            const wiz = document.getElementById('wizard-container');
+            document.getElementById('wizard-text').innerText = text;
+            wiz.classList.add('active');
+            setTimeout(() => wiz.classList.remove('active'), 3500);
+        }
+
+        // --- NOTES ---
+        window.toggleNoteEditor = () => {
+            const flipped = document.querySelectorAll('.page.flipped');
+            let currentPage = 0;
+            if(flipped.length > 0) currentPage = parseInt(flipped[flipped.length-1].dataset.pn) + 1;
+            openNoteForPage(currentPage);
+        };
+
+        function openNoteForPage(pageNum) {
+            const panel = document.getElementById('note-panel');
+            const area = document.getElementById('note-area');
+            area.value = userNotes[pageNum] || "";
+            area.dataset.pn = pageNum;
+            panel.classList.add('show');
+        }
+
+        window.saveCurrentNote = async () => {
+            if(!user) return;
+            const area = document.getElementById('note-area');
+            const pageNum = area.dataset.pn;
+            const text = area.value;
+            
+            userNotes[pageNum] = text;
+            await updateDoc(doc(db, "users", user.uid), { notes: userNotes });
+            
+            document.getElementById('note-panel').classList.remove('show');
+            loadInitialPages(); // Refresh markers
+        };
 
         // --- HELPERS ---
         function resizeContent() {
@@ -418,35 +518,17 @@
         window.toggleControls = () => { document.getElementById('controls-bar').classList.toggle('translate-y-full'); };
         window.toggleDarkMode = () => document.body.classList.toggle('dark-mode');
 
-        // Auth
-        document.getElementById('google-login').onclick = async () => {
-            try { await signInWithPopup(auth, new GoogleAuthProvider()); } catch(e){ alert(e.message); }
-        };
+        document.getElementById('google-login').onclick = async () => { try { await signInWithPopup(auth, new GoogleAuthProvider()); } catch(e){ alert(e.message); } };
         document.getElementById('logout-btn').onclick = () => signOut(auth);
 
-        // Upload
-        const processImage = (file) => {
-            return new Promise((resolve) => {
-                const reader = new FileReader(); reader.readAsDataURL(file);
-                reader.onload = (e) => {
-                    const img = new Image(); img.src = e.target.result;
-                    img.onload = () => {
-                        const c = document.createElement('canvas');
-                        let w=img.width, h=img.height, m=800;
-                        if(w>h){if(w>m){h*=m/w;w=m}}else{if(h>m){w*=m/h;h=m}}
-                        c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);
-                        resolve(c.toDataURL('image/jpeg',0.6));
-                    }
-                }
-            });
-        };
         document.getElementById('send-receipt').onclick = async () => {
             const f = document.getElementById('receipt-file').files[0];
             if(user && f) {
-                const b64 = await processImage(f);
-                await setDoc(doc(db,'requests',user.uid), {userId:user.uid, email:user.email, receiptImage:b64, status:'pending'});
-                await setDoc(doc(db,'users',user.uid), {status:'pending'}, {merge:true});
-                alert("Sent!"); document.getElementById('pay-modal').classList.add('hidden');
+                const reader = new FileReader(); reader.readAsDataURL(f);
+                reader.onload = async (e) => {
+                     await setDoc(doc(db,'requests',user.uid), {userId:user.uid, email:user.email, receiptImage:e.target.result, status:'pending'});
+                     alert("Sent!"); document.getElementById('pay-modal').classList.add('hidden');
+                }
             }
         };
     </script>
