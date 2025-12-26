@@ -6,147 +6,128 @@
     <title>Mysterium Library</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
+    
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     
     <style>
         :root { --gold: #d4af37; --dark: #0b0c10; }
         body { background-color: var(--dark); color: #e0e0e0; font-family: 'Inter', sans-serif; height: 100vh; overflow: hidden; }
-        
-        /* SCROLLBAR */
         ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #1a1a1a; }
         ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--gold); }
-
-        /* WALL STYLES */
-        .book-card { transition: transform 0.3s, box-shadow 0.3s; }
+        
+        /* WALL */
+        .book-card { transition: transform 0.3s; }
         .book-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(212, 175, 55, 0.2); }
         
-        /* READER STYLES */
+        /* READER */
         .book-scene { perspective: 1500px; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
-        .book { transform-style: preserve-3d; position: relative; width: auto; height: 75vh; aspect-ratio: 2/3; transition: transform 0.5s; }
-        .page { position: absolute; width: 100%; height: 100%; transform-origin: left; transition: transform 1.2s cubic-bezier(0.645, 0.045, 0.355, 1); transform-style: preserve-3d; background: white; cursor: pointer; }
-        .front, .back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; background: white; overflow: hidden; }
-        .back { transform: rotateY(180deg); background: #f0f0f0; }
+        .book { transform-style: preserve-3d; position: relative; width: auto; height: 75vh; aspect-ratio: 2/3; }
+        .page { position: absolute; width: 100%; height: 100%; transform-origin: left; transition: transform 1s; transform-style: preserve-3d; }
+        .front, .back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; background: white; }
+        .back { transform: rotateY(180deg); background: #eee; }
         .flipped { transform: rotateY(-180deg); }
-        .content-layer { position: absolute; top: 50%; left: 50%; width: 360px; height: 540px; transform: translate(-50%, -50%); pointer-events: none; }
-        .content-layer * { pointer-events: auto; }
+        .content-layer { position: absolute; inset:0; display:flex; justify-content:center; align-items:center; overflow:hidden; }
+        .content-layer img { width: 100%; height: 100%; object-fit: cover; }
 
-        /* EDITOR CANVAS */
-        #editor-canvas { width: 360px; height: 540px; background: #f4e4bc; position: relative; overflow: hidden; margin: 0 auto; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
-        .draggable-item { position: absolute; cursor: move; border: 1px dashed transparent; }
-        .draggable-item:hover { border: 1px dashed #666; }
-        .draggable-item.selected { border: 2px solid var(--gold); }
+        /* EDITOR */
+        #editor-canvas { width: 300px; height: 450px; background: #fff; position: relative; overflow: hidden; margin: 0 auto; box-shadow: 0 0 15px black; }
     </style>
 </head>
 <body class="flex flex-col">
 
     <div id="auth-section" class="fixed inset-0 z-[1000] bg-black/95 flex items-center justify-center">
-        <div class="text-center">
-            <h1 class="text-4xl font-[Cinzel] text-[#d4af37] mb-8">MYSTERIUM</h1>
-            <button id="google-login" class="bg-white text-black px-8 py-3 rounded-full font-bold hover:bg-gray-200 transition">
-                <i class="fab fa-google text-red-600 mr-2"></i> Enter Library
-            </button>
-        </div>
+        <button id="google-login" class="bg-white text-black px-8 py-3 rounded-full font-bold hover:bg-gray-200">
+            <i class="fab fa-google text-red-600 mr-2"></i> Enter Library
+        </button>
     </div>
 
     <nav id="main-nav" class="hidden h-16 bg-[#0f0f10] border-b border-gray-800 flex items-center justify-between px-6 z-50">
-        <div class="flex items-center gap-4">
-            <i class="fas fa-dragon text-[#d4af37] text-2xl"></i>
-            <span class="font-[Cinzel] font-bold text-lg tracking-widest hidden md:block">MYSTERIUM</span>
+        <div class="flex items-center gap-4 text-[#d4af37] font-[Cinzel] font-bold text-lg">
+            <i class="fas fa-dragon"></i> MYSTERIUM
         </div>
-        
-        <div id="search-container" class="flex-1 max-w-md mx-4 relative hidden md:block">
-            <input type="text" id="search-input" placeholder="Search books..." class="w-full bg-[#1a1a1a] border border-gray-700 rounded-full px-4 py-2 text-sm focus:border-[#d4af37] outline-none transition">
-            <i class="fas fa-search absolute right-4 top-2.5 text-gray-500"></i>
+        <div id="search-container" class="flex-1 max-w-md mx-4 hidden md:block">
+            <input type="text" id="search-input" placeholder="Search library..." class="w-full bg-[#1a1a1a] border border-gray-700 rounded-full px-4 py-2 text-sm text-white focus:border-[#d4af37] outline-none">
         </div>
-
-        <div class="flex items-center gap-3">
-            <button onclick="showView('wall')" class="w-10 h-10 rounded-full hover:bg-gray-800 flex items-center justify-center text-gray-400 hover:text-white" title="Home"><i class="fas fa-home"></i></button>
-            <button onclick="createNewBook()" class="bg-[#d4af37] hover:bg-yellow-600 text-black px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 transition">
-                <i class="fas fa-plus"></i> <span class="hidden sm:inline">CREATE</span>
-            </button>
+        <div class="flex gap-3">
+            <button onclick="showView('wall')" class="w-8 h-8 rounded-full bg-gray-800 text-gray-400 hover:text-white"><i class="fas fa-home"></i></button>
+            <button onclick="createNewBook()" class="bg-[#d4af37] text-black px-4 py-1 rounded-full text-xs font-bold flex items-center gap-2"><i class="fas fa-plus"></i> CREATE</button>
             <img id="user-avatar" src="" class="w-8 h-8 rounded-full border border-gray-600">
         </div>
     </nav>
 
     <main id="view-wall" class="hidden flex-grow overflow-y-auto p-6 pb-20">
-        <section class="mb-10">
-            <h2 class="font-[Cinzel] text-[#d4af37] text-xl mb-4 flex items-center"><i class="fas fa-fire mr-2"></i> Trending This Week</h2>
-            <div id="trending-grid" class="flex gap-4 overflow-x-auto pb-4 snap-x">
-                <div class="animate-pulse w-40 h-60 bg-gray-800 rounded-lg flex-shrink-0"></div>
-            </div>
+        <section class="mb-8">
+            <h2 class="font-[Cinzel] text-[#d4af37] mb-4">Trending Books</h2>
+            <div id="trending-grid" class="flex gap-4 overflow-x-auto pb-4"></div>
         </section>
-
         <section>
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="font-[Cinzel] text-white text-xl">Library Collection</h2>
-                <div class="md:hidden"><button onclick="document.getElementById('search-input').focus()" class="text-gray-400"><i class="fas fa-search"></i></button></div>
-            </div>
-            <div id="books-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
-                </div>
+            <h2 class="font-[Cinzel] text-white mb-4">All Collections</h2>
+            <div id="books-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6"></div>
         </section>
     </main>
 
     <main id="view-reader" class="hidden flex-grow relative bg-[#1a1a1a]">
-        <button onclick="closeReader()" class="absolute top-4 left-4 z-50 w-10 h-10 bg-black/50 text-white rounded-full"><i class="fas fa-arrow-left"></i></button>
-        <div class="book-scene">
-            <div id="the-book" class="book"><div id="pages-wrapper"></div></div>
-        </div>
+        <button onclick="showView('wall')" class="absolute top-4 left-4 z-50 bg-black/50 text-white p-3 rounded-full"><i class="fas fa-arrow-left"></i></button>
+        <div class="book-scene"><div id="the-book" class="book"><div id="pages-wrapper"></div></div></div>
         <div class="absolute bottom-6 w-full flex justify-center gap-8 z-50">
-            <button onclick="prevPage()" class="p-4 bg-black/60 rounded-full text-white hover:bg-[#d4af37] hover:text-black transition"><i class="fas fa-chevron-left"></i></button>
-            <button onclick="nextPage()" class="p-4 bg-black/60 rounded-full text-white hover:bg-[#d4af37] hover:text-black transition"><i class="fas fa-chevron-right"></i></button>
+            <button onclick="flipBook('prev')" class="p-4 bg-black/60 rounded-full text-white hover:bg-[#d4af37] hover:text-black"><i class="fas fa-chevron-left"></i></button>
+            <button onclick="flipBook('next')" class="p-4 bg-black/60 rounded-full text-white hover:bg-[#d4af37] hover:text-black"><i class="fas fa-chevron-right"></i></button>
         </div>
     </main>
 
     <main id="view-studio" class="hidden flex-grow flex overflow-hidden bg-gray-900">
-        <div class="w-64 bg-[#0b0c10] border-r border-gray-800 p-4 flex flex-col gap-4 overflow-y-auto">
-            <div class="text-[#d4af37] font-[Cinzel] text-center border-b border-gray-800 pb-2">BOOK STUDIO</div>
+        <div class="w-64 bg-[#0b0c10] border-r border-gray-800 p-4 flex flex-col gap-3 overflow-y-auto">
+            <div class="text-[#d4af37] font-[Cinzel] text-center border-b border-gray-800 pb-2">STUDIO</div>
             
-            <div class="bg-gray-800 p-3 rounded text-xs">
-                <label class="block text-gray-400 mb-1">Book Title</label>
-                <input id="new-book-title" type="text" class="w-full bg-black border border-gray-700 rounded p-1 text-white">
-                <label class="block text-gray-400 mt-2 mb-1">Price (LKR)</label>
-                <input id="new-book-price" type="number" class="w-full bg-black border border-gray-700 rounded p-1 text-white">
-            </div>
+            <input id="new-book-title" type="text" placeholder="Book Title" class="w-full bg-black border border-gray-700 rounded p-2 text-xs text-white">
+            <input id="new-book-price" type="number" placeholder="Price (LKR)" class="w-full bg-black border border-gray-700 rounded p-2 text-xs text-white">
+            
+            <label class="p-3 bg-red-900/30 border border-red-900 rounded hover:bg-red-900/50 cursor-pointer text-center group">
+                <i class="fas fa-file-pdf text-red-500 text-xl mb-1 group-hover:scale-110 transition"></i>
+                <div class="text-[10px] text-gray-300 font-bold">IMPORT PDF BOOK</div>
+                <input type="file" id="pdf-upload" class="hidden" accept="application/pdf" onchange="handlePdfUpload(this)">
+            </label>
+            <div id="pdf-status" class="text-[10px] text-center text-yellow-500 hidden">Processing PDF...</div>
+
+            <div class="h-px bg-gray-800 my-2"></div>
 
             <div class="grid grid-cols-2 gap-2">
-                <button onclick="addText()" class="p-3 bg-gray-800 hover:bg-gray-700 rounded flex flex-col items-center"><i class="fas fa-font mb-1"></i><span class="text-[10px]">Text</span></button>
-                <label class="p-3 bg-gray-800 hover:bg-gray-700 rounded flex flex-col items-center cursor-pointer">
-                    <i class="fas fa-image mb-1"></i><span class="text-[10px]">Image</span>
-                    <input type="file" id="img-upload" class="hidden" accept="image/*" onchange="addImage(this)">
+                <button onclick="addToCanvas('text')" class="p-2 bg-gray-800 rounded text-[10px] hover:bg-gray-700"><i class="fas fa-font"></i> Add Text</button>
+                <label class="p-2 bg-gray-800 rounded text-[10px] hover:bg-gray-700 cursor-pointer text-center">
+                    <i class="fas fa-image"></i> Add Image
+                    <input type="file" onchange="addToCanvas('image', this)" class="hidden">
                 </label>
             </div>
 
-            <div class="mt-auto">
-                <button onclick="savePage()" class="w-full py-2 bg-blue-900 text-blue-200 rounded mb-2 text-xs font-bold">SAVE PAGE</button>
-                <button onclick="openPublishModal()" class="w-full py-3 bg-green-700 hover:bg-green-600 text-white rounded font-bold shadow-lg shadow-green-900/50">PUBLISH BOOK</button>
+            <div class="mt-auto space-y-2">
+                <button onclick="saveCurrentPage()" class="w-full py-2 bg-blue-900 text-blue-100 text-xs rounded">Save Page</button>
+                <button onclick="openPublishModal()" class="w-full py-3 bg-green-700 hover:bg-green-600 text-white font-bold rounded shadow-lg">PUBLISH BOOK</button>
             </div>
-            <button onclick="showView('wall')" class="text-xs text-center text-gray-500 hover:text-white mt-2">Exit Studio</button>
+            <button onclick="showView('wall')" class="text-xs text-center text-gray-500 mt-2">Cancel</button>
         </div>
 
-        <div class="flex-grow flex items-center justify-center bg-gray-800 relative">
-            <div class="absolute top-4 bg-black/50 px-4 py-2 rounded-full text-xs">
-                Page: <input type="number" id="current-page-num" value="1" class="w-10 bg-transparent text-center font-bold" onchange="loadEditorPage()">
+        <div class="flex-grow flex flex-col items-center justify-center bg-gray-800 relative">
+            <div class="text-xs text-gray-400 mb-2">Editing Page: <span id="studio-page-num" class="font-bold text-white">1</span></div>
+            <div id="editor-canvas"></div>
+            <div class="mt-4 flex gap-2">
+                <button onclick="changeStudioPage(-1)" class="px-3 py-1 bg-black rounded text-white text-xs">< Prev</button>
+                <button onclick="changeStudioPage(1)" class="px-3 py-1 bg-black rounded text-white text-xs">Next ></button>
             </div>
-            <div id="editor-canvas" class="editor-font"></div>
         </div>
     </main>
 
     <div id="publish-modal" class="hidden fixed inset-0 z-[200] bg-black/90 flex items-center justify-center p-4">
         <div class="bg-[#1a1a1a] border border-[#d4af37] rounded-xl p-6 max-w-sm w-full text-center">
             <h3 class="text-[#d4af37] font-[Cinzel] text-xl mb-2">PUBLISH BOOK</h3>
-            <p class="text-gray-400 text-sm mb-4">Fee: <span class="text-white font-bold">500 LKR</span> to Admin</p>
+            <p class="text-gray-400 text-sm mb-4">Fee: <span class="text-white font-bold">500 LKR</span></p>
             <div class="bg-black/50 p-3 rounded mb-4 text-xs text-left font-mono text-gray-400">
-                Bank: Commercial Bank<br>
-                Acc: 8025211913<br>
-                Name: K.M.H.Y.S Kariyawasam<br>
-                Ref: Your Email
+                Bank: Commercial Bank<br>Acc: 8025211913<br>Ref: Your Email
             </div>
             <label class="block w-full border border-dashed border-gray-600 rounded p-4 mb-4 cursor-pointer hover:border-[#d4af37]">
-                <span class="text-xs text-gray-500">Upload Receipt (Image)</span>
-                <input type="file" id="publish-receipt" class="hidden" accept="image/*">
+                <span class="text-xs text-gray-500" id="receipt-label">Upload Receipt (Image)</span>
+                <input type="file" id="publish-receipt" class="hidden" accept="image/*" onchange="document.getElementById('receipt-label').innerText = 'File Selected'">
             </label>
             <button onclick="submitPublish()" class="w-full bg-[#d4af37] text-black font-bold py-2 rounded">SUBMIT FOR REVIEW</button>
             <button onclick="document.getElementById('publish-modal').classList.add('hidden')" class="mt-3 text-xs text-gray-500 underline">Cancel</button>
@@ -156,28 +137,19 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
-        import { getFirestore, collection, doc, setDoc, getDoc, getDocs, query, where, orderBy, updateDoc, addDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
-        import { getStorage, ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-storage.js";
+        import { getFirestore, collection, doc, setDoc, getDoc, getDocs, query, where, orderBy, updateDoc, addDoc, writeBatch } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyByyYMFzn1nHOuzxEsX44sQrIIT5AdB3Pc",
-            authDomain: "book-8cd24.firebaseapp.com",
-            projectId: "book-8cd24",
-            storageBucket: "book-8cd24.firebasestorage.app",
-            messagingSenderId: "747560284834",
-            appId: "1:747560284834:web:30f6080e8d4fbf9025ddfb"
-        };
+        const firebaseConfig = { apiKey: "AIzaSyByyYMFzn1nHOuzxEsX44sQrIIT5AdB3Pc", authDomain: "book-8cd24.firebaseapp.com", projectId: "book-8cd24", storageBucket: "book-8cd24.firebasestorage.app", messagingSenderId: "747560284834", appId: "1:747560284834:web:30f6080e8d4fbf9025ddfb" };
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const storage = getStorage(app);
 
         let currentUser = null;
-        let activeBookId = null; // For Reader
-        let studioBookId = null; // For Editor
+        let studioPages = []; // Stores page data in memory before publish
+        let currentStudioPageIndex = 0;
+        let studioBookId = null;
 
-        // AUTH
-        onAuthStateChanged(auth, (u) => {
+        onAuthStateChanged(auth, u => {
             if(u) {
                 currentUser = u;
                 document.getElementById('auth-section').classList.add('hidden');
@@ -185,222 +157,203 @@
                 document.getElementById('user-avatar').src = u.photoURL;
                 showView('wall');
                 loadWall();
-            } else {
-                document.getElementById('auth-section').classList.remove('hidden');
-            }
+            } else document.getElementById('auth-section').classList.remove('hidden');
         });
-
         document.getElementById('google-login').onclick = () => signInWithPopup(auth, new GoogleAuthProvider());
 
-        // --- NAVIGATION ---
-        window.showView = (view) => {
-            ['wall', 'reader', 'studio'].forEach(v => document.getElementById('view-'+v).classList.add('hidden'));
-            document.getElementById('view-'+view).classList.remove('hidden');
-            document.getElementById('view-'+view).classList.add('flex'); // Studio needs flex
-            if(view === 'wall') {
-                document.getElementById('view-wall').classList.remove('flex'); // Wall is block
-                loadWall();
-            }
+        window.showView = (v) => {
+            ['wall','reader','studio'].forEach(id=>document.getElementById('view-'+id).classList.add('hidden'));
+            document.getElementById('view-'+v).classList.remove('hidden');
+            if(v==='studio') document.getElementById('view-'+v).classList.add('flex');
+            if(v==='wall') loadWall();
         };
 
-        // --- WALL LOGIC ---
+        // --- WALL & READER ---
         async function loadWall() {
             const grid = document.getElementById('books-grid');
             const trend = document.getElementById('trending-grid');
-            grid.innerHTML = '<div class="text-gray-500">Loading library...</div>';
+            grid.innerHTML = '<div class="text-xs text-gray-500">Loading...</div>';
             
-            // Fetch Approved Books
             const q = query(collection(db, "books"), where("status", "==", "approved"), orderBy("views", "desc"));
-            const snapshot = await getDocs(q);
+            const snap = await getDocs(q);
+            grid.innerHTML=''; trend.innerHTML='';
             
-            grid.innerHTML = ''; trend.innerHTML = '';
-            
-            let count = 0;
-            snapshot.forEach(doc => {
-                const b = doc.data();
+            snap.forEach(d => {
+                const b = d.data();
                 const card = `
-                    <div onclick="openBook('${doc.id}')" class="book-card cursor-pointer group">
-                        <div class="aspect-[2/3] bg-gray-800 rounded-lg overflow-hidden mb-2 relative">
-                            ${b.coverUrl ? `<img src="${b.coverUrl}" class="w-full h-full object-cover">` : '<div class="w-full h-full flex items-center justify-center text-gray-600"><i class="fas fa-book text-4xl"></i></div>'}
-                            <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
-                                <span class="text-[#d4af37] font-bold"><i class="fas fa-book-open"></i> READ</span>
-                            </div>
-                        </div>
-                        <h3 class="text-sm font-bold truncate text-gray-200">${b.title || 'Untitled'}</h3>
-                        <p class="text-xs text-gray-500">${b.price > 0 ? 'Rs. '+b.price : 'Free'}</p>
+                <div onclick="openBook('${d.id}')" class="book-card cursor-pointer min-w-[120px]">
+                    <div class="aspect-[2/3] bg-gray-800 rounded overflow-hidden relative">
+                        ${b.coverUrl ? `<img src="${b.coverUrl}" class="w-full h-full object-cover">` : '<div class="p-4 text-xs text-gray-600">No Cover</div>'}
                     </div>
-                `;
+                    <div class="mt-2 text-sm font-bold truncate text-gray-300">${b.title}</div>
+                    <div class="text-[10px] text-gray-500">${b.price>0?'Rs.'+b.price:'Free'}</div>
+                </div>`;
                 grid.innerHTML += card;
-                
-                if(count < 5) trend.innerHTML += card.replace('book-card', 'book-card min-w-[120px]');
-                count++;
+                if(trend.children.length < 5) trend.innerHTML += card;
             });
-
-            // Search Logic
+            // Search
             document.getElementById('search-input').onkeyup = (e) => {
                 const term = e.target.value.toLowerCase();
-                const cards = grid.querySelectorAll('.book-card');
-                cards.forEach(c => {
-                    const title = c.querySelector('h3').innerText.toLowerCase();
-                    c.style.display = title.includes(term) ? 'block' : 'none';
-                });
+                Array.from(grid.children).forEach(c => c.style.display = c.innerText.toLowerCase().includes(term) ? 'block' : 'none');
             };
         }
 
-        // --- READER LOGIC ---
         window.openBook = async (id) => {
-            activeBookId = id;
             showView('reader');
-            
-            // Increment Views
-            updateDoc(doc(db, "books", id), {
-                views: (await getDoc(doc(db,"books",id))).data().views + 1 || 1
+            updateDoc(doc(db,"books",id), { views: (await getDoc(doc(db,"books",id))).data().views+1 || 1 });
+            const wrap = document.getElementById('pages-wrapper');
+            wrap.innerHTML = '';
+            const snap = await getDocs(query(collection(db,"books",id,"pages"), orderBy("pageNumber")));
+            snap.forEach(d => {
+                const p = d.data();
+                const el = document.createElement('div'); el.className=`page`; el.style.zIndex = 1000 - p.pageNumber;
+                el.dataset.pn = p.pageNumber;
+                el.innerHTML = `<div class="front"><div class="content-layer"><img src="${p.imageUrl}" style="width:100%;height:100%;"></div></div><div class="back"></div>`;
+                el.onclick = () => el.classList.toggle('flipped');
+                wrap.appendChild(el);
             });
-
-            // Load Pages
-            const wrapper = document.getElementById('pages-wrapper');
-            wrapper.innerHTML = '<div class="flex items-center justify-center h-full text-gray-500">Opening Book...</div>';
-            
-            const pSnap = await getDocs(query(collection(db, "books", id, "pages"), orderBy("pageNumber")));
-            wrapper.innerHTML = '';
-            
-            pSnap.forEach(d => {
-                const data = d.data();
-                renderPage(wrapper, data);
-            });
-            resizeContent();
+        }
+        window.flipBook = (dir) => {
+            const flipped = document.querySelectorAll('.page.flipped');
+            const unflipped = document.querySelectorAll('.page:not(.flipped)');
+            if(dir==='next' && unflipped.length > 0) unflipped[0].classList.add('flipped');
+            if(dir==='prev' && flipped.length > 0) flipped[flipped.length-1].classList.remove('flipped');
         };
 
-        window.closeReader = () => showView('wall');
-
-        function renderPage(wrapper, data) {
-            const z = 1000 - data.pageNumber;
-            const el = document.createElement('div');
-            el.className = 'page shadow-2xl'; el.style.zIndex = z;
-            el.dataset.pn = data.pageNumber;
-            
-            const content = `<div class="content-layer">
-                ${data.elements.map(e => e.type==='text' 
-                ? `<div style="position:absolute;left:${e.left};top:${e.top};${objToCss(e.style)}">${e.content}</div>`
-                : `<img src="${e.content}" style="position:absolute;left:${e.left};top:${e.top};width:${e.style.width}">`
-                ).join('')}
-            </div>`;
-
-            el.innerHTML = `<div class="front" style="background:${data.bgColor||'#fff'}">${content}</div><div class="back"></div>`;
-            el.onclick = () => { if(el.classList.contains('flipped')) el.classList.remove('flipped'); else el.classList.add('flipped'); };
-            wrapper.appendChild(el);
-        }
-
-        function objToCss(obj) { return Object.entries(obj).map(([k,v]) => `${k.replace(/[A-Z]/g, m=>'-'+m.toLowerCase())}:${v}`).join(';'); }
-        function resizeContent() {
-            const scale = document.getElementById('the-book').offsetHeight / 540;
-            document.querySelectorAll('.content-layer').forEach(l => l.style.transform = `translate(-50%, -50%) scale(${scale})`);
-        }
-        window.onresize = resizeContent;
-
-        // --- CREATOR STUDIO LOGIC ---
+        // --- STUDIO & PDF ---
         window.createNewBook = () => {
-            studioBookId = 'draft_' + currentUser.uid + '_' + Date.now();
+            studioBookId = 'book_'+Date.now();
+            studioPages = []; currentStudioPageIndex = 0;
             document.getElementById('new-book-title').value = '';
             document.getElementById('new-book-price').value = '';
             document.getElementById('editor-canvas').innerHTML = '';
             showView('studio');
         };
 
-        // Editor Canvas Logic (Simplified)
-        let selectedEl = null;
-        window.addText = () => addToCanvas('text', 'New Text');
-        window.addImage = async (input) => {
-            if(input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = e => addToCanvas('image', e.target.result);
-                reader.readAsDataURL(input.files[0]);
+        // PDF HANDLER
+        window.handlePdfUpload = async (input) => {
+            const file = input.files[0];
+            if(!file) return;
+            document.getElementById('pdf-status').classList.remove('hidden');
+            document.getElementById('pdf-status').innerText = "Reading PDF...";
+
+            try {
+                const ab = await file.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument(ab).promise;
+                studioPages = []; // Reset pages
+                
+                for(let i=1; i<=pdf.numPages; i++) {
+                    document.getElementById('pdf-status').innerText = `Processing Page ${i} of ${pdf.numPages}...`;
+                    const page = await pdf.getPage(i);
+                    const viewport = page.getViewport({scale: 1.5});
+                    const canvas = document.createElement('canvas');
+                    canvas.width = viewport.width; canvas.height = viewport.height;
+                    await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+                    
+                    // Add to memory
+                    studioPages.push({
+                        pageNumber: i,
+                        imageUrl: canvas.toDataURL('image/jpeg', 0.8) // Convert directly to image
+                    });
+                }
+                document.getElementById('pdf-status').innerText = "PDF Imported Successfully!";
+                currentStudioPageIndex = 0;
+                renderStudioPage();
+            } catch(e) {
+                alert("PDF Error: "+e.message);
+                document.getElementById('pdf-status').classList.add('hidden');
             }
         };
 
-        function addToCanvas(type, content) {
-            const div = document.createElement('div');
-            div.className = 'draggable-item'; div.style.left='50px'; div.style.top='50px';
-            div.dataset.type = type;
-            
-            if(type === 'text') div.innerHTML = `<div contenteditable="true" style="font-size:20px; color:black; min-width:100px;">${content}</div>`;
-            else div.innerHTML = `<img src="${content}" style="width:150px; pointer-events:none;">`;
-            
-            document.getElementById('editor-canvas').appendChild(div);
-            setupDrag(div);
-        }
-
-        function setupDrag(el) {
-            let isDown = false, offX, offY;
-            el.addEventListener('mousedown', e => {
-                if(e.target.isContentEditable) return;
-                isDown = true;
-                const r = el.getBoundingClientRect();
-                offX = e.clientX - r.left; offY = e.clientY - r.top;
-                document.querySelectorAll('.draggable-item').forEach(i => i.classList.remove('selected'));
-                el.classList.add('selected');
-            });
-            window.addEventListener('mouseup', () => isDown = false);
-            window.addEventListener('mousemove', e => {
-                if(!isDown) return;
-                const canvas = document.getElementById('editor-canvas').getBoundingClientRect();
-                el.style.left = (e.clientX - canvas.left - offX) + 'px';
-                el.style.top = (e.clientY - canvas.top - offY) + 'px';
-            });
-        }
-
-        window.savePage = async () => {
-            // In a real app, this saves to a temporary collection.
-            // For this demo, we assume the page is stored in memory until publish.
-            alert("Page Saved (In Memory Only for Demo)");
+        // CANVAS HELPERS
+        window.addToCanvas = (type, input) => {
+            if(type==='text') {
+                // Simplified: Just an overlay for now (Real app would need complex object saving)
+                alert("Text mode limited in PDF view. Please use an image editor if possible.");
+            } else if(type==='image' && input.files[0]) {
+                const r = new FileReader();
+                r.onload = e => {
+                    studioPages[currentStudioPageIndex] = { pageNumber: currentStudioPageIndex+1, imageUrl: e.target.result };
+                    renderStudioPage();
+                };
+                r.readAsDataURL(input.files[0]);
+            }
         };
 
-        // --- PUBLISHING LOGIC ---
-        window.openPublishModal = () => document.getElementById('publish-modal').classList.remove('hidden');
+        window.renderStudioPage = () => {
+            const canvas = document.getElementById('editor-canvas');
+            const pageData = studioPages[currentStudioPageIndex];
+            document.getElementById('studio-page-num').innerText = (currentStudioPageIndex + 1);
+            
+            if(pageData && pageData.imageUrl) {
+                canvas.innerHTML = `<img src="${pageData.imageUrl}" class="w-full h-full object-contain">`;
+            } else {
+                canvas.innerHTML = `<div class="w-full h-full flex items-center justify-center text-gray-400">Empty Page</div>`;
+            }
+        };
 
+        window.changeStudioPage = (delta) => {
+            const newIndex = currentStudioPageIndex + delta;
+            if(newIndex >= 0) {
+                // If moving to a new empty page
+                if(!studioPages[newIndex]) studioPages[newIndex] = { pageNumber: newIndex+1, imageUrl: null };
+                currentStudioPageIndex = newIndex;
+                renderStudioPage();
+            }
+        };
+        window.saveCurrentPage = () => alert("Page stored in memory. Click 'Publish' to finish.");
+
+        // PUBLISH
+        window.openPublishModal = () => document.getElementById('publish-modal').classList.remove('hidden');
+        
         window.submitPublish = async () => {
-            const file = document.getElementById('publish-receipt').files[0];
             const title = document.getElementById('new-book-title').value;
             const price = document.getElementById('new-book-price').value;
+            const receipt = document.getElementById('publish-receipt').files[0];
+            
+            if(!title || studioPages.length === 0 || !receipt) return alert("Please add title, pages, and receipt.");
+            
+            const btn = document.querySelector('#publish-modal button');
+            btn.innerText = "Uploading... Please Wait";
+            
+            try {
+                // 1. Process Receipt
+                const rReader = new FileReader();
+                rReader.readAsDataURL(receipt);
+                rReader.onload = async (e) => {
+                    const receiptBase64 = e.target.result;
 
-            if(!file || !title) return alert("Please fill all fields and upload receipt");
+                    // 2. Create Book Doc
+                    await setDoc(doc(db, "books", studioBookId), {
+                        title: title, price: price, author: currentUser.uid, status: "pending_payment", 
+                        coverUrl: studioPages[0]?.imageUrl || '', views: 0, timestamp: new Date().toISOString()
+                    });
 
-            document.getElementById('publish-modal').innerHTML = '<div class="text-white text-center">Uploading & Verifying...</div>';
+                    // 3. Save Pages (Batch)
+                    const batch = writeBatch(db);
+                    studioPages.forEach(p => {
+                        if(p.imageUrl) {
+                            const ref = doc(db, "books", studioBookId, "pages", "page_"+p.pageNumber);
+                            batch.set(ref, p);
+                        }
+                    });
+                    await batch.commit();
 
-            // 1. Compress & Read Image
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = async (e) => {
-                const imgBase64 = e.target.result;
+                    // 4. Create Admin Request
+                    await addDoc(collection(db, "requests"), {
+                        type: "publish_book", email: currentUser.email, userId: currentUser.uid,
+                        bookId: studioBookId, // IMPORTANT: Sending Book ID
+                        bookTitle: title, receiptImage: receiptBase64, status: "pending", timestamp: new Date().toISOString()
+                    });
 
-                // 2. Save Request to DB
-                await addDoc(collection(db, "requests"), {
-                    type: 'publish_book', // New Type
-                    email: currentUser.email,
-                    userId: currentUser.uid,
-                    receiptImage: imgBase64,
-                    bookTitle: title,
-                    bookPrice: price,
-                    status: 'pending',
-                    timestamp: new Date().toISOString()
-                });
-
-                // 3. Save Draft Book (Hidden until approved)
-                // Note: In a real app, you'd save all the pages here too.
-                await setDoc(doc(db, "books", studioBookId), {
-                    title: title,
-                    price: price,
-                    author: currentUser.uid,
-                    status: 'pending_payment',
-                    coverUrl: '', // Would be a screenshot of page 1
-                    views: 0
-                });
-
-                alert("Submitted! Admin will verify your 500 LKR receipt.");
-                window.location.reload();
-            };
+                    alert("Submitted Successfully! Admin will approve shortly.");
+                    location.reload();
+                };
+            } catch(e) {
+                alert("Error: "+e.message);
+                btn.innerText = "Try Again";
+            }
         };
-
     </script>
 </body>
 </html>
