@@ -34,8 +34,12 @@
         .book-scene { 
             perspective: 1500px; width: 100%; height: 100%; 
             display: flex; align-items: center; justify-content: center; 
-            padding-bottom: 60px; overflow: visible;
+            padding-bottom: 60px; overflow: visible; transition: all 0.5s;
         }
+        /* ZEN MODE STYLES */
+        body.zen-mode .book-scene { transform: scale(1.1); padding-bottom: 0; }
+        body.zen-mode #top-bar, body.zen-mode #controls-bar { opacity: 0; pointer-events: none; }
+        
         .book { 
             transform-style: preserve-3d; position: relative; 
             transition: transform 0.5s; aspect-ratio: 2 / 3; 
@@ -45,7 +49,7 @@
         .page { 
             position: absolute; top:0; left:0; width: 100%; height: 100%; 
             transform-origin: left center; 
-            transition: transform 1.4s cubic-bezier(0.25, 1, 0.5, 1); /* Smoother transition */
+            transition: transform 1.4s cubic-bezier(0.25, 1, 0.5, 1);
             transform-style: preserve-3d; 
             border-radius: 2px 8px 8px 2px; 
             cursor: pointer; background-color: white; 
@@ -55,18 +59,40 @@
         .front, .back { 
             position: absolute; width: 100%; height: 100%; 
             backface-visibility: hidden; -webkit-backface-visibility: hidden;
-            overflow: hidden; background-color: white; 
+            overflow: hidden; background-color: white; transition: background-color 0.5s;
         }
+        /* SEPIA / OLD PAPER MODE */
+        body.sepia-mode .front, body.sepia-mode .back { background-color: #f4e4bc !important; color: #4a3b2a; }
+
         .back { transform: rotateY(180deg); background-color: #f0f0f0; }
         .flipped { transform: rotateY(-180deg); }
         
-        /* Dark Mode Pages */
         body.dark-mode .front, body.dark-mode .back { background-color: #1a1a1a !important; color: #ccc; }
-        .content-layer { position: absolute; top: 50%; left: 50%; width: 360px; height: 540px; transform: translate(-50%, -50%); pointer-events: none; background: white; }
-        body.dark-mode .content-layer { background: #1a1a1a; }
+        .content-layer { position: absolute; top: 50%; left: 50%; width: 360px; height: 540px; transform: translate(-50%, -50%); pointer-events: none; background: transparent; }
         .content-layer * { pointer-events: auto; }
 
-        /* --- MAGIC FEATURES --- */
+        /* --- NON-INTRUSIVE WIZARD (CORNER) --- */
+        #wizard-container {
+            position: fixed; bottom: 100px; left: 20px; /* Moved to corner */
+            z-index: 200; pointer-events: none; display: flex; flex-direction: column; align-items: flex-start;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            opacity: 0; transform: translateX(-50px); /* Slides in from left */
+        }
+        #wizard-container.active { transform: translateX(0); opacity: 1; }
+        
+        .wizard-avatar-box {
+            width: 60px; height: 60px; background: #1a1a1a; border: 2px solid var(--gold);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+        }
+        .wizard-face { font-size: 30px; color: var(--gold); }
+        .wizard-bubble {
+            background: rgba(20, 20, 20, 0.9); color: #fff; padding: 10px 15px; 
+            border-radius: 10px 10px 10px 0; font-size: 0.85rem;
+            margin-bottom: 10px; border: 1px solid var(--gold);
+            max-width: 200px;
+        }
+
         .note-marker {
             position: absolute; top: 10px; right: 10px; z-index: 50;
             color: var(--gold); font-size: 24px; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.3));
@@ -74,39 +100,7 @@
         }
         .note-marker:hover { transform: scale(1.2); color: #facc15; }
 
-        .magic-egg {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            font-size: 50px; color: var(--magic-purple); z-index: 100;
-            filter: drop-shadow(0 0 15px var(--magic-purple));
-            animation: pulse-glow 2s infinite; cursor: pointer;
-        }
-        .magic-egg:hover { transform: translate(-50%, -50%) scale(1.1); }
-
-        #wizard-container {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
-            z-index: 200; pointer-events: none; display: flex; flex-col; align-items: center;
-            transition: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55); opacity: 0;
-        }
-        #wizard-container.active { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-        .wizard-avatar-box {
-            width: 80px; height: 80px; background: #1a1a1a; border: 3px solid var(--gold);
-            border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 0 25px rgba(212, 175, 55, 0.6);
-        }
-        .wizard-face { font-size: 45px; color: var(--gold); }
-        .wizard-bubble {
-            background: rgba(255, 255, 255, 0.95); color: #000; padding: 12px 20px; 
-            border-radius: 20px; font-weight: 700; margin-top: 15px; border: 2px solid var(--gold);
-            min-width: 200px; text-align: center;
-        }
-
-        #magic-flash {
-            position: fixed; inset: 0; background: white; z-index: 9999; 
-            pointer-events: none; opacity: 0; transition: opacity 0.5s;
-        }
-
         @keyframes float-mini { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
-        @keyframes pulse-glow { 0%, 100% { filter: drop-shadow(0 0 10px var(--magic-purple)); } 50% { filter: drop-shadow(0 0 25px var(--magic-purple)); } }
 
         /* UI */
         .glass-panel { background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px); border-top: 1px solid #444; }
@@ -130,20 +124,16 @@
         .policy-content h2 { color: var(--gold); font-family: 'Cinzel', serif; font-size: 1.4rem; margin-top: 1.5rem; border-bottom: 1px solid #333; }
         .policy-content p { color: #ccc; font-size: 0.9rem; line-height: 1.5; margin-bottom: 0.5rem; }
         
-        /* HIDDEN FILE INPUT */
         #music-input { display: none; }
     </style>
 </head>
 <body class="bg-mystic">
 
     <audio id="user-bgm" loop></audio>
-    
+    <audio id="sfx-flip" preload="auto" src="https://www.soundjay.com/books/sounds/book-page-turn-03.mp3"></audio> 
     <audio id="ambience-rain" loop preload="auto" src="https://assets.mixkit.co/active_storage/sfx/1253/1253-preview.mp3"></audio>
     <audio id="ambience-forest" loop preload="auto" src="https://assets.mixkit.co/active_storage/sfx/177/177-preview.mp3"></audio>
     <audio id="ambience-library" loop preload="auto" src="https://assets.mixkit.co/active_storage/sfx/876/876-preview.mp3"></audio>
-    <audio id="sfx-magic" preload="auto" src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3"></audio>
-    
-    <div id="magic-flash"></div>
 
     <div id="loading-screen">
         <i class="fas fa-book-open fa-2x mb-4 animate-bounce"></i>
@@ -161,26 +151,34 @@
     </div>
 
     <div id="wizard-container">
-        <div class="wizard-avatar-box"><i class="fas fa-user-astronaut wizard-face"></i></div>
         <div id="wizard-text" class="wizard-bubble">Welcome!</div>
+        <div class="wizard-avatar-box"><i class="fas fa-user-astronaut wizard-face"></i></div>
     </div>
 
     <div id="book-container" class="hidden w-full h-full relative flex-col">
-        <div class="absolute top-0 w-full p-4 flex justify-between items-center z-50">
+        <div id="top-bar" class="absolute top-0 w-full p-4 flex justify-between items-center z-50 transition-opacity duration-300">
             <div id="logo-btn" class="bg-black/40 px-3 py-1 rounded-full border border-white/10 cursor-pointer backdrop-blur-md">
                 <span class="text-[#d4af37] font-[Cinzel] text-xs">MYSTERIUM</span>
             </div>
             
             <div class="flex gap-2 relative">
                 <input type="file" id="music-input" accept="audio/*">
-                <button onclick="document.getElementById('music-input').click()" class="w-9 h-9 rounded-full bg-pink-900/50 border border-pink-500 text-pink-300 flex items-center justify-center backdrop-blur-md" title="Upload & Play Music">
+                <button onclick="document.getElementById('music-input').click()" class="w-9 h-9 rounded-full bg-pink-900/50 border border-pink-500 text-pink-300 flex items-center justify-center backdrop-blur-md" title="Upload Music">
                     <i class="fas fa-music"></i>
+                </button>
+                <button onclick="stopUserMusic()" class="w-9 h-9 rounded-full bg-red-900/50 border border-red-500 text-red-300 flex items-center justify-center backdrop-blur-md" title="Stop Music">
+                    <i class="fas fa-stop"></i>
+                </button>
+
+                <button onclick="toggleZenMode()" class="w-9 h-9 rounded-full bg-teal-900/50 border border-teal-500 text-teal-300 flex items-center justify-center backdrop-blur-md" title="Zen Mode (Hide UI)">
+                    <i class="fas fa-expand"></i>
+                </button>
+                <button onclick="toggleSepia()" class="w-9 h-9 rounded-full bg-amber-900/50 border border-amber-500 text-amber-300 flex items-center justify-center backdrop-blur-md" title="Old Paper Mode">
+                    <i class="fas fa-scroll"></i>
                 </button>
 
                 <button onclick="toggleNotesVisibility()" id="note-vis-btn" class="w-9 h-9 rounded-full bg-blue-900/50 border border-blue-500 text-blue-300 flex items-center justify-center backdrop-blur-md"><i class="fas fa-eye"></i></button>
-                <button onclick="toggleMagicEggs()" id="egg-btn" class="w-9 h-9 rounded-full bg-purple-900/50 border border-purple-500 text-purple-300 flex items-center justify-center backdrop-blur-md"><i class="fas fa-dragon"></i></button>
                 <button onclick="toggleWizardMode()" id="wiz-btn" class="w-9 h-9 rounded-full bg-gray-800 border border-gray-600 text-gray-400 flex items-center justify-center backdrop-blur-md"><i class="fas fa-hat-wizard"></i></button>
-                
                 <button onclick="toggleAmbience()" id="ambience-btn" class="w-9 h-9 rounded-full bg-green-900/50 border border-green-500 text-green-300 flex items-center justify-center backdrop-blur-md" title="Toggle Theme Sound"><i class="fas fa-volume-down"></i></button>
                 
                 <button onclick="document.getElementById('bg-menu').classList.toggle('show')" class="w-9 h-9 rounded-full bg-gray-800 border border-gray-600 text-white flex items-center justify-center backdrop-blur-md"><i class="fas fa-palette"></i></button>
@@ -194,13 +192,12 @@
                     <button onclick="setTheme('space')" class="theme-btn bg-purple-900" title="Space"><i class="fas fa-meteor"></i></button>
                     <button onclick="setTheme('sunset')" class="theme-btn bg-orange-900" title="Sunset"><i class="fas fa-sun"></i></button>
                     <button onclick="setTheme('mystic')" class="theme-btn bg-indigo-900" title="Mystic"><i class="fas fa-moon"></i></button>
-                    <button onclick="setTheme('midnight')" class="theme-btn bg-slate-900" title="Dark"><i class="fas fa-ghost"></i></button>
-                    <button onclick="toggleDarkMode()" class="theme-btn bg-black" title="Page Mode"><i class="fas fa-adjust"></i></button>
+                    <button onclick="toggleDarkMode()" class="theme-btn bg-black" title="Dark Page"><i class="fas fa-adjust"></i></button>
                 </div>
             </div>
         </div>
 
-        <div class="book-scene" onclick="toggleControls()">
+        <div class="book-scene" onclick="handleBookClick(event)">
             <div id="the-book" class="book"><div id="pages-wrapper"></div></div>
         </div>
 
@@ -216,7 +213,7 @@
             </div>
         </div>
 
-        <div id="controls-bar" class="absolute bottom-0 w-full glass-panel p-4 z-50 transition-transform duration-300 translate-y-0">
+        <div id="controls-bar" class="absolute bottom-0 w-full glass-panel p-4 z-50 transition-opacity duration-300">
             <div class="flex gap-4">
                 <button onclick="prevPage()" class="flex-1 h-12 bg-white/10 rounded-lg text-white font-bold hover:bg-white/20 transition">PREV PAGE</button>
                 <button onclick="toggleNoteEditor()" class="w-12 h-12 bg-yellow-600/20 text-yellow-500 rounded-lg border border-yellow-600"><i class="fas fa-pen"></i></button>
@@ -235,21 +232,13 @@
                 <h2>Refund Policy</h2>
                 <p>Thank you for shopping at MYSTERIUM. We accept returns within 1 day from the date of purchase.</p>
                 <h3>Returns & Refunds</h3>
-                <p>If your return is approved, we will initiate a refund to your original method of payment. Shipping charges are excluded.</p>
-                <h3>Non-Returnable Items</h3>
-                <ul>
-                    <li>Gift cards</li>
-                    <li>Downloadable software products</li>
-                    <li>Personalized items</li>
-                </ul>
-                <h3>Damaged Items</h3>
-                <p>Contact us immediately if your item arrives damaged. We will arrange a replacement or refund.</p>
+                <p>If your return is approved, we will initiate a refund to your original method of payment.</p>
                 
                 <h2>Privacy Policy</h2>
-                <p>We are committed to protecting your privacy. We collect personal info (email, payment info) to process orders and improve our service. We do not sell your data to third parties.</p>
+                <p>We are committed to protecting your privacy. We collect personal info to process orders.</p>
 
                 <h2>Terms and Conditions</h2>
-                <p>By using our website, you agree to comply with these terms. You must be at least 15 years old. Prices are subject to change without notice.</p>
+                <p>By using our website, you agree to comply with these terms.</p>
             </div>
             <div class="fixed bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black via-black/90 to-transparent flex flex-col items-center gap-3 max-w-2xl mx-auto left-0 right-0">
                 <div class="flex gap-3 w-full max-w-sm">
@@ -298,10 +287,10 @@
         let ambienceOn = true;
         let wizardOn = false;
         let notesVisible = true;
-        let magicEggsOn = true;
         let userNotes = {};
         let currentTheme = 'mystic';
         let currentAmbience = null;
+        let zenMode = false;
 
         // --- AUDIO ---
         const audioTracks = {
@@ -309,25 +298,32 @@
             'forest': document.getElementById('ambience-forest'),
             'library': document.getElementById('ambience-library')
         };
-        // REMOVED FLIP SOUND CALL AS REQUESTED
-        const magicSfx = document.getElementById('sfx-magic');
+        const flipSfx = document.getElementById('sfx-flip');
 
-        // MUSIC UPLOAD PLAYER
+        // MUSIC PLAYER LOGIC
+        const userAudio = document.getElementById('user-bgm');
         document.getElementById('music-input').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if(file) {
                 const url = URL.createObjectURL(file);
-                const player = document.getElementById('user-bgm');
-                player.src = url;
-                player.volume = 0.5;
-                player.play();
+                userAudio.src = url;
+                userAudio.volume = 0.5;
+                userAudio.play();
                 alert("Playing your music! 🎵");
             }
         });
+        window.stopUserMusic = () => {
+            userAudio.pause();
+            userAudio.currentTime = 0;
+            alert("Music Stopped.");
+        };
 
         window.setTheme = (themeName) => {
             if(currentAmbience) { currentAmbience.pause(); currentAmbience.currentTime=0; }
             document.body.className = `bg-${themeName}`;
+            // Keep zen mode class if active
+            if(zenMode) document.body.classList.add('zen-mode');
+            
             currentTheme = themeName;
             if(ambienceOn && audioTracks[themeName]) {
                 currentAmbience = audioTracks[themeName];
@@ -354,23 +350,26 @@
             }
         };
 
-        // --- TOGGLES ---
+        // --- NEW FEATURES ---
+        window.toggleZenMode = () => {
+            zenMode = !zenMode;
+            document.body.classList.toggle('zen-mode');
+        };
+        // Allow clicking background to exit zen mode
+        window.handleBookClick = (e) => {
+            if(zenMode && e.target.classList.contains('book-scene')) {
+                toggleZenMode();
+            }
+        }
+
+        window.toggleSepia = () => {
+            document.body.classList.toggle('sepia-mode');
+        };
+
         window.toggleNotesVisibility = () => {
             notesVisible = !notesVisible;
             document.getElementById('note-vis-btn').classList.toggle('opacity-50');
             loadInitialPages(); 
-        };
-
-        window.toggleMagicEggs = () => {
-            magicEggsOn = !magicEggsOn;
-            const btn = document.getElementById('egg-btn');
-            if(magicEggsOn) {
-                btn.classList.replace('bg-gray-800', 'bg-purple-900/50');
-                btn.classList.replace('text-gray-400', 'text-purple-300');
-            } else {
-                btn.classList.replace('bg-purple-900/50', 'bg-gray-800');
-                btn.classList.replace('text-purple-300', 'text-gray-400');
-            }
         };
 
         window.toggleWizardMode = () => {
@@ -387,7 +386,7 @@
             }
         };
 
-        // --- AUTH ---
+        // --- AUTH & LOAD ---
         onAuthStateChanged(auth, async (u) => {
             if(u){
                 user = u;
@@ -501,42 +500,21 @@
                         page.classList.remove('flipped');
                         page.style.zIndex = zIndex + 50; 
                         setTimeout(()=>page.style.zIndex = zIndex, 1000);
+                        flipSfx.currentTime=0; flipSfx.play().catch(()=>{});
                     } else {
                         page.classList.add('flipped');
                         page.style.zIndex = 100;
                         setTimeout(()=>page.style.zIndex = 1, 600);
+                        flipSfx.currentTime=0; flipSfx.play().catch(()=>{});
                         
-                        // MAGIC EGGS
-                        if(magicEggsOn && Math.random() < 0.25) spawnMagicEgg(page);
                         // WIZARD
-                        if(wizardOn && Math.random() < 0.3) showWizard(["Keep reading!", "The mystery deepens...", "Excellent!"][Math.floor(Math.random()*3)]);
+                        if(wizardOn && Math.random() < 0.2) showWizard(["Keep reading!", "The mystery deepens...", "Excellent!"][Math.floor(Math.random()*3)]);
                         loadMorePages();
                     }
                 };
                 wrap.appendChild(page);
             });
             resizeContent();
-        }
-
-        function spawnMagicEgg(pageElement) {
-            const egg = document.createElement('div');
-            egg.className = 'magic-egg';
-            egg.innerHTML = '<i class="fas fa-dragon"></i>';
-            egg.onclick = (e) => { e.stopPropagation(); triggerMagicTeleport(); };
-            pageElement.appendChild(egg);
-        }
-
-        function triggerMagicTeleport() {
-            if(ambienceOn) magicSfx.play().catch(()=>{});
-            const flash = document.getElementById('magic-flash');
-            flash.style.opacity = '1';
-            setTimeout(async () => {
-                // REAL TELEPORT: Re-load with random start
-                const randomPage = Math.floor(Math.random() * 20); // Simulating max 20
-                await loadInitialPages(); // Just reloads for now, logic to jump is implemented in backend queries
-                alert(`✨ TELEPORTED to a Random Page!`);
-                flash.style.opacity = '0';
-            }, 500);
         }
 
         function showWizard(text) {
