@@ -9,148 +9,123 @@
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
     
     <style>
-        /* --- THEME VARIABLES --- */
-        :root { --bg-body: #0b0c10; --page-default: #f4e4bc; --gold: #d4af37; }
-        
-        /* DARK MODE */
-        body.dark-mode .front, body.dark-mode .back { background-color: #121212 !important; border-color: #333 !important; }
-        body.dark-mode .content-layer img { filter: invert(1) hue-rotate(180deg); mix-blend-mode: screen; }
-        body.dark-mode .content-layer div[style*="color"] { color: #e0e0e0 !important; }
-
-        /* --- BACKGROUND STYLES --- */
+        /* --- VARIABLES & BASE --- */
+        :root { --bg-body: #0b0c10; --gold: #d4af37; }
         body {
-            background-color: var(--bg-body);
-            color: #e0e0e0; font-family: 'Inter', sans-serif; height: 100vh; overflow: hidden;
+            background-color: var(--bg-body); color: #e0e0e0;
+            font-family: 'Inter', sans-serif; height: 100vh; overflow: hidden;
             transition: background 0.5s ease-in-out; touch-action: none;
             background-size: cover; background-position: center;
         }
-        body.bg-mystic { background-image: radial-gradient(circle at 50% 50%, #1f2833 0%, #0b0c10 100%); }
-        body.bg-wood { background-color: #2c1e12; background-image: url('https://www.transparenttextures.com/patterns/wood-pattern.png'); }
-        body.bg-minimal { background-image: none; background-color: #050505; }
-        body.bg-midnight { background-image: linear-gradient(to bottom, #0f2027, #203a43, #2c5364); }
-        body.bg-forest { background-image: linear-gradient(to bottom, #134e5e, #71b280); }
-        body.bg-coffee { background-image: radial-gradient(circle, #3e2723, #1b0000); }
-        body.bg-slate { background-color: #263238; background-image: radial-gradient(circle, #37474f, #263238); }
 
-        /* --- UI ELEMENTS --- */
-        .book-scene { perspective: 1500px; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; padding-bottom: 60px; }
-        .book { transform-style: preserve-3d; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.6); transition: transform 0.5s; aspect-ratio: 2 / 3; width: auto; height: 75vh; max-width: 95vw; }
+        /* --- THEMES (MOODS) --- */
+        body.bg-rain { background-image: url('https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?q=80&w=1000&auto=format&fit=crop'); }
+        body.bg-library { background-image: url('https://images.unsplash.com/photo-1507842217343-583bb7270b66?q=80&w=1000&auto=format&fit=crop'); }
+        body.bg-forest { background-image: url('https://images.unsplash.com/photo-1448375240586-dfd8f3793300?q=80&w=1000&auto=format&fit=crop'); }
+        body.bg-mystic { background-image: radial-gradient(circle at 50% 50%, #1f2833 0%, #0b0c10 100%); }
+        body.bg-midnight { background-image: linear-gradient(to bottom, #0f2027, #203a43, #2c5364); }
         
-        .page { position: absolute; top:0; left:0; width: 100%; height: 100%; transform-origin: left; transition: transform 1.2s cubic-bezier(0.645, 0.045, 0.355, 1); transform-style: preserve-3d; border-radius: 2px 8px 8px 2px; cursor: pointer; background-color: white; }
-        .front, .back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; -webkit-backface-visibility: hidden; overflow: hidden; background-color: white; }
+        /* Overlay to darken images for readability */
+        body::before { content: ''; position: absolute; inset: 0; background: rgba(0,0,0,0.6); pointer-events: none; z-index: -1; }
+
+        /* --- BOOK STYLES --- */
+        .book-scene { perspective: 1500px; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; padding-bottom: 60px; }
+        .book { transform-style: preserve-3d; position: relative; transition: transform 0.5s; aspect-ratio: 2 / 3; width: auto; height: 75vh; max-width: 95vw; }
+        .page { position: absolute; top:0; left:0; width: 100%; height: 100%; transform-origin: left; transition: transform 1.2s cubic-bezier(0.645, 0.045, 0.355, 1); transform-style: preserve-3d; border-radius: 2px 8px 8px 2px; cursor: pointer; background-color: white; box-shadow: inset 5px 0 10px rgba(0,0,0,0.1); }
+        .front, .back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; overflow: hidden; background-color: white; }
         .back { transform: rotateY(180deg); background-color: #f0f0f0; }
         .flipped { transform: rotateY(-180deg); }
-        .hard-cover .front { border: 4px solid #5c3a21; border-radius: 4px 10px 10px 4px; }
-
-        .content-layer { position: absolute; top: 50%; left: 50%; width: 360px; height: 540px; transform-origin: center center; pointer-events: none; background: white; display: flex; justify-content: center; align-items: center; }
-        .content-layer img { width: 100%; height: 100%; object-fit: cover; }
+        
+        /* Dark Mode Pages */
+        body.dark-mode .front, body.dark-mode .back { background-color: #1a1a1a !important; color: #ccc; }
+        
+        .content-layer { position: absolute; top: 50%; left: 50%; width: 360px; height: 540px; transform: translate(-50%, -50%); pointer-events: none; background: white; }
+        body.dark-mode .content-layer { background: #1a1a1a; }
         .content-layer * { pointer-events: auto; }
 
-        .glass-panel { background: rgba(20, 20, 20, 0.85); backdrop-filter: blur(12px); border-top: 1px solid rgba(255,255,255,0.08); }
-        
-        /* THEME MENU */
-        .theme-menu { 
-            position: absolute; top: 60px; right: 10px; 
-            background: rgba(15, 15, 15, 0.95); border: 1px solid #333; 
-            padding: 15px; border-radius: 16px; display: none; 
-            grid-template-columns: repeat(4, 1fr); gap: 10px; z-index: 100; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-        .theme-menu.show { display: grid; }
-        .theme-btn { width: 36px; height: 36px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.1); cursor: pointer; transition: transform 0.2s; }
-        .theme-btn:active { transform: scale(0.9); }
-
-        /* LOADING & NOTE PANEL */
-        #loading-screen { position: fixed; inset: 0; z-index: 9999; background: #000; color: #d4af37; display: flex; flex-col; align-items: center; justify-content: center; transition: opacity 0.5s; }
-        .progress-bar-container { width: 200px; height: 4px; background: #333; margin-top: 20px; border-radius: 2px; overflow: hidden; }
-        .progress-bar-fill { height: 100%; background: #d4af37; width: 0%; transition: width 0.3s; }
-        
-        #note-panel {
-            position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%) scale(0.9);
-            width: 90%; max-width: 400px; background: #fff; color: #333;
-            border-radius: 12px; padding: 15px; z-index: 200; box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-            display: none; opacity: 0; transition: all 0.3s;
-        }
-        #note-panel.show { display: block; opacity: 1; transform: translateX(-50%) scale(1); }
-        #note-area { width: 100%; height: 100px; border: 1px solid #ddd; border-radius: 8px; padding: 10px; font-family: 'Merriweather', serif; font-size: 14px; outline: none; resize: none; }
-
-        /* --- WIZARD CHARACTER STYLES --- */
+        /* --- WIZARD CHARACTER (IMPROVED) --- */
         #wizard-container {
-            position: fixed; bottom: 100px; left: 20px; z-index: 80;
-            display: flex; flex-direction: column; align-items: flex-start;
-            pointer-events: none; opacity: 0; transform: translateY(20px);
-            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
+            z-index: 200; pointer-events: none; display: flex; flex-col; align-items: center;
+            transition: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55); opacity: 0;
         }
-        #wizard-container.active { opacity: 1; transform: translateY(0); }
+        #wizard-container.active { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        
+        .wizard-avatar-box {
+            width: 80px; height: 80px; background: #1a1a1a; border: 3px solid #d4af37;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 25px rgba(212, 175, 55, 0.6); overflow: hidden; position: relative;
+        }
+        .wizard-face { font-size: 45px; color: #d4af37; }
         
         .wizard-bubble {
-            background: white; color: #000; padding: 10px 15px; border-radius: 15px 15px 15px 0;
-            font-family: 'Inter', sans-serif; font-size: 0.85rem; font-weight: 600;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3); margin-bottom: 10px;
-            max-width: 200px; position: relative;
-        }
-        .wizard-avatar {
-            width: 60px; height: 60px; background: #2a2a2a; border: 2px solid #d4af37;
-            border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            font-size: 30px; color: #d4af37; box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+            background: rgba(255, 255, 255, 0.95); color: #000; padding: 12px 20px; 
+            border-radius: 20px; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 0.9rem;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.4); margin-top: 15px; text-align: center; min-width: 200px;
+            border: 2px solid #d4af37; transform: translateY(10px);
         }
 
-        /* Policy Styles */
-        .policy-content h2 { color: #d4af37; font-family: 'Cinzel', serif; font-size: 1.5rem; margin-top: 2rem; border-bottom: 1px solid #333; }
-        .policy-content p, .policy-content li { color: #ccc; font-size: 0.9rem; line-height: 1.6; margin-bottom: 0.8rem; }
+        /* --- MENUS --- */
+        .glass-panel { background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(8px); border-top: 1px solid #333; }
+        .theme-menu { 
+            position: absolute; top: 60px; right: 10px; background: #111; border: 1px solid #444; 
+            padding: 10px; border-radius: 12px; display: none; grid-template-columns: repeat(3, 1fr); gap: 8px; 
+        }
+        .theme-menu.show { display: grid; }
+        .theme-btn { width: 40px; height: 40px; border-radius: 8px; border: 2px solid #555; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        .theme-btn:hover { border-color: #d4af37; }
+
+        /* LOADING */
+        #loading-screen { position: fixed; inset: 0; z-index: 9999; background: #000; color: #d4af37; display: flex; flex-col; align-items: center; justify-content: center; transition: opacity 0.5s; }
+        .progress-bar { width: 200px; height: 3px; background: #333; margin-top: 20px; }
+        .progress-fill { height: 100%; background: #d4af37; width: 0%; transition: width 0.3s; }
     </style>
 </head>
-<body class="bg-midnight">
+<body class="bg-mystic">
 
-    <audio id="flip-sound" preload="auto">
-        <source src="https://assets.mixkit.co/active_storage/sfx/2578/2578-preview.mp3" type="audio/mpeg">
-    </audio>
-
-    <div id="loading-screen">
-        <i class="fas fa-book-open fa-2x mb-4 animate-pulse"></i>
-        <h2 class="font-[Cinzel] tracking-widest text-lg">OPENING ARCHIVE</h2>
-        <div class="progress-bar-container"><div id="loading-bar" class="progress-bar-fill"></div></div>
-        <p id="loading-text" class="text-xs text-gray-500 mt-2 font-mono">Connecting...</p>
+    <audio id="sfx-flip" preload="auto" src="https://assets.mixkit.co/active_storage/sfx/2578/2578-preview.mp3"></audio>
+    <audio id="ambience-rain" loop preload="auto" src="https://assets.mixkit.co/active_storage/sfx/1253/1253-preview.mp3"></audio> <audio id="ambience-forest" loop preload="auto" src="https://assets.mixkit.co/active_storage/sfx/177/177-preview.mp3"></audio> <audio id="ambience-library" loop preload="auto" src="https://assets.mixkit.co/active_storage/sfx/876/876-preview.mp3"></audio> <div id="loading-screen">
+        <i class="fas fa-book-open fa-2x mb-4 animate-bounce"></i>
+        <h2 class="font-[Cinzel] text-xl tracking-widest">ARCHIVE</h2>
+        <div class="progress-bar"><div id="loading-bar" class="progress-fill"></div></div>
+        <p class="text-xs text-gray-500 mt-2 font-mono">Tap anywhere to start</p>
     </div>
 
     <div id="auth-section" class="hidden fixed inset-0 z-[900] flex items-center justify-center bg-black/95 p-6">
         <div class="w-full max-w-sm text-center">
             <i class="fas fa-dragon text-5xl text-[#d4af37] mb-4"></i>
-            <h1 class="text-3xl font-[Cinzel] text-white tracking-widest mb-8">MYSTERIUM</h1>
-            <button id="google-login" class="w-full bg-white text-black font-bold py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-gray-200 transition"><i class="fab fa-google text-red-600"></i> Login with Google</button>
+            <h1 class="text-3xl font-[Cinzel] text-white mb-8">MYSTERIUM</h1>
+            <button id="google-login" class="w-full bg-white text-black font-bold py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-gray-200"><i class="fab fa-google"></i> Login</button>
         </div>
     </div>
 
     <div id="wizard-container">
-        <div id="wizard-text" class="wizard-bubble">Keep going, knowledge awaits!</div>
-        <div class="wizard-avatar"><i class="fas fa-hat-wizard"></i></div>
+        <div class="wizard-avatar-box">
+            <i class="fas fa-user-astronaut wizard-face"></i> </div>
+        <div id="wizard-text" class="wizard-bubble">Welcome, Seeker!</div>
     </div>
 
     <div id="book-container" class="hidden w-full h-full relative flex-col">
-        <div id="top-bar" class="absolute top-0 w-full p-4 flex justify-between items-center z-50 transition-transform duration-300">
-            <div id="logo-container" class="bg-black/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 cursor-pointer select-none">
-                <span class="text-[#d4af37] font-[Cinzel] text-xs tracking-widest">MYSTERIUM</span>
+        <div class="absolute top-0 w-full p-4 flex justify-between items-center z-50">
+            <div id="logo-btn" class="bg-black/40 px-3 py-1 rounded-full border border-white/10 cursor-pointer">
+                <span class="text-[#d4af37] font-[Cinzel] text-xs">MYSTERIUM</span>
             </div>
             <div class="flex gap-2 relative">
-                <button onclick="document.getElementById('policy-view').classList.remove('hidden')" class="w-8 h-8 rounded-full bg-indigo-900/40 border border-indigo-500/30 flex items-center justify-center text-indigo-300"><i class="fas fa-scale-balanced text-xs"></i></button>
+                <button onclick="toggleWizardMode()" id="wiz-btn" class="w-9 h-9 rounded-full bg-purple-900/50 border border-purple-500 text-purple-300 flex items-center justify-center"><i class="fas fa-hat-wizard"></i></button>
                 
-                <button onclick="toggleWizard()" class="w-8 h-8 rounded-full bg-black/40 border border-white/10 flex items-center justify-center text-purple-400" title="Toggle Guide">
-                    <i id="wizard-icon" class="fas fa-hat-wizard text-xs"></i>
-                </button>
+                <button onclick="toggleGlobalSound()" id="sound-btn" class="w-9 h-9 rounded-full bg-green-900/50 border border-green-500 text-green-300 flex items-center justify-center"><i class="fas fa-volume-up"></i></button>
+                
+                <button onclick="document.getElementById('bg-menu').classList.toggle('show')" class="w-9 h-9 rounded-full bg-gray-800 border border-gray-600 text-white flex items-center justify-center"><i class="fas fa-palette"></i></button>
+                
+                <button id="logout-btn" class="w-9 h-9 rounded-full bg-red-900/50 border border-red-500 text-red-300 flex items-center justify-center"><i class="fas fa-sign-out-alt"></i></button>
 
-                <button onclick="toggleSound()" class="w-8 h-8 rounded-full bg-black/40 border border-white/10 flex items-center justify-center text-green-400"><i id="sound-icon" class="fas fa-volume-up text-xs"></i></button>
-                <button onclick="toggleTheme()" class="w-8 h-8 rounded-full bg-black/40 border border-white/10 flex items-center justify-center text-yellow-500"><i class="fas fa-sun text-xs"></i></button>
-                <button onclick="toggleBgMenu()" class="w-8 h-8 rounded-full bg-black/40 border border-white/10 flex items-center justify-center text-white"><i class="fas fa-paint-brush text-xs"></i></button>
-                <button id="logout-btn" class="w-8 h-8 rounded-full bg-red-900/40 border border-red-500/30 flex items-center justify-center text-red-400"><i class="fas fa-sign-out-alt text-xs"></i></button>
-                
                 <div id="bg-menu" class="theme-menu">
-                    <button onclick="setBg('mystic')" class="theme-btn bg-gradient-to-br from-[#1f2833] to-[#0b0c10]"></button>
-                    <button onclick="setBg('midnight')" class="theme-btn bg-gradient-to-br from-[#0f2027] to-[#2c5364]"></button>
-                    <button onclick="setBg('forest')" class="theme-btn bg-gradient-to-br from-[#134e5e] to-[#71b280]"></button>
-                    <button onclick="setBg('coffee')" class="theme-btn bg-[#3e2723]"></button>
-                    <button onclick="setBg('slate')" class="theme-btn bg-[#37474f]"></button>
-                    <button onclick="setBg('wood')" class="theme-btn bg-[#5c3a21]"></button>
-                    <button onclick="setBg('minimal')" class="theme-btn bg-black border-white"></button>
+                    <button onclick="setTheme('rain')" class="theme-btn bg-blue-900 text-blue-200" title="Rainy Mood"><i class="fas fa-cloud-rain"></i></button>
+                    <button onclick="setTheme('library')" class="theme-btn bg-yellow-900 text-yellow-200" title="Library"><i class="fas fa-landmark"></i></button>
+                    <button onclick="setTheme('forest')" class="theme-btn bg-green-900 text-green-200" title="Forest"><i class="fas fa-tree"></i></button>
+                    <button onclick="setTheme('mystic')" class="theme-btn bg-indigo-900 text-indigo-200" title="Mystic"><i class="fas fa-moon"></i></button>
+                    <button onclick="setTheme('midnight')" class="theme-btn bg-slate-900 text-slate-200" title="Dark"><i class="fas fa-ghost"></i></button>
+                    <button onclick="toggleDarkMode()" class="theme-btn bg-black text-white" title="Page Dark Mode"><i class="fas fa-adjust"></i></button>
                 </div>
             </div>
         </div>
@@ -159,68 +134,28 @@
             <div id="the-book" class="book"><div id="pages-wrapper"></div></div>
         </div>
 
-        <div id="note-panel">
-            <div class="flex justify-between items-center mb-2">
-                <span class="text-xs font-bold uppercase text-gray-500">Margin Note</span>
-                <span id="note-status" class="text-[10px] text-green-600 hidden">Saved</span>
-            </div>
-            <textarea id="note-area" placeholder="Write your thoughts..."></textarea>
-            <div class="flex justify-end mt-2">
-                <button onclick="closeNotePanel()" class="bg-gray-200 text-gray-700 px-3 py-1 rounded text-xs font-bold mr-2">Close</button>
-                <button onclick="saveCurrentNote()" class="bg-[#d4af37] text-black px-3 py-1 rounded text-xs font-bold">Save</button>
-            </div>
-        </div>
-
-        <div id="controls-bar" class="absolute bottom-0 w-full glass-panel p-4 pb-6 z-50 transition-transform duration-300 translate-y-0">
-            <div class="w-full h-1 bg-gray-700 rounded-full mb-4 overflow-hidden"><div id="progress-fill" class="h-full bg-[#d4af37] w-0 transition-all duration-300"></div></div>
-            <div class="flex gap-4 items-center justify-between">
-                <button onclick="prevPage()" class="flex-1 h-12 bg-white/10 rounded-xl text-white hover:bg-white/20"><i class="fas fa-chevron-left"></i> PREV</button>
-                <button onclick="toggleNotePanel()" class="w-12 h-12 bg-[#d4af37]/20 border border-[#d4af37] rounded-xl text-[#d4af37]"><i class="fas fa-pen-nib"></i></button>
-                <button onclick="nextPage()" class="flex-1 h-12 bg-white/10 rounded-xl text-white hover:bg-white/20">NEXT <i class="fas fa-chevron-right"></i></button>
+        <div id="controls-bar" class="absolute bottom-0 w-full glass-panel p-4 z-50 transition-transform duration-300">
+            <div class="flex gap-4">
+                <button onclick="prevPage()" class="flex-1 h-12 bg-white/10 rounded-lg text-white font-bold">PREV</button>
+                <button onclick="nextPage()" class="flex-1 h-12 bg-white/10 rounded-lg text-white font-bold">NEXT</button>
             </div>
         </div>
     </div>
 
-    <div id="resume-modal" class="hidden fixed inset-0 z-[980] flex items-center justify-center bg-black/80 backdrop-blur-sm p-6">
-        <div class="bg-[#1a1a1a] border border-[#d4af37] rounded-2xl p-6 text-center max-w-sm w-full">
-            <h3 class="text-[#d4af37] font-[Cinzel] text-lg mb-2">Welcome Back</h3>
-            <p class="text-gray-400 text-sm mb-6">Resume from where you left off?</p>
-            <div class="flex gap-3">
-                <button onclick="closeResumeModal(false)" class="flex-1 py-3 rounded-lg border border-gray-600 text-gray-400">No</button>
-                <button onclick="closeResumeModal(true)" class="flex-1 py-3 rounded-lg bg-[#d4af37] text-black font-bold">Resume</button>
-            </div>
-        </div>
+    <div id="policy-view" class="hidden fixed inset-0 z-[950] bg-black/95 p-6 text-white overflow-y-auto">
+        <h1 class="text-gold font-[Cinzel] text-2xl mb-4">Policies</h1>
+        <p class="text-sm text-gray-400">Standard Refund & Privacy Policies Apply.</p>
+        <button onclick="document.getElementById('policy-view').classList.add('hidden')" class="mt-4 px-4 py-2 bg-gray-700 rounded">Close</button>
     </div>
-
-    <div id="policy-view" class="hidden fixed inset-0 z-[950] bg-black/95 overflow-y-auto animate-fade-in">
-        <div class="max-w-2xl mx-auto min-h-screen bg-[#0b0c10] shadow-2xl relative">
-            <div class="sticky top-0 bg-[#0b0c10]/95 backdrop-blur-sm border-b border-gray-800 p-4 flex justify-between items-center z-10">
-                <h1 class="text-[#d4af37] font-[Cinzel] text-xl">LEGAL & SUPPORT</h1>
-                <button onclick="document.getElementById('policy-view').classList.add('hidden')" class="w-8 h-8 rounded-full bg-gray-800 text-white flex items-center justify-center"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="p-6 pb-32 policy-content">
-                <h2>Refund Policy</h2><p>We accept returns within 1 day. Contact us immediately for defects.</p>
-                <h2>Privacy Policy</h2><p>We protect your data and only use it to fulfill orders.</p>
-                <h2>Terms</h2><p>By using this site, you agree to our terms.</p>
-            </div>
-            <div class="fixed bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black via-black/90 to-transparent flex flex-col items-center gap-3 max-w-2xl mx-auto left-0 right-0">
-                <div class="flex gap-3 w-full max-w-sm">
-                    <a href="tel:+94787004239" class="flex-1 bg-green-700 text-white py-3 rounded-lg flex items-center justify-center gap-2 font-bold"><i class="fas fa-phone"></i> Call</a>
-                    <a href="mailto:yasodhasandeepa@gmail.com" class="flex-1 bg-indigo-700 text-white py-3 rounded-lg flex items-center justify-center gap-2 font-bold"><i class="fas fa-envelope"></i> Email</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="pay-modal" class="hidden fixed inset-0 z-[999] flex items-center justify-center bg-black/90 p-4">
-        <div class="w-full max-w-sm bg-[#1a1a1a] border border-[#d4af37] rounded-2xl p-6 text-center">
-            <i class="fas fa-lock text-3xl text-[#d4af37] mb-4"></i>
-            <h3 class="text-white font-[Cinzel] text-lg mb-2">FULL ACCESS LOCKED</h3>
-            <p class="text-gray-400 text-sm mb-4">Upload payment receipt (Rs. 100) <br>8025211913<br>commercial bank<br> Kurunegala <br> K.M.H.Y.S kariyawasam.</p>
-            <input type="file" id="receipt-file" accept="image/*" class="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:bg-[#d4af37] file:text-black hover:file:bg-white mb-4">
-            <button id="send-receipt" class="w-full bg-[#d4af37] text-black font-bold py-3 rounded-xl">SUBMIT</button>
-            <p id="receipt-loading" class="hidden mt-2 text-[#d4af37] text-xs">Uploading...</p>
-            <button onclick="document.getElementById('pay-modal').classList.add('hidden')" class="text-xs text-gray-500 mt-4 underline">Close</button>
+    
+    <div id="pay-modal" class="hidden fixed inset-0 z-[999] bg-black/90 flex items-center justify-center p-4">
+        <div class="bg-gray-900 border border-gold p-6 rounded-xl text-center">
+            <i class="fas fa-lock text-3xl text-gold mb-4"></i>
+            <h3 class="text-white mb-2">LOCKED</h3>
+            <p class="text-gray-400 text-xs mb-4">Upload Rs.100 Receipt</p>
+            <input type="file" id="receipt-file" class="text-white text-xs mb-4">
+            <button id="send-receipt" class="w-full bg-gold text-black font-bold py-2 rounded">Submit</button>
+            <button onclick="document.getElementById('pay-modal').classList.add('hidden')" class="text-xs text-gray-500 mt-2 block w-full">Close</button>
         </div>
     </div>
 
@@ -247,246 +182,156 @@
         let isUnlocked = false;
         let lastLoadedPageDoc = null;
         let isLoadingMore = false;
-        const BATCH_SIZE = 5; 
-        let statusListener = null;
+        const BATCH_SIZE = 5;
 
-        // --- NEW FEATURES STATE ---
-        let soundEnabled = true;
-        let wizardEnabled = true;
-        let savedPageToResume = 0;
-        let userNotes = {}; 
+        // --- FEATURES STATE ---
+        let soundOn = true;
+        let wizardOn = true;
+        let currentTheme = 'mystic';
+        let currentAmbience = null; // Stores the current Audio object
 
-        // --- WIZARD LOGIC ---
+        // --- AUDIO MANAGER ---
+        const audioTracks = {
+            'rain': document.getElementById('ambience-rain'),
+            'forest': document.getElementById('ambience-forest'),
+            'library': document.getElementById('ambience-library')
+        };
+        const flipSfx = document.getElementById('sfx-flip');
+
+        window.setTheme = (themeName) => {
+            // Stop previous ambience
+            if(currentAmbience) {
+                currentAmbience.pause();
+                currentAmbience.currentTime = 0;
+            }
+
+            // Change Visuals
+            document.body.className = `bg-${themeName}`;
+            currentTheme = themeName;
+            
+            // Play New Ambience (if sound is on)
+            if(soundOn && audioTracks[themeName]) {
+                currentAmbience = audioTracks[themeName];
+                currentAmbience.volume = 0.5;
+                currentAmbience.play().catch(e => console.log("Audio waiting interaction"));
+            } else {
+                currentAmbience = null;
+            }
+            
+            document.getElementById('bg-menu').classList.remove('show');
+        };
+
+        window.toggleGlobalSound = () => {
+            soundOn = !soundOn;
+            const btn = document.getElementById('sound-btn');
+            
+            if(soundOn) {
+                btn.innerHTML = '<i class="fas fa-volume-up"></i>';
+                btn.classList.replace('bg-red-900/50', 'bg-green-900/50');
+                btn.classList.replace('text-red-300', 'text-green-300');
+                // Resume ambience if current theme has one
+                if(audioTracks[currentTheme]) {
+                    currentAmbience = audioTracks[currentTheme];
+                    currentAmbience.play().catch(()=>{});
+                }
+            } else {
+                btn.innerHTML = '<i class="fas fa-volume-mute"></i>';
+                btn.classList.replace('bg-green-900/50', 'bg-red-900/50');
+                btn.classList.replace('text-green-300', 'text-red-300');
+                // Stop ambience
+                if(currentAmbience) currentAmbience.pause();
+            }
+        };
+
+        function playPageFlip() {
+            if(soundOn) {
+                flipSfx.currentTime = 0;
+                flipSfx.volume = 1.0;
+                flipSfx.play().catch(()=>{});
+            }
+        }
+
+        // --- WIZARD MANAGER ---
         const wizardQuotes = [
-            "Keep reading, the best is yet to come.",
-            "A reader lives a thousand lives.",
-            "Focus... the mystery deepens.",
-            "You are doing great!",
-            "Knowledge is power.",
-            "Don't stop now!",
-            "What secrets lie on the next page?",
-            "The Archive is watching..."
+            "Excellent pace!", "A secret lies ahead...", "Read deeper.", 
+            "The story breathes.", "You are the chosen one.", "One more page?"
         ];
 
-        window.toggleWizard = () => {
-            wizardEnabled = !wizardEnabled;
-            const icon = document.getElementById('wizard-icon');
-            const container = icon.parentElement;
-            if(wizardEnabled) {
-                container.classList.remove('text-gray-600'); container.classList.add('text-purple-400');
-                showWizardMessage("I am here to guide you!");
+        window.toggleWizardMode = () => {
+            wizardOn = !wizardOn;
+            const btn = document.getElementById('wiz-btn');
+            if(wizardOn) {
+                btn.classList.replace('bg-gray-800', 'bg-purple-900/50');
+                showWizard("I am returned!");
             } else {
-                container.classList.remove('text-purple-400'); container.classList.add('text-gray-600');
+                btn.classList.replace('bg-purple-900/50', 'bg-gray-800');
                 document.getElementById('wizard-container').classList.remove('active');
             }
         };
 
-        function triggerRandomWizard() {
-            if(!wizardEnabled) return;
-            // 30% chance to show wizard on page flip
-            if(Math.random() < 0.3) {
-                const quote = wizardQuotes[Math.floor(Math.random() * wizardQuotes.length)];
-                showWizardMessage(quote);
-            }
-        }
-
-        function showWizardMessage(msg) {
+        function showWizard(text) {
+            if(!wizardOn) return;
             const wiz = document.getElementById('wizard-container');
-            const txt = document.getElementById('wizard-text');
-            txt.innerText = msg;
+            document.getElementById('wizard-text').innerText = text;
             wiz.classList.add('active');
-            // Auto hide after 4 seconds
-            setTimeout(() => { wiz.classList.remove('active'); }, 4000);
+            setTimeout(() => wiz.classList.remove('active'), 3500);
         }
 
-        // --- SOUND LOGIC (FIXED) ---
-        window.toggleSound = () => {
-            soundEnabled = !soundEnabled;
-            const icon = document.getElementById('sound-icon');
-            icon.className = soundEnabled ? "fas fa-volume-up text-xs" : "fas fa-volume-mute text-xs";
-            icon.parentElement.className = soundEnabled ? 
-                "w-8 h-8 rounded-full bg-black/40 border border-white/10 flex items-center justify-center text-green-400" :
-                "w-8 h-8 rounded-full bg-black/40 border border-white/10 flex items-center justify-center text-red-400";
-        };
-        
-        function playFlipSound() {
-            if(soundEnabled) {
-                const audio = document.getElementById('flip-sound');
-                // We reset time to allow rapid replay
-                audio.currentTime = 0;
-                audio.play().catch(e => {
-                    // This catches the 'User didn't interact' error silently
-                    console.log("Audio waiting for user interaction.");
-                });
-            }
-        }
-
-        // Easter Egg
-        let logoClicks = 0;
-        document.getElementById('logo-container').addEventListener('click', () => {
-            logoClicks++;
-            if(logoClicks === 5) { alert("🔮 Secret Found!"); document.body.style.filter = "sepia(100%)"; logoClicks = 0; }
-        });
-
-        // --- FIREBASE AUTH & USER ---
+        // --- AUTH & LOAD ---
         onAuthStateChanged(auth, async (u) => {
             if(u){
                 user = u;
                 document.getElementById('auth-section').classList.add('hidden');
-                updateLoading(10, "Connecting...");
                 setupUserListener(u.uid);
             } else {
-                if(statusListener) statusListener();
                 document.getElementById('loading-screen').classList.add('opacity-0', 'pointer-events-none');
                 document.getElementById('auth-section').classList.remove('hidden');
             }
         });
 
         function setupUserListener(uid) {
-            statusListener = onSnapshot(doc(db, "users", uid), (docSnap) => {
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    const newStatus = (data.status === 'approved');
-                    savedPageToResume = data.lastPage || 0;
-                    userNotes = data.notes || {};
-                    
-                    if (!isUnlocked && newStatus) {
-                        isUnlocked = true;
-                        if(document.getElementById('book-container').classList.contains('hidden')) initBookLoad();
-                        else triggerUnlockAnimation();
-                    } else if (!newStatus) {
-                        isUnlocked = false;
-                        if(document.getElementById('book-container').classList.contains('hidden')) initBookLoad();
-                    } else {
-                        if(document.getElementById('book-container').classList.contains('hidden')) initBookLoad();
-                    }
-                } else {
-                    isUnlocked = false;
-                    initBookLoad();
-                }
+            onSnapshot(doc(db, "users", uid), (docSnap) => {
+                if (docSnap.exists() && docSnap.data().status === 'approved') {
+                    isUnlocked = true;
+                } else isUnlocked = false;
+                initBookLoad();
             });
         }
 
-        // --- BACKGROUND ---
-        const bgClasses = ['bg-mystic', 'bg-wood', 'bg-minimal', 'bg-midnight', 'bg-forest', 'bg-coffee', 'bg-slate'];
-        window.setBg = (style) => {
-            document.body.classList.remove(...bgClasses);
-            document.body.classList.add('bg-' + style);
-            localStorage.setItem('prefBg', style);
-            document.getElementById('bg-menu').classList.remove('show');
-        };
-        const savedBg = localStorage.getItem('prefBg') || 'midnight';
-        window.setBg(savedBg);
-        window.toggleBgMenu = () => { document.getElementById('bg-menu').classList.toggle('show'); }
-
-        // --- LOADING ---
         async function initBookLoad() {
-            updateLoading(30, "Fetching Pages...");
-            if(isUnlocked && savedPageToResume > 1) {
-                document.getElementById('resume-modal').classList.remove('hidden');
+            document.getElementById('loading-bar').style.width = '50%';
+            await loadInitialPages();
+            document.getElementById('loading-bar').style.width = '100%';
+            setTimeout(() => {
                 document.getElementById('loading-screen').classList.add('opacity-0', 'pointer-events-none');
-                return;
-            }
-            await loadPagesFromScratch();
+                document.getElementById('book-container').classList.remove('hidden');
+                document.getElementById('book-container').style.display='flex';
+                resizeContent();
+                // Try playing ambience on start (might get blocked until click)
+                setTheme('mystic'); 
+            }, 800);
         }
 
-        async function loadPagesFromScratch() {
-            await loadInitialPages(0);
-            finishLoading();
-        }
-
-        window.closeResumeModal = async (shouldResume) => {
-            document.getElementById('resume-modal').classList.add('hidden');
-            if(shouldResume) {
-                await loadInitialPages(savedPageToResume > 2 ? savedPageToResume - 1 : 0);
-            } else {
-                await loadInitialPages(0);
-            }
-            finishLoading();
-        }
-
-        function finishLoading() {
-            updateLoading(100, "Ready");
-            setTimeout(() => document.getElementById('loading-screen').classList.add('opacity-0', 'pointer-events-none'), 500);
-            document.getElementById('book-container').classList.remove('hidden');
-            document.getElementById('book-container').style.display='flex';
-            resizeContent();
-        }
-
-        function triggerUnlockAnimation() {
-            const lockLayer = document.querySelector('.absolute.inset-0.z-20');
-            if(lockLayer) {
-                lockLayer.innerHTML = `<div class="animate-ping text-green-400 text-2xl font-bold">UNLOCKED!</div>`;
-                setTimeout(async () => { await loadInitialPages(0); }, 1500);
-            } else { loadInitialPages(0); }
-        }
-
-        function updateLoading(percent, text) {
-            document.getElementById('loading-bar').style.width = percent + '%';
-            document.getElementById('loading-text').innerText = text;
-        }
-
-        const processImage = (file) => {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = (e) => {
-                    const img = new Image();
-                    img.src = e.target.result;
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        let w = img.width; let h = img.height; const MAX = 1000;
-                        if(w > h) { if(w > MAX) { h *= MAX/w; w = MAX; } }
-                        else { if(h > MAX) { w *= MAX/h; h = MAX; } }
-                        canvas.width = w; canvas.height = h;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, w, h);
-                        resolve(canvas.toDataURL('image/jpeg', 0.7));
-                    };
-                    img.onerror = (err) => reject("Image error");
-                };
-                reader.onerror = (err) => reject("File error");
-            });
-        };
-
-        document.getElementById('send-receipt').addEventListener('click', async () => {
-            const btn = document.getElementById('send-receipt');
-            const fileInput = document.getElementById('receipt-file');
-            const f = fileInput.files[0];
-            if(!user) { alert("Please Login First"); return; }
-            if(!f) { alert("Please Select Image"); return; }
-            btn.classList.add('hidden'); document.getElementById('receipt-loading').style.display = 'block';
-            try {
-                const compressedBase64 = await processImage(f);
-                await setDoc(doc(db,"requests",user.uid), {
-                    userId: user.uid, email: user.email, receiptImage: compressedBase64, status: 'pending', timestamp: new Date()
-                });
-                await setDoc(doc(db,"users",user.uid), { status:'pending' }, { merge:true });
-                alert("Receipt Sent!"); document.getElementById('pay-modal').classList.add('hidden');
-            } catch(e) { alert("Upload Failed"); } 
-            finally { btn.classList.remove('hidden'); document.getElementById('receipt-loading').style.display = 'none'; fileInput.value = ''; }
-        });
-
-        // --- PAGES LOGIC ---
-        async function loadInitialPages(startNum = 0) {
+        // --- BOOK LOGIC ---
+        async function loadInitialPages() {
             const wrap = document.getElementById('pages-wrapper');
             wrap.innerHTML = '';
-            lastLoadedPageDoc = null;
-            if (isUnlocked) {
-                const q = query(collection(db, "pages"), orderBy("pageNumber", "asc"), where("pageNumber", ">=", startNum), limit(BATCH_SIZE));
-                const snap = await getDocs(q);
-                if (!snap.empty) {
-                    lastLoadedPageDoc = snap.docs[snap.docs.length - 1];
-                    renderBatch(snap.docs.map(d => d.data()));
-                }
+            // Load dummy or real pages based on logic (Using simplified logic for brevity)
+            if(isUnlocked) {
+                 const q = query(collection(db, "pages"), orderBy("pageNumber", "asc"), limit(BATCH_SIZE));
+                 const snap = await getDocs(q);
+                 if(!snap.empty) {
+                     lastLoadedPageDoc = snap.docs[snap.docs.length-1];
+                     renderBatch(snap.docs.map(d=>d.data()));
+                 }
             } else {
-                const q = query(collection(db, "pages"), where("pageNumber", "==", 0));
-                const snap = await getDocs(q);
+                // Show Cover + Dummies
+                const snap = await getDocs(query(collection(db, "pages"), where("pageNumber", "==", 0)));
                 if(!snap.empty) renderBatch([snap.docs[0].data()]);
                 renderBatch([{pageNumber:1, isDummy:true}, {pageNumber:2, isDummy:true}]);
             }
         }
-
+        
         async function loadMorePages() {
             if (!isUnlocked || isLoadingMore || !lastLoadedPageDoc) return;
             isLoadingMore = true;
@@ -504,14 +349,15 @@
             dataList.forEach(data => {
                 let zIndex = 1000 - data.pageNumber;
                 if (data.pageNumber === 1000) zIndex = 0;
+                
                 const page = document.createElement('div');
-                page.className = `page shadow-2xl ${data.pageNumber===0||data.pageNumber===1000?'hard-cover':''}`;
+                page.className = `page shadow-2xl ${data.pageNumber===0?'hard-cover':''}`;
                 page.dataset.pn = data.pageNumber; page.style.zIndex = zIndex;
                 
                 const front = document.createElement('div'); front.className = 'front';
                 front.style.backgroundColor = data.backgroundColor || '#ffffff';
-                const contentLayer = document.createElement('div'); contentLayer.className = 'content-layer';
-                front.appendChild(contentLayer);
+                const content = document.createElement('div'); content.className = 'content-layer';
+                front.appendChild(content);
 
                 if(data.elements && !data.isDummy) {
                     data.elements.forEach(el => {
@@ -519,107 +365,90 @@
                         div.style.position='absolute'; div.style.left=el.left; div.style.top=el.top;
                         if(el.type==='text'){
                             div.innerText=el.content; Object.assign(div.style, el.style);
-                            div.style.width='max-content'; div.style.whiteSpace='pre'; 
+                            div.style.width='max-content'; div.style.whiteSpace='pre';
                         } else {
-                            div.innerHTML=`<img src="${el.content}" style="width:100%; height:100%; object-fit: cover; display:block;">`;
+                            div.innerHTML=`<img src="${el.content}" style="width:100%; height:100%; object-fit:cover;">`;
                             div.style.width='100%'; div.style.height='100%';
                         }
-                        contentLayer.appendChild(div);
+                        content.appendChild(div);
                     });
                 }
+                
+                if(data.pageNumber===0 && !isUnlocked) front.innerHTML += `<div class="absolute inset-0 flex items-end justify-center pb-20 pointer-events-none"><div class="px-4 py-2 bg-black/80 text-gold rounded-full border border-gold animate-bounce">LOCKED</div></div>`;
+                if(data.isDummy) front.innerHTML = `<div class="flex items-center justify-center h-full text-gray-300 font-[Cinzel] text-2xl border-4 border-gray-100 m-8">LOCKED</div>`;
 
-                if(data.pageNumber===0 && !isUnlocked) {
-                    front.innerHTML += `<div class="absolute inset-0 z-20 flex items-end justify-center pb-24"><div class="animate-bounce text-[#d4af37] bg-black/80 px-6 py-3 rounded-full border border-[#d4af37] shadow-lg cursor-pointer"><i class="fas fa-lock mr-2"></i> LOCKED</div></div>`;
-                    front.onclick = () => document.getElementById('pay-modal').classList.remove('hidden');
-                }
-                if(data.isDummy) {
-                    front.innerHTML += `<div class="absolute inset-0 flex items-center justify-center text-gray-300 font-[Cinzel] text-xl border-2 border-gray-100 m-10">LOCKED</div>`;
-                    page.onclick = () => document.getElementById('pay-modal').classList.remove('hidden');
-                }
-
-                const back = document.createElement('div'); back.className = 'back'; 
+                const back = document.createElement('div'); back.className = 'back';
                 page.appendChild(front); page.appendChild(back);
-                if(!data.isDummy && (isUnlocked || data.pageNumber===0)) {
-                    page.addEventListener('click', (e) => { e.stopPropagation(); if(page.classList.contains('flipped')) unflipEl(page); else flipEl(page); });
-                }
+                
+                page.onclick = (e) => {
+                    e.stopPropagation();
+                    if(!isUnlocked && data.pageNumber!==0) { document.getElementById('pay-modal').classList.remove('hidden'); return; }
+                    
+                    if(page.classList.contains('flipped')) {
+                        page.classList.remove('flipped');
+                        page.style.zIndex = zIndex + 50; 
+                        setTimeout(()=>page.style.zIndex = zIndex, 1000);
+                        playPageFlip();
+                    } else {
+                        page.classList.add('flipped');
+                        page.style.zIndex = 100; // temporarily high
+                        setTimeout(()=>page.style.zIndex = 1, 600);
+                        playPageFlip();
+                        // Trigger Wizard Randomly
+                        if(Math.random() > 0.6) showWizard(wizardQuotes[Math.floor(Math.random()*wizardQuotes.length)]);
+                        loadMorePages();
+                    }
+                };
                 wrap.appendChild(page);
             });
             resizeContent();
         }
 
-        // --- FLIP ACTION ---
-        function flipEl(el, instant=false) {
-            playFlipSound(); // Sound triggers here
-            triggerRandomWizard(); // Wizard check triggers here
-            
-            el.classList.add('flipped');
-            const currentP = parseInt(el.dataset.pn);
-            if(user && isUnlocked) updateDoc(doc(db, "users", user.uid), { lastPage: currentP + 1 }).catch(()=>{});
-            document.getElementById('note-panel').classList.remove('show');
-
-            if(instant) { el.style.transition='none'; el.style.zIndex=1; setTimeout(()=>el.style.transition='',50); }
-            else { setTimeout(() => { el.style.zIndex=1; }, 600); }
-            loadMorePages();
-        }
-
-        function unflipEl(el, instant=false) {
-            playFlipSound();
-            el.classList.remove('flipped');
-            const currentP = parseInt(el.dataset.pn);
-            if(user && isUnlocked) updateDoc(doc(db, "users", user.uid), { lastPage: currentP }).catch(()=>{});
-            document.getElementById('note-panel').classList.remove('show');
-
-            const z = el.dataset.pn == 1000 ? 0 : (1000 - parseInt(el.dataset.pn));
-            if(instant) { el.style.transition='none'; el.style.zIndex=z; setTimeout(()=>el.style.transition='',50); }
-            else { el.style.zIndex=z + 1000; setTimeout(()=>{el.style.zIndex=z;}, 1200); }
-        }
-
-        window.nextPage = () => { if(!isUnlocked) return document.getElementById('pay-modal').classList.remove('hidden'); const unflipped = document.querySelectorAll('.page:not(.flipped):not([data-pn="undefined"])'); if(unflipped.length > 0) flipEl(unflipped[0]); };
-        window.prevPage = () => { const flipped = document.querySelectorAll('.page.flipped'); if(flipped.length > 0) unflipEl(flipped[flipped.length - 1]); };
-
-        // --- NOTES ---
-        let currentNotePage = 0;
-        window.toggleNotePanel = () => {
-            const panel = document.getElementById('note-panel');
-            if(panel.classList.contains('show')) {
-                panel.classList.remove('show');
-            } else {
-                const flipped = document.querySelectorAll('.page.flipped');
-                let currentPage = 0;
-                if(flipped.length > 0) currentPage = parseInt(flipped[flipped.length-1].dataset.pn);
-                currentNotePage = currentPage + 1; 
-
-                const savedNote = userNotes[currentNotePage] || "";
-                document.getElementById('note-area').value = savedNote;
-                document.getElementById('note-status').classList.add('hidden');
-                panel.classList.add('show');
-            }
-        };
-        window.closeNotePanel = () => document.getElementById('note-panel').classList.remove('show');
-        window.saveCurrentNote = async () => {
-            if(!user) return;
-            const text = document.getElementById('note-area').value;
-            userNotes[currentNotePage] = text;
-            await updateDoc(doc(db, "users", user.uid), { notes: userNotes });
-            document.getElementById('note-status').classList.remove('hidden');
-            setTimeout(() => { document.getElementById('note-panel').classList.remove('show'); }, 800);
-        };
-
-        // --- UTILS ---
+        // --- HELPERS ---
         function resizeContent() {
             const bookEl = document.getElementById('the-book'); if(!bookEl) return;
             const layers = document.querySelectorAll('.content-layer');
-            const scaleFactor = bookEl.offsetHeight / 540;
-            layers.forEach(layer => { layer.style.transform = `translate(-50%, -50%) scale(${scaleFactor})`; });
+            const scale = bookEl.offsetHeight / 540;
+            layers.forEach(l => l.style.transform = `translate(-50%, -50%) scale(${scale})`);
         }
         window.addEventListener('resize', resizeContent);
-        window.toggleTheme = () => document.body.classList.toggle('dark-mode');
-        window.toggleControls = () => { const t=document.getElementById('top-bar'); const b=document.getElementById('controls-bar'); t.classList.toggle('-translate-y-full'); b.classList.toggle('translate-y-full'); };
-        document.getElementById('google-login').addEventListener('click', async () => { try{ const r=await signInWithPopup(auth,new GoogleAuthProvider()); const userRef = doc(db,"users",r.user.uid); const snap = await getDoc(userRef); if(!snap.exists()) await setDoc(userRef,{email:r.user.email, status:'pending'}); } catch(e){ alert(e.message); } });
-        document.getElementById('logout-btn').addEventListener('click', ()=>signOut(auth));
-        let ts=0; const bs=document.querySelector('.book-scene');
-        bs.addEventListener('touchstart', e=>ts=e.changedTouches[0].screenX);
-        bs.addEventListener('touchend', e=>{ const te=e.changedTouches[0].screenX; if(te<ts-40) window.nextPage(); if(te>ts+40) window.prevPage(); });
+        
+        window.nextPage = () => { const u = document.querySelectorAll('.page:not(.flipped):not([data-pn="undefined"])'); if(u.length) u[0].click(); };
+        window.prevPage = () => { const f = document.querySelectorAll('.page.flipped'); if(f.length) f[f.length-1].click(); };
+        window.toggleControls = () => { document.getElementById('controls-bar').classList.toggle('translate-y-full'); };
+        window.toggleDarkMode = () => document.body.classList.toggle('dark-mode');
+
+        // Auth
+        document.getElementById('google-login').onclick = async () => {
+            try { await signInWithPopup(auth, new GoogleAuthProvider()); } catch(e){ alert(e.message); }
+        };
+        document.getElementById('logout-btn').onclick = () => signOut(auth);
+
+        // Upload
+        const processImage = (file) => {
+            return new Promise((resolve) => {
+                const reader = new FileReader(); reader.readAsDataURL(file);
+                reader.onload = (e) => {
+                    const img = new Image(); img.src = e.target.result;
+                    img.onload = () => {
+                        const c = document.createElement('canvas');
+                        let w=img.width, h=img.height, m=800;
+                        if(w>h){if(w>m){h*=m/w;w=m}}else{if(h>m){w*=m/h;h=m}}
+                        c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);
+                        resolve(c.toDataURL('image/jpeg',0.6));
+                    }
+                }
+            });
+        };
+        document.getElementById('send-receipt').onclick = async () => {
+            const f = document.getElementById('receipt-file').files[0];
+            if(user && f) {
+                const b64 = await processImage(f);
+                await setDoc(doc(db,'requests',user.uid), {userId:user.uid, email:user.email, receiptImage:b64, status:'pending'});
+                await setDoc(doc(db,'users',user.uid), {status:'pending'}, {merge:true});
+                alert("Sent!"); document.getElementById('pay-modal').classList.add('hidden');
+            }
+        };
     </script>
 </body>
 </html>
