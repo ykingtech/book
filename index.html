@@ -3,23 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Archive - Ultimate Reader</title>
+    <title>The Archive - Reader</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
     
     <style>
-        /* --- VARIABLES --- */
         :root { --bg-body: #0b0c10; --gold: #d4af37; --magic-purple: #a855f7; }
         
         body {
             background-color: var(--bg-body); color: #e0e0e0;
             font-family: 'Inter', sans-serif; height: 100vh; overflow: hidden;
-            transition: background 0.5s ease-in-out; touch-action: none;
+            transition: background 0.5s; touch-action: none;
             background-size: cover; background-position: center;
         }
 
-        /* --- THEMES --- */
+        /* THEMES */
         body.bg-rain { background-image: url('https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?q=80&w=1000&auto=format&fit=crop'); }
         body.bg-library { background-image: url('https://images.unsplash.com/photo-1507842217343-583bb7270b66?q=80&w=1000&auto=format&fit=crop'); }
         body.bg-forest { background-image: url('https://images.unsplash.com/photo-1448375240586-dfd8f3793300?q=80&w=1000&auto=format&fit=crop'); }
@@ -27,14 +26,13 @@
         body.bg-midnight { background-image: linear-gradient(to bottom, #0f2027, #203a43, #2c5364); }
         body.bg-space { background-image: url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1000&auto=format&fit=crop'); }
         body.bg-sunset { background-image: url('https://images.unsplash.com/photo-1472120435266-53107fd0c46a?q=80&w=1000&auto=format&fit=crop'); }
-
         body::before { content: ''; position: absolute; inset: 0; background: rgba(0,0,0,0.5); pointer-events: none; z-index: -1; }
 
-        /* --- BOOK 3D ENGINE (FIXED FLIP) --- */
+        /* BOOK ENGINE */
         .book-scene { 
             perspective: 1500px; width: 100%; height: 100%; 
             display: flex; align-items: center; justify-content: center; 
-            padding-bottom: 60px; overflow: visible; transition: all 0.5s;
+            padding-bottom: 60px; overflow: visible; transition: 0.5s;
         }
         body.zen-mode .book-scene { transform: scale(1.1); padding-bottom: 0; }
         body.zen-mode #top-bar, body.zen-mode #controls-bar { opacity: 0; pointer-events: none; }
@@ -47,28 +45,29 @@
         .page { 
             position: absolute; top:0; left:0; width: 100%; height: 100%; 
             transform-origin: left center; 
-            transition: transform 1s cubic-bezier(0.645, 0.045, 0.355, 1);
+            /* SMOOTH TRANSITION HERE */
+            transition: transform 1.2s cubic-bezier(0.645, 0.045, 0.355, 1);
             transform-style: preserve-3d; 
             border-radius: 2px 8px 8px 2px; 
             cursor: pointer; background-color: white; 
-            box-shadow: inset 5px 0 10px rgba(0,0,0,0.1), 0 5px 15px rgba(0,0,0,0.2);
+            box-shadow: inset 5px 0 10px rgba(0,0,0,0.1), 0 5px 15px rgba(0,0,0,0.3);
         }
         
         .front, .back { 
             position: absolute; width: 100%; height: 100%; 
             backface-visibility: hidden; -webkit-backface-visibility: hidden;
-            overflow: hidden; background-color: white; transition: background-color 0.5s;
+            overflow: hidden; background-color: white; 
         }
         body.sepia-mode .front, body.sepia-mode .back { background-color: #f4e4bc !important; color: #4a3b2a; }
+        body.dark-mode .front, body.dark-mode .back { background-color: #1a1a1a !important; color: #ccc; }
         
         .back { transform: rotateY(180deg); background-color: #f0f0f0; }
-        .flipped { transform: rotateY(-180deg); }
+        .flipped { transform: rotateY(-180deg); } /* CSS Class to trigger flip */
         
-        body.dark-mode .front, body.dark-mode .back { background-color: #1a1a1a !important; color: #ccc; }
-        .content-layer { position: absolute; top: 50%; left: 50%; width: 360px; height: 540px; transform: translate(-50%, -50%); pointer-events: none; background: transparent; }
+        .content-layer { position: absolute; top: 50%; left: 50%; width: 360px; height: 540px; transform: translate(-50%, -50%); pointer-events: none; }
         .content-layer * { pointer-events: auto; }
 
-        /* --- TORCH MODE --- */
+        /* WIZARD & TORCH */
         .torch-overlay {
             position: fixed; inset: 0; pointer-events: none; z-index: 800;
             background: radial-gradient(circle 200px at var(--x, 50%) var(--y, 50%), transparent 0%, rgba(0,0,0,0.98) 100%);
@@ -76,11 +75,10 @@
         }
         body.torch-active .torch-overlay { display: block; }
 
-        /* --- WIZARD (Corner) --- */
         #wizard-container {
             position: fixed; bottom: 100px; left: 20px; 
             z-index: 200; pointer-events: none; display: flex; flex-direction: column; align-items: flex-start;
-            transition: all 0.5s; opacity: 0; transform: translateX(-50px);
+            transition: 0.5s; opacity: 0; transform: translateX(-50px);
         }
         #wizard-container.active { transform: translateX(0); opacity: 1; }
         .wizard-avatar-box {
@@ -95,7 +93,7 @@
             margin-bottom: 10px; border: 1px solid var(--gold); max-width: 200px;
         }
 
-        /* --- UI ELEMENTS --- */
+        /* UI */
         #xp-container {
             display: flex; align-items: center; gap: 8px; font-family: 'Cinzel'; color: var(--gold); font-size: 0.8rem;
             background: rgba(0,0,0,0.6); padding: 4px 10px; border-radius: 20px; border: 1px solid rgba(212, 175, 55, 0.3);
@@ -117,13 +115,10 @@
             position: absolute; bottom: 90px; left: 50%; transform: translateX(-50%) scale(0.9);
             width: 90%; max-width: 400px; background: #fff; color: #333;
             border-radius: 12px; padding: 15px; z-index: 300; box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-            display: none; opacity: 0; transition: all 0.3s;
+            display: none; opacity: 0; transition: 0.3s;
         }
         #note-panel.show { display: block; opacity: 1; transform: translateX(-50%) scale(1); }
-        
         .note-marker { position: absolute; top: 10px; right: 10px; color: var(--gold); font-size: 20px; z-index: 50; cursor: pointer; }
-        .policy-content h2 { color: var(--gold); font-family: 'Cinzel', serif; font-size: 1.4rem; margin-top: 1.5rem; border-bottom: 1px solid #333; }
-        .policy-content p { color: #ccc; font-size: 0.9rem; line-height: 1.5; margin-bottom: 0.5rem; }
         #music-input { display: none; }
     </style>
 </head>
@@ -174,9 +169,9 @@
                 <button onclick="document.getElementById('music-input').click()" class="w-9 h-9 rounded-full bg-pink-900/50 border border-pink-500 text-pink-300 flex items-center justify-center backdrop-blur-md" title="Upload Music"><i class="fas fa-music"></i></button>
                 <button onclick="stopUserMusic()" class="w-9 h-9 rounded-full bg-red-900/50 border border-red-500 text-red-300 flex items-center justify-center backdrop-blur-md" title="Stop Music"><i class="fas fa-stop"></i></button>
 
-                <button onclick="toggleTorch()" id="torch-btn" class="w-9 h-9 rounded-full bg-orange-900/50 border border-orange-500 text-orange-300 flex items-center justify-center backdrop-blur-md" title="Torch Mode"><i class="fas fa-lightbulb"></i></button>
-                <button onclick="toggleZenMode()" class="w-9 h-9 rounded-full bg-teal-900/50 border border-teal-500 text-teal-300 flex items-center justify-center backdrop-blur-md" title="Zen Mode"><i class="fas fa-expand"></i></button>
-                <button onclick="toggleSepia()" class="w-9 h-9 rounded-full bg-amber-900/50 border border-amber-500 text-amber-300 flex items-center justify-center backdrop-blur-md" title="Old Paper"><i class="fas fa-scroll"></i></button>
+                <button onclick="toggleTorch()" id="torch-btn" class="w-9 h-9 rounded-full bg-orange-900/50 border border-orange-500 text-orange-300 flex items-center justify-center backdrop-blur-md"><i class="fas fa-lightbulb"></i></button>
+                <button onclick="toggleZenMode()" class="w-9 h-9 rounded-full bg-teal-900/50 border border-teal-500 text-teal-300 flex items-center justify-center backdrop-blur-md"><i class="fas fa-expand"></i></button>
+                <button onclick="toggleSepia()" class="w-9 h-9 rounded-full bg-amber-900/50 border border-amber-500 text-amber-300 flex items-center justify-center backdrop-blur-md"><i class="fas fa-scroll"></i></button>
 
                 <button onclick="toggleNotesVisibility()" id="note-vis-btn" class="w-9 h-9 rounded-full bg-blue-900/50 border border-blue-500 text-blue-300 flex items-center justify-center backdrop-blur-md"><i class="fas fa-eye"></i></button>
                 <button onclick="toggleWizardMode()" id="wiz-btn" class="w-9 h-9 rounded-full bg-gray-800 border border-gray-600 text-gray-400 flex items-center justify-center backdrop-blur-md"><i class="fas fa-hat-wizard"></i></button>
@@ -205,7 +200,6 @@
         <div id="note-panel">
             <div class="flex justify-between items-center mb-2">
                 <span class="text-xs font-bold uppercase text-gray-500">Margin Note</span>
-                <span id="note-status" class="text-[10px] text-green-600 hidden">Saved</span>
             </div>
             <textarea id="note-area" class="w-full h-24 border p-2 text-sm rounded font-[Merriweather]" placeholder="Write thoughts..."></textarea>
             <div class="flex justify-end mt-2">
@@ -226,13 +220,16 @@
     <div id="policy-view" class="hidden fixed inset-0 z-[950] bg-black/95 overflow-y-auto animate-fade-in">
         <div class="max-w-2xl mx-auto min-h-screen bg-[#0b0c10] shadow-2xl relative">
             <div class="sticky top-0 bg-[#0b0c10]/95 backdrop-blur-sm border-b border-gray-800 p-4 flex justify-between items-center z-10">
-                <h1 class="text-[#d4af37] font-[Cinzel] text-xl">LEGAL</h1>
+                <h1 class="text-[#d4af37] font-[Cinzel] text-xl">LEGAL & SUPPORT</h1>
                 <button onclick="document.getElementById('policy-view').classList.add('hidden')" class="w-8 h-8 rounded-full bg-gray-800 text-white flex items-center justify-center"><i class="fas fa-times"></i></button>
             </div>
-            <div class="p-6 pb-32 policy-content">
-                <h2>Refund Policy</h2><p>Returns accepted within 1 day.</p>
-                <h2>Privacy Policy</h2><p>We protect your data.</p>
-                <h2>Terms</h2><p>Standard terms apply.</p>
+            <div class="p-6 pb-32 text-gray-300 text-sm leading-relaxed">
+                <h2 class="text-[#d4af37] font-[Cinzel] text-lg mt-4 border-b border-gray-700">Refund Policy</h2>
+                <p class="mt-2">We accept returns within 1 day from the date of purchase. Refunds exclude shipping.</p>
+                <h2 class="text-[#d4af37] font-[Cinzel] text-lg mt-4 border-b border-gray-700">Privacy Policy</h2>
+                <p class="mt-2">We collect only necessary info to fulfill orders. We do not sell data.</p>
+                <h2 class="text-[#d4af37] font-[Cinzel] text-lg mt-4 border-b border-gray-700">Terms</h2>
+                <p class="mt-2">By using this site you agree to our terms. Users must be 15+.</p>
             </div>
             <div class="fixed bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black via-black/90 to-transparent flex flex-col items-center gap-3">
                 <div class="flex gap-3 w-full max-w-sm">
@@ -246,7 +243,7 @@
     <div id="pay-modal" class="hidden fixed inset-0 z-[999] bg-black/90 flex items-center justify-center p-4">
         <div class="bg-gray-900 border border-yellow-600 p-6 rounded-xl text-center">
             <h3 class="text-white mb-2">LOCKED</h3>
-            <p class="text-gray-400 text-xs mb-4">Rs.100 Receipt Needed</p>
+            <p class="text-gray-400 text-xs mb-4">Upload Rs.100 Receipt</p>
             <input type="file" id="receipt-file" class="text-white text-xs mb-4">
             <button id="send-receipt" class="w-full bg-yellow-600 text-black font-bold py-2 rounded">Submit</button>
             <button onclick="document.getElementById('pay-modal').classList.add('hidden')" class="text-xs text-gray-500 mt-2 block w-full">Close</button>
@@ -275,7 +272,8 @@
         let isUnlocked = false;
         let lastDoc = null;
         let isLoading = false;
-        const BATCH_SIZE = 5; // Load 5 pages at a time
+        const BATCH_SIZE = 5;
+        let totalLoadedPages = 0;
 
         // --- FEATURES ---
         let ambienceOn = false; 
@@ -349,7 +347,7 @@
                 }
             } else {
                 btn.classList.replace('bg-red-900/50', 'bg-green-900/50');
-                btn.classList.replace('text-red-300', 'text-green-300');
+                btn.classList.replace('text-green-300', 'text-red-300');
                 if(currentAmbience) currentAmbience.pause();
             }
         };
@@ -357,7 +355,8 @@
         window.toggleZenMode = () => { zenMode = !zenMode; document.body.classList.toggle('zen-mode'); };
         window.handleBookClick = (e) => { if(zenMode && e.target.classList.contains('book-scene')) toggleZenMode(); };
         window.toggleSepia = () => document.body.classList.toggle('sepia-mode');
-        window.toggleNotesVisibility = () => { notesVisible = !notesVisible; document.getElementById('note-vis-btn').classList.toggle('opacity-50'); refreshPages(); };
+        window.toggleNotesVisibility = () => { notesVisible = !notesVisible; document.getElementById('note-vis-btn').classList.toggle('opacity-50'); refreshNoteMarkers(); };
+        
         window.toggleWizardMode = () => {
             wizardOn = !wizardOn;
             const btn = document.getElementById('wiz-btn');
@@ -403,20 +402,16 @@
             }
         });
 
-        // --- LAZY LOADING LOGIC ---
-        let pagesCache = [];
-
+        // --- LAZY LOADING LOGIC (FIXED) ---
         async function loadInitialBatch() {
             document.getElementById('loading-bar').style.width = '100%';
-            pagesCache = [];
-            const wrap = document.getElementById('pages-wrapper');
-            wrap.innerHTML = '';
+            document.getElementById('pages-wrapper').innerHTML = ''; // Clear only on init
+            totalLoadedPages = 0;
+            lastDoc = null;
             
             if(isUnlocked) {
-                // Fetch first batch
                 await fetchMorePages(); 
             } else {
-                // Dummy pages
                 renderPage({pageNumber:0});
                 renderPage({pageNumber:1, isDummy:true});
             }
@@ -440,26 +435,24 @@
             if(!snap.empty) {
                 lastDoc = snap.docs[snap.docs.length-1];
                 snap.forEach(d => {
-                    const data = d.data();
-                    pagesCache.push(data);
-                    renderPage(data);
+                    renderPage(d.data());
+                    totalLoadedPages++;
                 });
             }
             isLoading = false;
         }
 
-        function refreshPages() {
-            const wrap = document.getElementById('pages-wrapper');
-            wrap.innerHTML = '';
-            pagesCache.forEach(p => renderPage(p));
+        function refreshNoteMarkers() {
+            // Simplified: Reloading all pages is too heavy, we just toggle visibility class for markers
+            const markers = document.querySelectorAll('.note-marker');
+            markers.forEach(m => m.style.display = notesVisible ? 'block' : 'none');
         }
 
         function renderPage(data) {
             const wrap = document.getElementById('pages-wrapper');
-            
             const page = document.createElement('div');
-            // Z-Index Logic: Unflipped pages stack High->Low. Flipped pages stack Low->High.
-            // Simplified: Default z-index based on reverse order (High for page 0).
+            
+            // Z-Index: Page 0 is top (1000), Page 1 is 999...
             const initialZ = 1000 - data.pageNumber;
             
             page.className = `page shadow-2xl ${data.pageNumber===0?'hard-cover':''}`;
@@ -486,13 +479,13 @@
                 });
             }
 
-            if(notesVisible && userNotes[data.pageNumber]) {
-                const marker = document.createElement('div');
-                marker.className = 'note-marker';
-                marker.innerHTML = '<i class="fas fa-sticky-note"></i>';
-                marker.onclick = (e) => { e.stopPropagation(); openNoteForPage(data.pageNumber); };
-                front.appendChild(marker);
-            }
+            // NOTE MARKER
+            const marker = document.createElement('div');
+            marker.className = 'note-marker';
+            marker.innerHTML = '<i class="fas fa-sticky-note"></i>';
+            marker.style.display = (notesVisible && userNotes[data.pageNumber]) ? 'block' : 'none';
+            marker.onclick = (e) => { e.stopPropagation(); openNoteForPage(data.pageNumber); };
+            front.appendChild(marker);
 
             if(data.pageNumber===0 && !isUnlocked) front.innerHTML += `<div class="absolute inset-0 flex items-end justify-center pb-20 pointer-events-none"><div class="px-4 py-2 bg-black/80 text-yellow-500 rounded-full border border-yellow-500 animate-bounce">LOCKED</div></div>`;
             if(data.isDummy) front.innerHTML = `<div class="flex items-center justify-center h-full text-gray-300 font-[Cinzel] text-2xl border-4 border-gray-100 m-8">LOCKED</div>`;
@@ -500,30 +493,30 @@
             const back = document.createElement('div'); back.className = 'back';
             page.appendChild(front); page.appendChild(back);
             
+            // PAGE CLICK LOGIC
             page.onclick = (e) => {
                 e.stopPropagation();
                 if(!isUnlocked && data.pageNumber!==0) { document.getElementById('pay-modal').classList.remove('hidden'); return; }
                 
                 if(page.classList.contains('flipped')) {
-                    // FLIP BACK
+                    // FLIP BACK (RIGHT)
                     page.classList.remove('flipped');
-                    // Delay Z-index change so it slides under
-                    setTimeout(() => page.style.zIndex = initialZ, 600); 
-                    flipSfx.currentTime=0; flipSfx.play().catch(()=>{});
+                    setTimeout(() => page.style.zIndex = initialZ, 600); // Restore original stacking
+                    if(ambienceOn) { flipSfx.currentTime=0; flipSfx.play().catch(()=>{}); }
                 } else {
-                    // FLIP FORWARD
+                    // FLIP FORWARD (LEFT)
                     page.classList.add('flipped');
-                    // Bring to top momentarily then push back in stack logic if needed
-                    // For simply stacking on left: zIndex needs to be higher than previous flipped page
-                    page.style.zIndex = 1000 + data.pageNumber; 
-                    flipSfx.currentTime=0; flipSfx.play().catch(()=>{});
+                    page.style.zIndex = 1000 + data.pageNumber; // Bring to top of left stack
+                    if(ambienceOn) { flipSfx.currentTime=0; flipSfx.play().catch(()=>{}); }
                     
                     if(wizardOn && Math.random() < 0.2) showWizard("Keep reading!");
                     if(user) { updateXP(10); updateDoc(doc(db,"users",user.uid), {xp: userXP}).catch(()=>{}); }
                     
-                    // Lazy Load Trigger
-                    const totalPages = pagesCache.length;
-                    if(data.pageNumber >= totalPages - 2) fetchMorePages();
+                    // CHECK FOR LAZY LOAD
+                    // If we just flipped a page close to the end, load more
+                    if(data.pageNumber >= totalLoadedPages - 3) {
+                        fetchMorePages();
+                    }
                 }
             };
             wrap.appendChild(page);
@@ -559,7 +552,9 @@
             userNotes[area.dataset.pn] = area.value;
             await updateDoc(doc(db, "users", user.uid), { notes: userNotes });
             document.getElementById('note-panel').classList.remove('show');
-            refreshPages();
+            // Update markers on current page only to save performance
+            const pageEl = document.querySelector(`.page[data-pn="${area.dataset.pn}"] .note-marker`);
+            if(pageEl) pageEl.style.display = 'block';
         };
 
         function resizeContent() {
