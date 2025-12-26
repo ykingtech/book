@@ -24,12 +24,26 @@
         .book-card { transition: transform 0.3s, box-shadow 0.3s; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; overflow: hidden; }
         .book-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(212, 175, 55, 0.2); border-color: var(--gold); }
         
+        /* 3D BOOK STYLES (UPDATED) */
         .book-scene { perspective: 1500px; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; padding-bottom: 60px; }
         .book { transform-style: preserve-3d; position: relative; width: auto; height: 75vh; aspect-ratio: 2/3; box-shadow: 0 20px 50px rgba(0,0,0,0.6); transition: transform 0.5s; }
-        .page { position: absolute; inset:0; transform-origin: left; transition: transform 1.2s cubic-bezier(0.645, 0.045, 0.355, 1); transform-style: preserve-3d; border-radius: 2px 8px 8px 2px; cursor: pointer; background: white; }
+        
+        .page { 
+            position: absolute; inset:0; 
+            transform-origin: left; 
+            transition: transform 1.2s cubic-bezier(0.645, 0.045, 0.355, 1); 
+            transform-style: preserve-3d; 
+            border-radius: 2px 8px 8px 2px; 
+            cursor: pointer; 
+            background: white;
+            /* Important for stack handling */
+            backface-visibility: hidden; 
+        }
+        
         .front, .back { position: absolute; inset:0; backface-visibility: hidden; background: white; overflow: hidden; }
         .back { transform: rotateY(180deg); background: #f0f0f0; }
         .flipped { transform: rotateY(-180deg); }
+        
         .content-layer { position: absolute; top:50%; left:50%; width: 360px; height: 540px; transform: translate(-50%, -50%); pointer-events: none; display: flex; justify-content: center; align-items: center; }
         
         ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
@@ -171,7 +185,7 @@
         let activeBookId = null;
         let lastLoadedPageDoc = null;
         let isFetchingPages = false;
-        let pendingAction = null; // Stores current action (Buy or Publish)
+        let pendingAction = null;
 
         onAuthStateChanged(auth, u => {
             if(u) {
@@ -201,17 +215,14 @@
             }
         };
 
-        // --- WALL ---
         async function loadWall() {
             const grid = document.getElementById('books-grid');
             if(grid.children.length > 0 && !document.getElementById('search-input').value) return; 
-            
             grid.innerHTML = '';
             document.getElementById('loading-screen').classList.remove('opacity-0', 'pointer-events-none');
             document.getElementById('loading-text').innerText = "Fetching Books...";
             
             try {
-                // Client-side sorting to fix Index issues
                 const q = query(collection(db, "books"), where("status", "==", "approved"));
                 const snap = await getDocs(q);
                 
@@ -222,7 +233,6 @@
                     const books = [];
                     snap.forEach(d => books.push({id:d.id, ...d.data()}));
                     books.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
-                    
                     books.forEach(b => {
                         grid.innerHTML += `
                         <div onclick="checkAndOpenBook('${b.id}')" class="book-card cursor-pointer group">
@@ -238,7 +248,6 @@
             document.getElementById('loading-screen').classList.add('opacity-0', 'pointer-events-none');
         }
 
-        // --- READER ---
         window.checkAndOpenBook = async (bookId) => {
             const bookSnap = await getDoc(doc(db, "books", bookId));
             const b = bookSnap.data();
@@ -284,10 +293,25 @@
                 el.style.zIndex = z;
                 el.dataset.pn = p.pageNumber;
                 el.innerHTML = `<div class="front"><div class="content-layer"><img src="${p.imageUrl}" style="width:100%; height:100%;"></div></div><div class="back"></div>`;
+                
+                // IMPORTANT: FLIP ANIMATION FIX
                 el.onclick = (e) => {
                     e.stopPropagation();
-                    if(el.classList.contains('flipped')) { el.classList.remove('flipped'); setTimeout(() => el.style.zIndex = z, 500); }
-                    else { el.classList.add('flipped'); el.style.zIndex = p.pageNumber; loadMorePages(); }
+                    if(el.classList.contains('flipped')) { 
+                        // Unflip
+                        el.classList.remove('flipped'); 
+                        // Delay Z-index restore so it comes back on top smoothly
+                        setTimeout(() => el.style.zIndex = z, 500); 
+                    } else { 
+                        // Flip
+                        el.classList.add('flipped'); 
+                        // Wait for animation to finish half-way before dropping z-index
+                        // This prevents the page from disappearing instantly
+                        setTimeout(() => {
+                            el.style.zIndex = p.pageNumber; // Send to back of left stack
+                        }, 600); // 600ms = half of 1.2s transition
+                        loadMorePages(); 
+                    }
                 };
                 wrap.appendChild(el);
             });
@@ -306,7 +330,7 @@
         window.toggleBgMenu = () => document.getElementById('bg-menu').classList.toggle('show');
         window.setBg = (s) => { document.body.className = `bg-${s} flex flex-col`; document.getElementById('bg-menu').classList.remove('show'); };
 
-        // --- SUBMISSION LOGIC (BUY & PUBLISH) ---
+        // --- SUBMISSION ---
         function openPayModal(id, data, type) {
             pendingAction = { id, data, type };
             document.getElementById('pay-title').innerText = type==='publish_fee' ? 'PUBLISH FEE' : 'UNLOCK BOOK';
@@ -333,14 +357,10 @@
             });
         };
 
-        // GLOBAL SUBMIT HANDLER (Fixes the issue)
         document.getElementById('pay-btn').onclick = async () => {
             const f = document.getElementById('pay-receipt').files[0];
             if(!f) return alert("Please select a receipt image");
-            
-            const btn = document.getElementById('pay-btn'); 
-            btn.innerText = "Processing...";
-            
+            const btn = document.getElementById('pay-btn'); btn.innerText = "Processing...";
             try {
                 const img = await compressImage(f);
                 const reqData = {
@@ -349,40 +369,31 @@
                 };
 
                 if(pendingAction.type === 'buy_book') {
-                    // BUY LOGIC
                     reqData.bookId = pendingAction.id;
                     reqData.amount = document.getElementById('pay-price').innerText.replace('Rs. ','');
                     await addDoc(collection(db, "requests"), reqData);
                     alert("Receipt Sent! Please wait for approval.");
-                
                 } else if (pendingAction.type === 'publish_fee') {
-                    // PUBLISH LOGIC
                     const bookData = pendingAction.data;
                     await setDoc(doc(db, "books", pendingAction.id), {
                         ...bookData, status: "pending_payment", 
                         coverUrl: studioPages[0].imageUrl, timestamp: new Date().toISOString(), author: currentUser.uid
                     });
-                    
                     const batch = writeBatch(db);
                     studioPages.forEach(p => batch.set(doc(db,"books",pendingAction.id,"pages","p"+p.pageNumber), p));
                     await batch.commit();
-
                     reqData.bookId = pendingAction.id;
                     reqData.bookTitle = bookData.title;
                     await addDoc(collection(db, "requests"), reqData);
                     alert("Book Submitted for Review!");
                     window.location.reload();
                 }
-
                 document.getElementById('pay-modal').classList.add('hidden');
-            } catch(e) {
-                alert("Error: " + e.message);
-            }
+            } catch(e) { alert("Error: " + e.message); }
             btn.innerText = "SUBMIT";
         };
 
         // --- STUDIO ---
-        let studioPages = [], currentStudioPageIndex = 0, studioBookId = null;
         window.createNewBook = () => {
             studioBookId = 'book_'+Date.now(); studioPages = []; currentStudioPageIndex=0;
             document.getElementById('editor-canvas').innerHTML = '<div class="text-gray-500">Upload PDF</div>';
@@ -415,10 +426,7 @@
             const bName = document.getElementById('bank-name').value;
             const bAcc = document.getElementById('bank-acc').value;
             const bBranch = document.getElementById('bank-branch').value;
-
             if(!title || !studioPages.length || !bAcc) return alert("Please fill all fields and upload PDF");
-            
-            // Pass data to Pay Modal
             const bookData = { title, price, bankHolder: bHolder, bankName: bName, bankAcc: bAcc, bankBranch: bBranch };
             openPayModal(studioBookId, bookData, 'publish_fee');
         };
