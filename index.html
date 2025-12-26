@@ -66,6 +66,7 @@
             
             <div class="bg-gray-800 p-3 rounded border border-gray-700">
                 <div class="text-[10px] text-yellow-500 font-bold mb-2 uppercase">Your Bank Details (For Payments)</div>
+                <input id="bank-holder" type="text" placeholder="Account Holder Name" class="w-full bg-black border border-gray-600 rounded p-1 text-[10px] text-white mb-1">
                 <input id="bank-name" type="text" placeholder="Bank Name" class="w-full bg-black border border-gray-600 rounded p-1 text-[10px] text-white mb-1">
                 <input id="bank-acc" type="text" placeholder="Account Number" class="w-full bg-black border border-gray-600 rounded p-1 text-[10px] text-white mb-1">
                 <input id="bank-branch" type="text" placeholder="Branch" class="w-full bg-black border border-gray-600 rounded p-1 text-[10px] text-white">
@@ -112,8 +113,9 @@
             
             <div class="bg-gray-800 p-3 rounded mb-4 text-xs text-left space-y-1">
                 <div class="text-gray-400 uppercase text-[10px]">Transfer to Owner:</div>
+                <div id="buy-holder-name" class="font-bold text-yellow-500 text-sm"></div>
                 <div id="buy-bank-name" class="font-bold text-white"></div>
-                <div id="buy-bank-acc" class="text-white font-mono"></div>
+                <div id="buy-bank-acc" class="text-white font-mono bg-black/50 p-1 rounded"></div>
                 <div id="buy-bank-branch" class="text-gray-400"></div>
             </div>
 
@@ -141,7 +143,29 @@
         let studioPages = [];
         let studioBookId = null;
         let currentStudioPageIndex = 0;
-        let pendingPurchaseBookId = null; // Stores ID for purchase
+        let pendingPurchaseBookId = null;
+
+        // --- IMAGE COMPRESSOR (FIX FOR UPLOAD ISSUE) ---
+        const compressImage = (file) => {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.src = e.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 800; 
+                        const scaleSize = MAX_WIDTH / img.width;
+                        canvas.width = MAX_WIDTH;
+                        canvas.height = img.height * scaleSize;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        resolve(canvas.toDataURL('image/jpeg', 0.6)); // 0.6 Quality to save space
+                    };
+                };
+            });
+        };
 
         onAuthStateChanged(auth, u => {
             if(u) {
@@ -161,41 +185,53 @@
             if(v==='wall') loadWall();
         };
 
-        // --- WALL & PURCHASE LOGIC ---
+        // --- WALL LOGIC ---
         async function loadWall() {
             const grid = document.getElementById('books-grid');
             grid.innerHTML = '<div class="text-xs text-gray-500">Loading library...</div>';
-            const snap = await getDocs(query(collection(db, "books"), where("status", "==", "approved"), orderBy("timestamp", "desc")));
-            grid.innerHTML='';
-            
-            snap.forEach(d => {
-                const b = d.data();
-                grid.innerHTML += `
-                <div onclick="tryOpenBook('${d.id}', '${b.title}', ${b.price}, '${b.bankName}', '${b.bankAcc}', '${b.bankBranch}')" class="book-card cursor-pointer">
-                    <div class="aspect-[2/3] bg-gray-800 rounded overflow-hidden relative mb-2">
-                        <img src="${b.coverUrl}" class="w-full h-full object-cover">
-                        <div class="absolute top-2 right-2 bg-black/70 text-[#d4af37] text-[10px] font-bold px-2 py-1 rounded">Rs.${b.price}</div>
-                    </div>
-                    <div class="text-sm font-bold truncate text-gray-300">${b.title}</div>
-                </div>`;
-            });
+            try {
+                // Modified Query: Sort by title if timestamp is missing to avoid index errors initially
+                const snap = await getDocs(query(collection(db, "books"), where("status", "==", "approved")));
+                
+                grid.innerHTML='';
+                if(snap.empty) { grid.innerHTML = '<div class="text-gray-500">No books found.</div>'; return; }
+
+                snap.forEach(d => {
+                    const b = d.data();
+                    grid.innerHTML += `
+                    <div onclick="initBookOpen('${d.id}')" class="book-card cursor-pointer">
+                        <div class="aspect-[2/3] bg-gray-800 rounded overflow-hidden relative mb-2">
+                            <img src="${b.coverUrl}" class="w-full h-full object-cover">
+                            <div class="absolute top-2 right-2 bg-black/70 text-[#d4af37] text-[10px] font-bold px-2 py-1 rounded">Rs.${b.price}</div>
+                        </div>
+                        <div class="text-sm font-bold truncate text-gray-300">${b.title}</div>
+                    </div>`;
+                });
+            } catch(e) {
+                console.error(e);
+                grid.innerHTML = `<div class="text-red-500 text-xs">Error loading books. Retry later.</div>`;
+            }
         }
 
-        window.tryOpenBook = async (bookId, title, price, bName, bAcc, bBranch) => {
-            // Check if user owns the book
+        window.initBookOpen = async (bookId) => {
+            const docSnap = await getDoc(doc(db, "books", bookId));
+            if(!docSnap.exists()) return;
+            const b = docSnap.data();
+
             const purchaseSnap = await getDoc(doc(db, "users", currentUser.uid, "purchases", bookId));
             
-            if (purchaseSnap.exists() || price == 0) {
-                // UNLOCKED: Open Reader
+            if (purchaseSnap.exists() || b.price == 0) {
                 loadReader(bookId);
             } else {
-                // LOCKED: Show Buy Modal
+                // Show Buy Modal
                 pendingPurchaseBookId = bookId;
-                document.getElementById('buy-book-title').innerText = title;
-                document.getElementById('buy-book-price').innerText = `Rs. ${price}`;
-                document.getElementById('buy-bank-name').innerText = bName || "Bank Info Missing";
-                document.getElementById('buy-bank-acc').innerText = bAcc || "Contact Admin";
-                document.getElementById('buy-bank-branch').innerText = bBranch || "";
+                document.getElementById('buy-book-title').innerText = b.title;
+                document.getElementById('buy-book-price').innerText = `Rs. ${b.price}`;
+                // Fill Bank Details
+                document.getElementById('buy-holder-name').innerText = b.bankHolder || "Unknown Holder";
+                document.getElementById('buy-bank-name').innerText = b.bankName || "Bank Info Missing";
+                document.getElementById('buy-bank-acc').innerText = b.bankAcc || "Contact Admin";
+                document.getElementById('buy-bank-branch').innerText = b.bankBranch || "";
                 document.getElementById('buy-modal').classList.remove('hidden');
             }
         };
@@ -205,28 +241,23 @@
             const priceText = document.getElementById('buy-book-price').innerText.replace('Rs. ', '').trim();
             
             if(!file) return alert("Please upload receipt");
-            
             const btn = document.querySelector('#buy-modal button');
-            btn.innerText = "Verifying...";
+            btn.innerText = "Compressing & Sending...";
             
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = async (e) => {
-                // Submit 'buy_book' request
+            try {
+                const compressedImg = await compressImage(file);
                 await addDoc(collection(db, "requests"), {
-                    type: "buy_book",
-                    email: currentUser.email,
-                    userId: currentUser.uid,
-                    bookId: pendingPurchaseBookId,
-                    amount: priceText, // Important for BOT
-                    receiptImage: e.target.result,
-                    status: "pending",
-                    timestamp: new Date().toISOString()
+                    type: "buy_book", email: currentUser.email, userId: currentUser.uid,
+                    bookId: pendingPurchaseBookId, amount: priceText, receiptImage: compressedImg,
+                    status: "pending", timestamp: new Date().toISOString()
                 });
-                alert("Receipt Sent! Auto-verification in progress.");
+                alert("Receipt Sent! Wait for auto-approval.");
                 document.getElementById('buy-modal').classList.add('hidden');
+            } catch(e) {
+                alert("Upload Failed: " + e.message);
+            } finally {
                 btn.innerText = "UNLOCK NOW";
-            };
+            }
         };
 
         async function loadReader(bookId) {
@@ -247,11 +278,9 @@
                 wrap.appendChild(el);
             });
         }
-
+        
         window.flipBook = (dir) => {
-            const pages = document.querySelectorAll('.page');
             let flipped = document.querySelectorAll('.page.flipped');
-            
             if(dir === 'next') {
                 const toFlip = document.querySelector(`.page:not(.flipped)`);
                 if(toFlip) toFlip.classList.add('flipped');
@@ -260,7 +289,7 @@
             }
         };
 
-        // --- STUDIO & PUBLISH ---
+        // --- STUDIO ---
         window.createNewBook = () => {
             studioBookId = 'book_'+Date.now();
             studioPages = []; currentStudioPageIndex=0;
@@ -300,32 +329,44 @@
         window.submitPublish = async () => {
             const title = document.getElementById('new-book-title').value;
             const price = document.getElementById('new-book-price').value;
+            const bHolder = document.getElementById('bank-holder').value; // NEW
             const bName = document.getElementById('bank-name').value;
             const bAcc = document.getElementById('bank-acc').value;
             const bBranch = document.getElementById('bank-branch').value;
             const receipt = document.getElementById('publish-receipt').files[0];
 
-            if(!title || !price || !bAcc || !receipt || studioPages.length===0) return alert("Fill all details & PDF");
+            if(!title || !price || !bAcc || !bHolder || !receipt || studioPages.length===0) return alert("Fill all details & PDF");
 
-            const r = new FileReader();
-            r.readAsDataURL(receipt);
-            r.onload = async (e) => {
+            const btn = document.querySelector('#publish-modal button');
+            btn.innerText = "Processing...";
+
+            try {
+                const compressedReceipt = await compressImage(receipt);
+                
+                // Save Book Data
                 await setDoc(doc(db, "books", studioBookId), {
-                    title, price, bankName: bName, bankAcc: bAcc, bankBranch: bBranch,
-                    author: currentUser.uid, status: "pending_payment", coverUrl: studioPages[0].imageUrl, timestamp: new Date().toISOString()
+                    title, price, bankHolder: bHolder, bankName: bName, bankAcc: bAcc, bankBranch: bBranch,
+                    author: currentUser.uid, status: "pending_payment", 
+                    coverUrl: studioPages[0].imageUrl, timestamp: new Date().toISOString()
                 });
 
+                // Save Pages
                 const batch = writeBatch(db);
                 studioPages.forEach(p => batch.set(doc(db,"books",studioBookId,"pages","p"+p.pageNumber), p));
                 await batch.commit();
 
+                // Request
                 await addDoc(collection(db, "requests"), {
                     type: "publish_fee", email: currentUser.email, userId: currentUser.uid, bookId: studioBookId,
-                    bookTitle: title, receiptImage: e.target.result, status: "pending", timestamp: new Date().toISOString()
+                    bookTitle: title, receiptImage: compressedReceipt, status: "pending", timestamp: new Date().toISOString()
                 });
-                alert("Book Submitted! Waiting for Admin Approval.");
+                alert("Book Submitted!");
                 location.reload();
-            };
+            } catch(e) {
+                alert("Error: "+e.message);
+            } finally {
+                btn.innerText = "SUBMIT";
+            }
         };
     </script>
 </body>
