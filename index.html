@@ -3,262 +3,161 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Archive - Ultimate Reader</title>
+    <title>Mysterium Library</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
     
     <style>
-        :root { --bg-body: #0b0c10; --gold: #d4af37; --magic-purple: #a855f7; }
+        :root { --gold: #d4af37; --dark: #0b0c10; }
+        body { background-color: var(--dark); color: #e0e0e0; font-family: 'Inter', sans-serif; height: 100vh; overflow: hidden; }
         
-        body {
-            background-color: var(--bg-body); color: #e0e0e0;
-            font-family: 'Inter', sans-serif; height: 100vh; overflow: hidden;
-            transition: background 0.5s; touch-action: none;
-            background-size: cover; background-position: center;
-        }
+        /* SCROLLBAR */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #1a1a1a; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--gold); }
 
-        /* THEMES */
-        body.bg-rain { background-image: url('https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?q=80&w=1000&auto=format&fit=crop'); }
-        body.bg-library { background-image: url('https://images.unsplash.com/photo-1507842217343-583bb7270b66?q=80&w=1000&auto=format&fit=crop'); }
-        body.bg-forest { background-image: url('https://images.unsplash.com/photo-1448375240586-dfd8f3793300?q=80&w=1000&auto=format&fit=crop'); }
-        body.bg-mystic { background-image: radial-gradient(circle at 50% 50%, #1f2833 0%, #0b0c10 100%); }
-        body.bg-midnight { background-image: linear-gradient(to bottom, #0f2027, #203a43, #2c5364); }
-        body.bg-space { background-image: url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1000&auto=format&fit=crop'); }
-        body.bg-sunset { background-image: url('https://images.unsplash.com/photo-1472120435266-53107fd0c46a?q=80&w=1000&auto=format&fit=crop'); }
-        body::before { content: ''; position: absolute; inset: 0; background: rgba(0,0,0,0.5); pointer-events: none; z-index: -1; }
-
-        /* BOOK ENGINE (Kept original smooth logic) */
-        .book-scene { 
-            perspective: 1500px; width: 100%; height: 100%; 
-            display: flex; align-items: center; justify-content: center; 
-            padding-bottom: 60px; overflow: visible; transition: 0.5s;
-        }
-        body.zen-mode .book-scene { transform: scale(1.1); padding-bottom: 0; }
-        body.zen-mode #top-bar, body.zen-mode #controls-bar { opacity: 0; pointer-events: none; }
+        /* WALL STYLES */
+        .book-card { transition: transform 0.3s, box-shadow 0.3s; }
+        .book-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(212, 175, 55, 0.2); }
         
-        .book { 
-            transform-style: preserve-3d; position: relative; 
-            width: auto; height: 75vh; max-width: 95vw; aspect-ratio: 2 / 3;
-        }
-        
-        .page { 
-            position: absolute; top:0; left:0; width: 100%; height: 100%; 
-            transform-origin: left center; 
-            transition: transform 1.2s cubic-bezier(0.645, 0.045, 0.355, 1);
-            transform-style: preserve-3d; 
-            border-radius: 2px 8px 8px 2px; 
-            cursor: pointer; background-color: white; 
-            box-shadow: inset 5px 0 10px rgba(0,0,0,0.1), 0 5px 15px rgba(0,0,0,0.3);
-        }
-        
-        .front, .back { 
-            position: absolute; width: 100%; height: 100%; 
-            backface-visibility: hidden; -webkit-backface-visibility: hidden;
-            overflow: hidden; background-color: white; 
-        }
-        body.sepia-mode .front, body.sepia-mode .back { background-color: #f4e4bc !important; color: #4a3b2a; }
-        body.dark-mode .front, body.dark-mode .back { background-color: #1a1a1a !important; color: #ccc; }
-        
-        .back { transform: rotateY(180deg); background-color: #f0f0f0; }
+        /* READER STYLES */
+        .book-scene { perspective: 1500px; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+        .book { transform-style: preserve-3d; position: relative; width: auto; height: 75vh; aspect-ratio: 2/3; transition: transform 0.5s; }
+        .page { position: absolute; width: 100%; height: 100%; transform-origin: left; transition: transform 1.2s cubic-bezier(0.645, 0.045, 0.355, 1); transform-style: preserve-3d; background: white; cursor: pointer; }
+        .front, .back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; background: white; overflow: hidden; }
+        .back { transform: rotateY(180deg); background: #f0f0f0; }
         .flipped { transform: rotateY(-180deg); }
-        
         .content-layer { position: absolute; top: 50%; left: 50%; width: 360px; height: 540px; transform: translate(-50%, -50%); pointer-events: none; }
         .content-layer * { pointer-events: auto; }
 
-        /* TORCH MODE */
-        .torch-overlay {
-            position: fixed; inset: 0; pointer-events: none; z-index: 800;
-            background: radial-gradient(circle 200px at var(--x, 50%) var(--y, 50%), transparent 0%, rgba(0,0,0,0.98) 100%);
-            display: none;
-        }
-        body.torch-active .torch-overlay { display: block; }
-
-        /* WIZARD (Corner) */
-        #wizard-container {
-            position: fixed; bottom: 100px; left: 20px; 
-            z-index: 200; pointer-events: none; display: flex; flex-direction: column; align-items: flex-start;
-            transition: 0.5s; opacity: 0; transform: translateX(-50px);
-        }
-        #wizard-container.active { transform: translateX(0); opacity: 1; }
-        .wizard-avatar-box {
-            width: 60px; height: 60px; background: #1a1a1a; border: 2px solid var(--gold);
-            border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
-        }
-        .wizard-face { font-size: 30px; color: var(--gold); }
-        .wizard-bubble {
-            background: rgba(20, 20, 20, 0.9); color: #fff; padding: 10px 15px; 
-            border-radius: 10px 10px 10px 0; font-size: 0.85rem;
-            margin-bottom: 10px; border: 1px solid var(--gold); max-width: 200px;
-        }
-
-        /* XP BAR */
-        #xp-container {
-            display: flex; align-items: center; gap: 8px; font-family: 'Cinzel'; color: var(--gold); font-size: 0.8rem;
-            background: rgba(0,0,0,0.6); padding: 4px 10px; border-radius: 20px; border: 1px solid rgba(212, 175, 55, 0.3);
-        }
-        .xp-bar { width: 60px; height: 4px; background: #333; border-radius: 2px; overflow: hidden; }
-        .xp-fill { height: 100%; background: var(--gold); width: 0%; transition: width 0.5s; }
-
-        /* UI */
-        .glass-panel { background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px); border-top: 1px solid #444; }
-        .theme-menu { position: absolute; top: 60px; right: 10px; background: #111; border: 1px solid #444; padding: 10px; border-radius: 12px; display: none; grid-template-columns: repeat(3, 1fr); gap: 8px; box-shadow: 0 10px 30px black; }
-        .theme-menu.show { display: grid; }
-        .theme-btn { width: 40px; height: 40px; border-radius: 8px; border: 2px solid #555; display: flex; align-items: center; justify-content: center; color: white; transition: 0.2s; }
-        .theme-btn:hover { border-color: var(--gold); transform: scale(1.1); }
-        
-        #loading-screen { position: fixed; inset: 0; z-index: 9999; background: #000; color: var(--gold); display: flex; flex-col; align-items: center; justify-content: center; transition: opacity 0.5s; }
-        .progress-bar { width: 200px; height: 3px; background: #333; margin-top: 20px; }
-        .progress-fill { height: 100%; background: var(--gold); width: 0%; transition: width 0.3s; }
-        
-        #note-panel {
-            position: absolute; bottom: 90px; left: 50%; transform: translateX(-50%) scale(0.9);
-            width: 90%; max-width: 400px; background: #fff; color: #333;
-            border-radius: 12px; padding: 15px; z-index: 300; box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-            display: none; opacity: 0; transition: 0.3s;
-        }
-        #note-panel.show { display: block; opacity: 1; transform: translateX(-50%) scale(1); }
-        .note-marker { position: absolute; top: 10px; right: 10px; color: var(--gold); font-size: 20px; z-index: 50; cursor: pointer; }
-        
-        .policy-content h2 { color: var(--gold); font-family: 'Cinzel', serif; font-size: 1.4rem; margin-top: 1.5rem; border-bottom: 1px solid #333; }
-        .policy-content p { color: #ccc; font-size: 0.9rem; line-height: 1.5; margin-bottom: 0.5rem; }
-        #music-input { display: none; }
+        /* EDITOR CANVAS */
+        #editor-canvas { width: 360px; height: 540px; background: #f4e4bc; position: relative; overflow: hidden; margin: 0 auto; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        .draggable-item { position: absolute; cursor: move; border: 1px dashed transparent; }
+        .draggable-item:hover { border: 1px dashed #666; }
+        .draggable-item.selected { border: 2px solid var(--gold); }
     </style>
 </head>
-<body class="bg-mystic">
+<body class="flex flex-col">
 
-    <audio id="user-bgm" loop></audio>
-    <audio id="sfx-flip" preload="auto" src="https://www.soundjay.com/books/sounds/book-page-turn-03.mp3"></audio> 
-    <audio id="ambience-rain" loop preload="auto" src="https://assets.mixkit.co/active_storage/sfx/1253/1253-preview.mp3"></audio>
-    <audio id="ambience-forest" loop preload="auto" src="https://assets.mixkit.co/active_storage/sfx/177/177-preview.mp3"></audio>
-    <audio id="ambience-library" loop preload="auto" src="https://assets.mixkit.co/active_storage/sfx/876/876-preview.mp3"></audio>
-
-    <div class="torch-overlay"></div>
-
-    <div id="loading-screen">
-        <i class="fas fa-book-open fa-2x mb-4 animate-bounce"></i>
-        <h2 class="font-[Cinzel] text-xl tracking-widest">ARCHIVE</h2>
-        <div class="progress-bar"><div id="loading-bar" class="progress-fill"></div></div>
-        <p class="text-xs text-gray-500 mt-2 font-mono">Loading Book...</p>
-    </div>
-
-    <div id="auth-section" class="hidden fixed inset-0 z-[900] flex items-center justify-center bg-black/95 p-6">
-        <div class="w-full max-w-sm text-center">
-            <i class="fas fa-dragon text-5xl text-[#d4af37] mb-4"></i>
-            <h1 class="text-3xl font-[Cinzel] text-white mb-8">MYSTERIUM</h1>
-            <button id="google-login" class="w-full bg-white text-black font-bold py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-gray-200"><i class="fab fa-google"></i> Login with Google</button>
+    <div id="auth-section" class="fixed inset-0 z-[1000] bg-black/95 flex items-center justify-center">
+        <div class="text-center">
+            <h1 class="text-4xl font-[Cinzel] text-[#d4af37] mb-8">MYSTERIUM</h1>
+            <button id="google-login" class="bg-white text-black px-8 py-3 rounded-full font-bold hover:bg-gray-200 transition">
+                <i class="fab fa-google text-red-600 mr-2"></i> Enter Library
+            </button>
         </div>
     </div>
 
-    <div id="wizard-container">
-        <div id="wizard-text" class="wizard-bubble">Welcome!</div>
-        <div class="wizard-avatar-box"><i class="fas fa-user-astronaut wizard-face"></i></div>
-    </div>
+    <nav id="main-nav" class="hidden h-16 bg-[#0f0f10] border-b border-gray-800 flex items-center justify-between px-6 z-50">
+        <div class="flex items-center gap-4">
+            <i class="fas fa-dragon text-[#d4af37] text-2xl"></i>
+            <span class="font-[Cinzel] font-bold text-lg tracking-widest hidden md:block">MYSTERIUM</span>
+        </div>
+        
+        <div id="search-container" class="flex-1 max-w-md mx-4 relative hidden md:block">
+            <input type="text" id="search-input" placeholder="Search books..." class="w-full bg-[#1a1a1a] border border-gray-700 rounded-full px-4 py-2 text-sm focus:border-[#d4af37] outline-none transition">
+            <i class="fas fa-search absolute right-4 top-2.5 text-gray-500"></i>
+        </div>
 
-    <div id="book-container" class="hidden w-full h-full relative flex-col">
-        <div id="top-bar" class="absolute top-0 w-full p-4 flex justify-between items-center z-50 transition-opacity duration-300">
-            <div id="logo-btn" class="bg-black/40 px-3 py-1 rounded-full border border-white/10 cursor-pointer backdrop-blur-md">
-                <span class="text-[#d4af37] font-[Cinzel] text-xs">MYSTERIUM</span>
+        <div class="flex items-center gap-3">
+            <button onclick="showView('wall')" class="w-10 h-10 rounded-full hover:bg-gray-800 flex items-center justify-center text-gray-400 hover:text-white" title="Home"><i class="fas fa-home"></i></button>
+            <button onclick="createNewBook()" class="bg-[#d4af37] hover:bg-yellow-600 text-black px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 transition">
+                <i class="fas fa-plus"></i> <span class="hidden sm:inline">CREATE</span>
+            </button>
+            <img id="user-avatar" src="" class="w-8 h-8 rounded-full border border-gray-600">
+        </div>
+    </nav>
+
+    <main id="view-wall" class="hidden flex-grow overflow-y-auto p-6 pb-20">
+        <section class="mb-10">
+            <h2 class="font-[Cinzel] text-[#d4af37] text-xl mb-4 flex items-center"><i class="fas fa-fire mr-2"></i> Trending This Week</h2>
+            <div id="trending-grid" class="flex gap-4 overflow-x-auto pb-4 snap-x">
+                <div class="animate-pulse w-40 h-60 bg-gray-800 rounded-lg flex-shrink-0"></div>
             </div>
-            
-            <div id="xp-container" class="hidden md:flex backdrop-blur-md">
-                <span id="user-rank">Novice</span>
-                <div class="xp-bar"><div id="xp-fill" class="xp-fill"></div></div>
-                <span id="user-lvl" class="text-xs text-gray-400">Lvl 1</span>
+        </section>
+
+        <section>
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="font-[Cinzel] text-white text-xl">Library Collection</h2>
+                <div class="md:hidden"><button onclick="document.getElementById('search-input').focus()" class="text-gray-400"><i class="fas fa-search"></i></button></div>
             </div>
-
-            <div class="flex gap-2 relative">
-                <input type="file" id="music-input" accept="audio/*">
-                <button onclick="document.getElementById('music-input').click()" class="w-9 h-9 rounded-full bg-pink-900/50 border border-pink-500 text-pink-300 flex items-center justify-center backdrop-blur-md" title="Upload Music"><i class="fas fa-music"></i></button>
-                <button onclick="stopUserMusic()" class="w-9 h-9 rounded-full bg-red-900/50 border border-red-500 text-red-300 flex items-center justify-center backdrop-blur-md" title="Stop Music"><i class="fas fa-stop"></i></button>
-
-                <button onclick="toggleTorch()" id="torch-btn" class="w-9 h-9 rounded-full bg-orange-900/50 border border-orange-500 text-orange-300 flex items-center justify-center backdrop-blur-md" title="Torch Mode"><i class="fas fa-lightbulb"></i></button>
-                <button onclick="toggleZenMode()" class="w-9 h-9 rounded-full bg-teal-900/50 border border-teal-500 text-teal-300 flex items-center justify-center backdrop-blur-md" title="Zen Mode"><i class="fas fa-expand"></i></button>
-                <button onclick="toggleSepia()" class="w-9 h-9 rounded-full bg-amber-900/50 border border-amber-500 text-amber-300 flex items-center justify-center backdrop-blur-md" title="Old Paper"><i class="fas fa-scroll"></i></button>
-
-                <button onclick="toggleNotesVisibility()" id="note-vis-btn" class="w-9 h-9 rounded-full bg-blue-900/50 border border-blue-500 text-blue-300 flex items-center justify-center backdrop-blur-md"><i class="fas fa-eye"></i></button>
-                <button onclick="toggleWizardMode()" id="wiz-btn" class="w-9 h-9 rounded-full bg-gray-800 border border-gray-600 text-gray-400 flex items-center justify-center backdrop-blur-md" title="Guide"><i class="fas fa-hat-wizard"></i></button>
-                <button onclick="toggleAmbience()" id="ambience-btn" class="w-9 h-9 rounded-full bg-green-900/50 border border-green-500 text-green-300 flex items-center justify-center backdrop-blur-md" title="Ambience"><i class="fas fa-volume-down"></i></button>
-                
-                <button onclick="document.getElementById('bg-menu').classList.toggle('show')" class="w-9 h-9 rounded-full bg-gray-800 border border-gray-600 text-white flex items-center justify-center backdrop-blur-md"><i class="fas fa-palette"></i></button>
-                <button onclick="document.getElementById('policy-view').classList.remove('hidden')" class="w-9 h-9 rounded-full bg-gray-800 border border-gray-600 text-white flex items-center justify-center backdrop-blur-md"><i class="fas fa-scale-balanced"></i></button>
-                <button id="logout-btn" class="w-9 h-9 rounded-full bg-red-900/50 border border-red-500 text-red-300 flex items-center justify-center backdrop-blur-md"><i class="fas fa-sign-out-alt"></i></button>
-
-                <div id="bg-menu" class="theme-menu">
-                    <button onclick="setTheme('rain')" class="theme-btn bg-blue-900"><i class="fas fa-cloud-rain"></i></button>
-                    <button onclick="setTheme('library')" class="theme-btn bg-yellow-900"><i class="fas fa-landmark"></i></button>
-                    <button onclick="setTheme('forest')" class="theme-btn bg-green-900"><i class="fas fa-tree"></i></button>
-                    <button onclick="setTheme('space')" class="theme-btn bg-purple-900"><i class="fas fa-meteor"></i></button>
-                    <button onclick="setTheme('sunset')" class="theme-btn bg-orange-900"><i class="fas fa-sun"></i></button>
-                    <button onclick="setTheme('mystic')" class="theme-btn bg-indigo-900"><i class="fas fa-moon"></i></button>
-                    <button onclick="toggleDarkMode()" class="theme-btn bg-black"><i class="fas fa-adjust"></i></button>
+            <div id="books-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
                 </div>
-            </div>
-        </div>
+        </section>
+    </main>
 
-        <div class="book-scene" onclick="handleBookClick(event)">
+    <main id="view-reader" class="hidden flex-grow relative bg-[#1a1a1a]">
+        <button onclick="closeReader()" class="absolute top-4 left-4 z-50 w-10 h-10 bg-black/50 text-white rounded-full"><i class="fas fa-arrow-left"></i></button>
+        <div class="book-scene">
             <div id="the-book" class="book"><div id="pages-wrapper"></div></div>
         </div>
+        <div class="absolute bottom-6 w-full flex justify-center gap-8 z-50">
+            <button onclick="prevPage()" class="p-4 bg-black/60 rounded-full text-white hover:bg-[#d4af37] hover:text-black transition"><i class="fas fa-chevron-left"></i></button>
+            <button onclick="nextPage()" class="p-4 bg-black/60 rounded-full text-white hover:bg-[#d4af37] hover:text-black transition"><i class="fas fa-chevron-right"></i></button>
+        </div>
+    </main>
 
-        <div id="note-panel">
-            <div class="flex justify-between items-center mb-2">
-                <span class="text-xs font-bold uppercase text-gray-500">Margin Note</span>
+    <main id="view-studio" class="hidden flex-grow flex overflow-hidden bg-gray-900">
+        <div class="w-64 bg-[#0b0c10] border-r border-gray-800 p-4 flex flex-col gap-4 overflow-y-auto">
+            <div class="text-[#d4af37] font-[Cinzel] text-center border-b border-gray-800 pb-2">BOOK STUDIO</div>
+            
+            <div class="bg-gray-800 p-3 rounded text-xs">
+                <label class="block text-gray-400 mb-1">Book Title</label>
+                <input id="new-book-title" type="text" class="w-full bg-black border border-gray-700 rounded p-1 text-white">
+                <label class="block text-gray-400 mt-2 mb-1">Price (LKR)</label>
+                <input id="new-book-price" type="number" class="w-full bg-black border border-gray-700 rounded p-1 text-white">
             </div>
-            <textarea id="note-area" class="w-full h-24 border p-2 text-sm rounded font-[Merriweather]" placeholder="Write thoughts..."></textarea>
-            <div class="flex justify-end mt-2">
-                <button onclick="document.getElementById('note-panel').classList.remove('show')" class="mr-2 text-xs">Close</button>
-                <button onclick="saveCurrentNote()" class="bg-yellow-600 text-white px-3 py-1 rounded text-xs font-bold">Save</button>
+
+            <div class="grid grid-cols-2 gap-2">
+                <button onclick="addText()" class="p-3 bg-gray-800 hover:bg-gray-700 rounded flex flex-col items-center"><i class="fas fa-font mb-1"></i><span class="text-[10px]">Text</span></button>
+                <label class="p-3 bg-gray-800 hover:bg-gray-700 rounded flex flex-col items-center cursor-pointer">
+                    <i class="fas fa-image mb-1"></i><span class="text-[10px]">Image</span>
+                    <input type="file" id="img-upload" class="hidden" accept="image/*" onchange="addImage(this)">
+                </label>
             </div>
+
+            <div class="mt-auto">
+                <button onclick="savePage()" class="w-full py-2 bg-blue-900 text-blue-200 rounded mb-2 text-xs font-bold">SAVE PAGE</button>
+                <button onclick="openPublishModal()" class="w-full py-3 bg-green-700 hover:bg-green-600 text-white rounded font-bold shadow-lg shadow-green-900/50">PUBLISH BOOK</button>
+            </div>
+            <button onclick="showView('wall')" class="text-xs text-center text-gray-500 hover:text-white mt-2">Exit Studio</button>
         </div>
 
-        <div id="controls-bar" class="absolute bottom-0 w-full glass-panel p-4 z-50 transition-opacity duration-300">
-            <div class="flex gap-4">
-                <button onclick="prevPage()" class="flex-1 h-12 bg-white/10 rounded-lg text-white font-bold hover:bg-white/20 transition">PREV PAGE</button>
-                <button onclick="toggleNoteEditor()" class="w-12 h-12 bg-yellow-600/20 text-yellow-500 rounded-lg border border-yellow-600"><i class="fas fa-pen"></i></button>
-                <button onclick="nextPage()" class="flex-1 h-12 bg-white/10 rounded-lg text-white font-bold hover:bg-white/20 transition">NEXT PAGE</button>
+        <div class="flex-grow flex items-center justify-center bg-gray-800 relative">
+            <div class="absolute top-4 bg-black/50 px-4 py-2 rounded-full text-xs">
+                Page: <input type="number" id="current-page-num" value="1" class="w-10 bg-transparent text-center font-bold" onchange="loadEditorPage()">
             </div>
+            <div id="editor-canvas" class="editor-font"></div>
         </div>
-    </div>
+    </main>
 
-    <div id="policy-view" class="hidden fixed inset-0 z-[950] bg-black/95 overflow-y-auto animate-fade-in">
-        <div class="max-w-2xl mx-auto min-h-screen bg-[#0b0c10] shadow-2xl relative">
-            <div class="sticky top-0 bg-[#0b0c10]/95 backdrop-blur-sm border-b border-gray-800 p-4 flex justify-between items-center z-10">
-                <h1 class="text-[#d4af37] font-[Cinzel] text-xl">LEGAL & SUPPORT</h1>
-                <button onclick="document.getElementById('policy-view').classList.add('hidden')" class="w-8 h-8 rounded-full bg-gray-800 text-white flex items-center justify-center"><i class="fas fa-times"></i></button>
+    <div id="publish-modal" class="hidden fixed inset-0 z-[200] bg-black/90 flex items-center justify-center p-4">
+        <div class="bg-[#1a1a1a] border border-[#d4af37] rounded-xl p-6 max-w-sm w-full text-center">
+            <h3 class="text-[#d4af37] font-[Cinzel] text-xl mb-2">PUBLISH BOOK</h3>
+            <p class="text-gray-400 text-sm mb-4">Fee: <span class="text-white font-bold">500 LKR</span> to Admin</p>
+            <div class="bg-black/50 p-3 rounded mb-4 text-xs text-left font-mono text-gray-400">
+                Bank: Commercial Bank<br>
+                Acc: 8025211913<br>
+                Name: K.M.H.Y.S Kariyawasam<br>
+                Ref: Your Email
             </div>
-            <div class="p-6 pb-32 policy-content">
-                <h2>Refund Policy</h2>
-                <p>Thank you for shopping at MYSTERIUM. We accept returns within 1 day from the date of purchase. Refunds exclude shipping.</p>
-                <h3>Non-Returnable Items</h3><ul><li>Gift cards</li><li>Downloads</li><li>Personalized items</li></ul>
-                <h2>Privacy Policy</h2>
-                <p>We collect only necessary info to fulfill orders. We do not sell data.</p>
-                <h2>Terms</h2>
-                <p>By using this site you agree to our terms. Users must be 15+.</p>
-            </div>
-            <div class="fixed bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black via-black/90 to-transparent flex flex-col items-center gap-3">
-                <div class="flex gap-3 w-full max-w-sm">
-                    <a href="tel:+94787004239" class="flex-1 bg-green-700 text-white py-3 rounded-lg flex items-center justify-center gap-2 font-bold"><i class="fas fa-phone"></i> Call</a>
-                    <a href="mailto:yasodhasandeepa@gmail.com" class="flex-1 bg-indigo-700 text-white py-3 rounded-lg flex items-center justify-center gap-2 font-bold"><i class="fas fa-envelope"></i> Email</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="pay-modal" class="hidden fixed inset-0 z-[999] bg-black/90 flex items-center justify-center p-4">
-        <div class="bg-gray-900 border border-yellow-600 p-6 rounded-xl text-center">
-            <h3 class="text-white mb-2">LOCKED</h3>
-            <p class="text-gray-400 text-xs mb-4">Upload Rs.100 Receipt</p>
-            <input type="file" id="receipt-file" class="text-white text-xs mb-4">
-            <button id="send-receipt" class="w-full bg-yellow-600 text-black font-bold py-2 rounded">Submit</button>
-            <button onclick="document.getElementById('pay-modal').classList.add('hidden')" class="text-xs text-gray-500 mt-2 block w-full">Close</button>
+            <label class="block w-full border border-dashed border-gray-600 rounded p-4 mb-4 cursor-pointer hover:border-[#d4af37]">
+                <span class="text-xs text-gray-500">Upload Receipt (Image)</span>
+                <input type="file" id="publish-receipt" class="hidden" accept="image/*">
+            </label>
+            <button onclick="submitPublish()" class="w-full bg-[#d4af37] text-black font-bold py-2 rounded">SUBMIT FOR REVIEW</button>
+            <button onclick="document.getElementById('publish-modal').classList.add('hidden')" class="mt-3 text-xs text-gray-500 underline">Cancel</button>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, where, orderBy, limit, startAfter, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, getDoc, getDocs, query, where, orderBy, updateDoc, addDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+        import { getStorage, ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-storage.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyByyYMFzn1nHOuzxEsX44sQrIIT5AdB3Pc",
@@ -266,331 +165,242 @@
             projectId: "book-8cd24",
             storageBucket: "book-8cd24.firebasestorage.app",
             messagingSenderId: "747560284834",
-            appId: "1:747560284834:web:30f6080e8d4fbf9025ddfb",
-            measurementId: "G-FFFS1HS4GY"
+            appId: "1:747560284834:web:30f6080e8d4fbf9025ddfb"
         };
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        
-        let user = null;
-        let isUnlocked = false;
-        let lastLoadedPageDoc = null;
-        let isLoadingMore = false;
-        const BATCH_SIZE = 5;
-        let totalPagesLoaded = 0;
+        const storage = getStorage(app);
 
-        // --- FEATURES ---
-        let ambienceOn = false; 
-        let wizardOn = false;
-        let notesVisible = true;
-        let userNotes = {};
-        let currentTheme = 'mystic';
-        let currentAmbience = null;
-        let zenMode = false;
-        let torchMode = false;
-        let userXP = 0;
+        let currentUser = null;
+        let activeBookId = null; // For Reader
+        let studioBookId = null; // For Editor
 
-        // --- AUDIO ---
-        const audioTracks = {
-            'rain': document.getElementById('ambience-rain'),
-            'forest': document.getElementById('ambience-forest'),
-            'library': document.getElementById('ambience-library')
-        };
-        const flipSfx = document.getElementById('sfx-flip');
-        const userAudio = document.getElementById('user-bgm');
-
-        document.getElementById('music-input').addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if(file) {
-                userAudio.src = URL.createObjectURL(file);
-                userAudio.volume = 0.5;
-                userAudio.play();
-                alert("Playing Music! 🎵");
-            }
-        });
-        window.stopUserMusic = () => { userAudio.pause(); userAudio.currentTime = 0; };
-
-        // --- VISUALS ---
-        document.addEventListener('mousemove', (e) => {
-            if(torchMode) {
-                document.body.style.setProperty('--x', e.clientX + 'px');
-                document.body.style.setProperty('--y', e.clientY + 'px');
-            }
-        });
-        window.toggleTorch = () => {
-            torchMode = !torchMode;
-            document.body.classList.toggle('torch-active');
-            const btn = document.getElementById('torch-btn');
-            btn.classList.toggle('bg-orange-900/50'); btn.classList.toggle('bg-white');
-            btn.classList.toggle('text-orange-300'); btn.classList.toggle('text-black');
-        };
-
-        window.setTheme = (name) => {
-            if(currentAmbience) { currentAmbience.pause(); currentAmbience.currentTime=0; }
-            document.body.className = `bg-${name}`;
-            if(zenMode) document.body.classList.add('zen-mode');
-            if(torchMode) document.body.classList.add('torch-active');
-            currentTheme = name;
-            if(ambienceOn && audioTracks[name]) {
-                currentAmbience = audioTracks[name];
-                currentAmbience.volume = 0.4;
-                currentAmbience.play().catch(()=>{});
-            }
-            document.getElementById('bg-menu').classList.remove('show');
-        };
-
-        window.toggleAmbience = () => {
-            ambienceOn = !ambienceOn;
-            const btn = document.getElementById('ambience-btn');
-            if(ambienceOn) {
-                btn.classList.replace('bg-green-900/50', 'bg-red-900/50');
-                btn.classList.replace('text-green-300', 'text-red-300');
-                if(audioTracks[currentTheme]) {
-                    currentAmbience = audioTracks[currentTheme];
-                    currentAmbience.play().catch(()=>{});
-                }
-            } else {
-                btn.classList.replace('bg-red-900/50', 'bg-green-900/50');
-                btn.classList.replace('text-green-300', 'text-red-300');
-                if(currentAmbience) currentAmbience.pause();
-            }
-        };
-
-        window.toggleZenMode = () => { zenMode = !zenMode; document.body.classList.toggle('zen-mode'); };
-        window.handleBookClick = (e) => { if(zenMode && e.target.classList.contains('book-scene')) toggleZenMode(); };
-        window.toggleSepia = () => document.body.classList.toggle('sepia-mode');
-        window.toggleNotesVisibility = () => { notesVisible = !notesVisible; document.getElementById('note-vis-btn').classList.toggle('opacity-50'); refreshNoteMarkers(); };
-        
-        window.toggleWizardMode = () => {
-            wizardOn = !wizardOn;
-            const btn = document.getElementById('wiz-btn');
-            if(wizardOn) {
-                btn.classList.replace('bg-gray-800', 'bg-yellow-900/50');
-                btn.classList.replace('text-gray-400', 'text-yellow-300');
-                showWizard("I am here!");
-            } else {
-                btn.classList.replace('bg-yellow-900/50', 'bg-gray-800');
-                btn.classList.replace('text-yellow-300', 'text-gray-400');
-                document.getElementById('wizard-container').classList.remove('active');
-            }
-        };
-
-        function updateXP(amount) {
-            userXP += amount;
-            const level = Math.floor(userXP / 50) + 1;
-            const progress = (userXP % 50) / 50 * 100;
-            document.getElementById('xp-fill').style.width = `${progress}%`;
-            document.getElementById('user-lvl').innerText = `Lvl ${level}`;
-            const ranks = ["Novice", "Apprentice", "Scholar", "Scribe", "Grand Wizard"];
-            document.getElementById('user-rank').innerText = ranks[Math.min(Math.floor(level/5), 4)];
-        }
-
-        // --- AUTH & DATA ---
-        onAuthStateChanged(auth, async (u) => {
-            if(u){
-                user = u;
+        // AUTH
+        onAuthStateChanged(auth, (u) => {
+            if(u) {
+                currentUser = u;
                 document.getElementById('auth-section').classList.add('hidden');
-                onSnapshot(doc(db, "users", u.uid), (docSnap) => {
-                    if (docSnap.exists()) {
-                        const d = docSnap.data();
-                        isUnlocked = (d.status === 'approved');
-                        userNotes = d.notes || {};
-                        userXP = d.xp || 0;
-                        updateXP(0);
-                    }
-                    loadInitialBatch();
-                });
+                document.getElementById('main-nav').classList.remove('hidden');
+                document.getElementById('user-avatar').src = u.photoURL;
+                showView('wall');
+                loadWall();
             } else {
-                document.getElementById('loading-screen').classList.add('opacity-0', 'pointer-events-none');
                 document.getElementById('auth-section').classList.remove('hidden');
             }
         });
 
-        // --- LAZY LOADING LOGIC ---
-        async function loadInitialBatch() {
-            document.getElementById('loading-bar').style.width = '100%';
-            document.getElementById('pages-wrapper').innerHTML = ''; // Clear only on init
-            totalLoadedPages = 0;
-            lastLoadedPageDoc = null; // Fix: Reset cursor
-            
-            if(isUnlocked) {
-                await fetchMorePages(); 
-            } else {
-                renderPage({pageNumber:0});
-                renderPage({pageNumber:1, isDummy:true});
+        document.getElementById('google-login').onclick = () => signInWithPopup(auth, new GoogleAuthProvider());
+
+        // --- NAVIGATION ---
+        window.showView = (view) => {
+            ['wall', 'reader', 'studio'].forEach(v => document.getElementById('view-'+v).classList.add('hidden'));
+            document.getElementById('view-'+view).classList.remove('hidden');
+            document.getElementById('view-'+view).classList.add('flex'); // Studio needs flex
+            if(view === 'wall') {
+                document.getElementById('view-wall').classList.remove('flex'); // Wall is block
+                loadWall();
             }
+        };
+
+        // --- WALL LOGIC ---
+        async function loadWall() {
+            const grid = document.getElementById('books-grid');
+            const trend = document.getElementById('trending-grid');
+            grid.innerHTML = '<div class="text-gray-500">Loading library...</div>';
             
-            setTimeout(() => {
-                document.getElementById('loading-screen').classList.add('opacity-0', 'pointer-events-none');
-                document.getElementById('book-container').classList.remove('hidden');
-                document.getElementById('book-container').style.display='flex';
-                resizeContent();
-                setTheme('mystic'); 
-            }, 800);
-        }
-
-        async function fetchMorePages() {
-            if(isLoadingMore) return;
-            isLoadingMore = true;
-            let q;
-            if(lastLoadedPageDoc) {
-                q = query(collection(db, "pages"), orderBy("pageNumber", "asc"), startAfter(lastLoadedPageDoc), limit(BATCH_SIZE));
-            } else {
-                q = query(collection(db, "pages"), orderBy("pageNumber", "asc"), limit(BATCH_SIZE));
-            }
+            // Fetch Approved Books
+            const q = query(collection(db, "books"), where("status", "==", "approved"), orderBy("views", "desc"));
+            const snapshot = await getDocs(q);
             
-            const snap = await getDocs(q);
-            if(!snap.empty) {
-                lastLoadedPageDoc = snap.docs[snap.docs.length-1];
-                snap.forEach(d => {
-                    renderPage(d.data());
-                    totalLoadedPages++;
-                });
-            }
-            isLoadingMore = false;
-        }
-
-        function refreshNoteMarkers() {
-            const markers = document.querySelectorAll('.note-marker');
-            markers.forEach(m => m.style.display = notesVisible ? 'block' : 'none');
-        }
-
-        function renderPage(data) {
-            const wrap = document.getElementById('pages-wrapper');
-            const page = document.createElement('div');
+            grid.innerHTML = ''; trend.innerHTML = '';
             
-            // Z-Index: Unflipped (Right) stack high to low.
-            let initialZ = 1000 - data.pageNumber;
-            if (data.pageNumber === 1000) initialZ = 0;
-
-            page.className = `page shadow-2xl ${data.pageNumber===0||data.pageNumber===1000?'hard-cover':''}`;
-            page.dataset.pn = data.pageNumber;
-            page.style.zIndex = initialZ;
-            
-            const front = document.createElement('div'); front.className = 'front';
-            front.style.backgroundColor = data.backgroundColor || '#ffffff';
-            const content = document.createElement('div'); content.className = 'content-layer';
-            front.appendChild(content);
-
-            if(data.elements && !data.isDummy) {
-                data.elements.forEach(el => {
-                    const div = document.createElement('div');
-                    div.style.position='absolute'; div.style.left=el.left; div.style.top=el.top;
-                    if(el.type==='text'){
-                        div.innerText=el.content; Object.assign(div.style, el.style);
-                        div.style.width='max-content'; div.style.whiteSpace='pre';
-                    } else {
-                        div.innerHTML=`<img src="${el.content}" style="width:100%; height:100%; object-fit:cover;">`;
-                        div.style.width='100%'; div.style.height='100%';
-                    }
-                    content.appendChild(div);
-                });
-            }
-
-            // NOTE MARKER
-            const marker = document.createElement('div');
-            marker.className = 'note-marker';
-            marker.innerHTML = '<i class="fas fa-sticky-note"></i>';
-            marker.style.display = (notesVisible && userNotes[data.pageNumber]) ? 'block' : 'none';
-            marker.onclick = (e) => { e.stopPropagation(); openNoteForPage(data.pageNumber); };
-            front.appendChild(marker);
-
-            if(data.pageNumber===0 && !isUnlocked) front.innerHTML += `<div class="absolute inset-0 flex items-end justify-center pb-20 pointer-events-none"><div class="px-4 py-2 bg-black/80 text-yellow-500 rounded-full border border-yellow-500 animate-bounce">LOCKED</div></div>`;
-            if(data.isDummy) front.innerHTML = `<div class="flex items-center justify-center h-full text-gray-300 font-[Cinzel] text-2xl border-4 border-gray-100 m-8">LOCKED</div>`;
-
-            const back = document.createElement('div'); back.className = 'back';
-            page.appendChild(front); page.appendChild(back);
-            
-            // PAGE CLICK LOGIC
-            page.onclick = (e) => {
-                e.stopPropagation();
-                if(!isUnlocked && data.pageNumber!==0) { document.getElementById('pay-modal').classList.remove('hidden'); return; }
+            let count = 0;
+            snapshot.forEach(doc => {
+                const b = doc.data();
+                const card = `
+                    <div onclick="openBook('${doc.id}')" class="book-card cursor-pointer group">
+                        <div class="aspect-[2/3] bg-gray-800 rounded-lg overflow-hidden mb-2 relative">
+                            ${b.coverUrl ? `<img src="${b.coverUrl}" class="w-full h-full object-cover">` : '<div class="w-full h-full flex items-center justify-center text-gray-600"><i class="fas fa-book text-4xl"></i></div>'}
+                            <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
+                                <span class="text-[#d4af37] font-bold"><i class="fas fa-book-open"></i> READ</span>
+                            </div>
+                        </div>
+                        <h3 class="text-sm font-bold truncate text-gray-200">${b.title || 'Untitled'}</h3>
+                        <p class="text-xs text-gray-500">${b.price > 0 ? 'Rs. '+b.price : 'Free'}</p>
+                    </div>
+                `;
+                grid.innerHTML += card;
                 
-                if(page.classList.contains('flipped')) {
-                    // FLIP BACK (RIGHT)
-                    page.classList.remove('flipped');
-                    setTimeout(() => page.style.zIndex = initialZ, 600); // Restore original stacking
-                    if(ambienceOn) { flipSfx.currentTime=0; flipSfx.play().catch(()=>{}); }
-                } else {
-                    // FLIP FORWARD (LEFT)
-                    page.classList.add('flipped');
-                    page.style.zIndex = 1000 + data.pageNumber; // Bring to top of LEFT stack
-                    if(ambienceOn) { flipSfx.currentTime=0; flipSfx.play().catch(()=>{}); }
-                    
-                    if(wizardOn && Math.random() < 0.2) showWizard(["Keep reading!", "Interesting...", "Good pace!"][Math.floor(Math.random()*3)]);
-                    if(user) { updateXP(10); updateDoc(doc(db,"users",user.uid), {xp: userXP}).catch(()=>{}); }
-                    
-                    // CHECK FOR LAZY LOAD
-                    if(data.pageNumber >= totalPagesLoaded - 3 && isUnlocked) {
-                        fetchMorePages();
-                    }
-                }
+                if(count < 5) trend.innerHTML += card.replace('book-card', 'book-card min-w-[120px]');
+                count++;
+            });
+
+            // Search Logic
+            document.getElementById('search-input').onkeyup = (e) => {
+                const term = e.target.value.toLowerCase();
+                const cards = grid.querySelectorAll('.book-card');
+                cards.forEach(c => {
+                    const title = c.querySelector('h3').innerText.toLowerCase();
+                    c.style.display = title.includes(term) ? 'block' : 'none';
+                });
             };
-            wrap.appendChild(page);
+        }
+
+        // --- READER LOGIC ---
+        window.openBook = async (id) => {
+            activeBookId = id;
+            showView('reader');
+            
+            // Increment Views
+            updateDoc(doc(db, "books", id), {
+                views: (await getDoc(doc(db,"books",id))).data().views + 1 || 1
+            });
+
+            // Load Pages
+            const wrapper = document.getElementById('pages-wrapper');
+            wrapper.innerHTML = '<div class="flex items-center justify-center h-full text-gray-500">Opening Book...</div>';
+            
+            const pSnap = await getDocs(query(collection(db, "books", id, "pages"), orderBy("pageNumber")));
+            wrapper.innerHTML = '';
+            
+            pSnap.forEach(d => {
+                const data = d.data();
+                renderPage(wrapper, data);
+            });
             resizeContent();
-        }
-
-        // --- HELPERS ---
-        function showWizard(text) {
-            const wiz = document.getElementById('wizard-container');
-            document.getElementById('wizard-text').innerText = text;
-            wiz.classList.add('active');
-            setTimeout(() => wiz.classList.remove('active'), 3500);
-        }
-
-        window.toggleNoteEditor = () => {
-            const flipped = document.querySelectorAll('.page.flipped');
-            let currentPage = 0;
-            if(flipped.length > 0) currentPage = parseInt(flipped[flipped.length-1].dataset.pn) + 1;
-            openNoteForPage(currentPage);
         };
 
-        function openNoteForPage(pageNum) {
-            const panel = document.getElementById('note-panel');
-            const area = document.getElementById('note-area');
-            area.value = userNotes[pageNum] || "";
-            area.dataset.pn = pageNum;
-            panel.classList.add('show');
+        window.closeReader = () => showView('wall');
+
+        function renderPage(wrapper, data) {
+            const z = 1000 - data.pageNumber;
+            const el = document.createElement('div');
+            el.className = 'page shadow-2xl'; el.style.zIndex = z;
+            el.dataset.pn = data.pageNumber;
+            
+            const content = `<div class="content-layer">
+                ${data.elements.map(e => e.type==='text' 
+                ? `<div style="position:absolute;left:${e.left};top:${e.top};${objToCss(e.style)}">${e.content}</div>`
+                : `<img src="${e.content}" style="position:absolute;left:${e.left};top:${e.top};width:${e.style.width}">`
+                ).join('')}
+            </div>`;
+
+            el.innerHTML = `<div class="front" style="background:${data.bgColor||'#fff'}">${content}</div><div class="back"></div>`;
+            el.onclick = () => { if(el.classList.contains('flipped')) el.classList.remove('flipped'); else el.classList.add('flipped'); };
+            wrapper.appendChild(el);
         }
 
-        window.saveCurrentNote = async () => {
-            if(!user) return;
-            const area = document.getElementById('note-area');
-            userNotes[area.dataset.pn] = area.value;
-            await updateDoc(doc(db, "users", user.uid), { notes: userNotes });
-            document.getElementById('note-panel').classList.remove('show');
-            // Update markers on current page only to save performance
-            const pageEl = document.querySelector(`.page[data-pn="${area.dataset.pn}"] .note-marker`);
-            if(pageEl) pageEl.style.display = 'block';
-        };
-
+        function objToCss(obj) { return Object.entries(obj).map(([k,v]) => `${k.replace(/[A-Z]/g, m=>'-'+m.toLowerCase())}:${v}`).join(';'); }
         function resizeContent() {
-            const bookEl = document.getElementById('the-book'); if(!bookEl) return;
-            const layers = document.querySelectorAll('.content-layer');
-            const scale = bookEl.offsetHeight / 540;
-            layers.forEach(l => l.style.transform = `translate(-50%, -50%) scale(${scale})`);
+            const scale = document.getElementById('the-book').offsetHeight / 540;
+            document.querySelectorAll('.content-layer').forEach(l => l.style.transform = `translate(-50%, -50%) scale(${scale})`);
         }
-        window.addEventListener('resize', resizeContent);
-        
-        window.nextPage = () => { const u = document.querySelectorAll('.page:not(.flipped):not([data-pn="undefined"])'); if(u.length) u[0].click(); };
-        window.prevPage = () => { const f = document.querySelectorAll('.page.flipped'); if(f.length) f[f.length-1].click(); };
-        window.toggleControls = () => { document.getElementById('controls-bar').classList.toggle('translate-y-full'); };
-        window.toggleDarkMode = () => document.body.classList.toggle('dark-mode');
+        window.onresize = resizeContent;
 
-        document.getElementById('google-login').onclick = async () => { try { await signInWithPopup(auth, new GoogleAuthProvider()); } catch(e){ alert(e.message); } };
-        document.getElementById('logout-btn').onclick = () => signOut(auth);
+        // --- CREATOR STUDIO LOGIC ---
+        window.createNewBook = () => {
+            studioBookId = 'draft_' + currentUser.uid + '_' + Date.now();
+            document.getElementById('new-book-title').value = '';
+            document.getElementById('new-book-price').value = '';
+            document.getElementById('editor-canvas').innerHTML = '';
+            showView('studio');
+        };
 
-        document.getElementById('send-receipt').onclick = async () => {
-            const f = document.getElementById('receipt-file').files[0];
-            if(user && f) {
-                const reader = new FileReader(); reader.readAsDataURL(f);
-                reader.onload = async (e) => {
-                     await setDoc(doc(db,'requests',user.uid), {userId:user.uid, email:user.email, receiptImage:e.target.result, status:'pending'});
-                     alert("Sent!"); document.getElementById('pay-modal').classList.add('hidden');
-                }
+        // Editor Canvas Logic (Simplified)
+        let selectedEl = null;
+        window.addText = () => addToCanvas('text', 'New Text');
+        window.addImage = async (input) => {
+            if(input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => addToCanvas('image', e.target.result);
+                reader.readAsDataURL(input.files[0]);
             }
         };
+
+        function addToCanvas(type, content) {
+            const div = document.createElement('div');
+            div.className = 'draggable-item'; div.style.left='50px'; div.style.top='50px';
+            div.dataset.type = type;
+            
+            if(type === 'text') div.innerHTML = `<div contenteditable="true" style="font-size:20px; color:black; min-width:100px;">${content}</div>`;
+            else div.innerHTML = `<img src="${content}" style="width:150px; pointer-events:none;">`;
+            
+            document.getElementById('editor-canvas').appendChild(div);
+            setupDrag(div);
+        }
+
+        function setupDrag(el) {
+            let isDown = false, offX, offY;
+            el.addEventListener('mousedown', e => {
+                if(e.target.isContentEditable) return;
+                isDown = true;
+                const r = el.getBoundingClientRect();
+                offX = e.clientX - r.left; offY = e.clientY - r.top;
+                document.querySelectorAll('.draggable-item').forEach(i => i.classList.remove('selected'));
+                el.classList.add('selected');
+            });
+            window.addEventListener('mouseup', () => isDown = false);
+            window.addEventListener('mousemove', e => {
+                if(!isDown) return;
+                const canvas = document.getElementById('editor-canvas').getBoundingClientRect();
+                el.style.left = (e.clientX - canvas.left - offX) + 'px';
+                el.style.top = (e.clientY - canvas.top - offY) + 'px';
+            });
+        }
+
+        window.savePage = async () => {
+            // In a real app, this saves to a temporary collection.
+            // For this demo, we assume the page is stored in memory until publish.
+            alert("Page Saved (In Memory Only for Demo)");
+        };
+
+        // --- PUBLISHING LOGIC ---
+        window.openPublishModal = () => document.getElementById('publish-modal').classList.remove('hidden');
+
+        window.submitPublish = async () => {
+            const file = document.getElementById('publish-receipt').files[0];
+            const title = document.getElementById('new-book-title').value;
+            const price = document.getElementById('new-book-price').value;
+
+            if(!file || !title) return alert("Please fill all fields and upload receipt");
+
+            document.getElementById('publish-modal').innerHTML = '<div class="text-white text-center">Uploading & Verifying...</div>';
+
+            // 1. Compress & Read Image
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = async (e) => {
+                const imgBase64 = e.target.result;
+
+                // 2. Save Request to DB
+                await addDoc(collection(db, "requests"), {
+                    type: 'publish_book', // New Type
+                    email: currentUser.email,
+                    userId: currentUser.uid,
+                    receiptImage: imgBase64,
+                    bookTitle: title,
+                    bookPrice: price,
+                    status: 'pending',
+                    timestamp: new Date().toISOString()
+                });
+
+                // 3. Save Draft Book (Hidden until approved)
+                // Note: In a real app, you'd save all the pages here too.
+                await setDoc(doc(db, "books", studioBookId), {
+                    title: title,
+                    price: price,
+                    author: currentUser.uid,
+                    status: 'pending_payment',
+                    coverUrl: '', // Would be a screenshot of page 1
+                    views: 0
+                });
+
+                alert("Submitted! Admin will verify your 500 LKR receipt.");
+                window.location.reload();
+            };
+        };
+
     </script>
 </body>
 </html>
