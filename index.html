@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Archive - Reader</title>
+    <title>The Archive - Ultimate Reader</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
@@ -30,7 +30,7 @@
 
         body::before { content: ''; position: absolute; inset: 0; background: rgba(0,0,0,0.5); pointer-events: none; z-index: -1; }
 
-        /* --- SMOOTH BOOK 3D ENGINE --- */
+        /* --- BOOK 3D ENGINE (FIXED FLIP) --- */
         .book-scene { 
             perspective: 1500px; width: 100%; height: 100%; 
             display: flex; align-items: center; justify-content: center; 
@@ -41,15 +41,13 @@
         
         .book { 
             transform-style: preserve-3d; position: relative; 
-            transition: transform 0.5s; aspect-ratio: 2 / 3; 
-            width: auto; height: 75vh; max-width: 95vw; 
+            width: auto; height: 75vh; max-width: 95vw; aspect-ratio: 2 / 3;
         }
         
         .page { 
             position: absolute; top:0; left:0; width: 100%; height: 100%; 
             transform-origin: left center; 
-            /* Improved transition for realistic feel */
-            transition: transform 1.2s cubic-bezier(0.4, 0.0, 0.2, 1); 
+            transition: transform 1s cubic-bezier(0.645, 0.045, 0.355, 1);
             transform-style: preserve-3d; 
             border-radius: 2px 8px 8px 2px; 
             cursor: pointer; background-color: white; 
@@ -64,16 +62,16 @@
         body.sepia-mode .front, body.sepia-mode .back { background-color: #f4e4bc !important; color: #4a3b2a; }
         
         .back { transform: rotateY(180deg); background-color: #f0f0f0; }
-        .flipped { transform: rotateY(-180deg); } /* Pure rotation, handled by CSS transition */
+        .flipped { transform: rotateY(-180deg); }
         
         body.dark-mode .front, body.dark-mode .back { background-color: #1a1a1a !important; color: #ccc; }
         .content-layer { position: absolute; top: 50%; left: 50%; width: 360px; height: 540px; transform: translate(-50%, -50%); pointer-events: none; background: transparent; }
         .content-layer * { pointer-events: auto; }
 
-        /* --- TORCH MODE (Flashlight) --- */
+        /* --- TORCH MODE --- */
         .torch-overlay {
             position: fixed; inset: 0; pointer-events: none; z-index: 800;
-            background: radial-gradient(circle 150px at var(--x, 50%) var(--y, 50%), transparent 0%, rgba(0,0,0,0.95) 100%);
+            background: radial-gradient(circle 200px at var(--x, 50%) var(--y, 50%), transparent 0%, rgba(0,0,0,0.98) 100%);
             display: none;
         }
         body.torch-active .torch-overlay { display: block; }
@@ -82,8 +80,7 @@
         #wizard-container {
             position: fixed; bottom: 100px; left: 20px; 
             z-index: 200; pointer-events: none; display: flex; flex-direction: column; align-items: flex-start;
-            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-            opacity: 0; transform: translateX(-50px);
+            transition: all 0.5s; opacity: 0; transform: translateX(-50px);
         }
         #wizard-container.active { transform: translateX(0); opacity: 1; }
         .wizard-avatar-box {
@@ -98,7 +95,7 @@
             margin-bottom: 10px; border: 1px solid var(--gold); max-width: 200px;
         }
 
-        /* --- LEVEL / XP BAR --- */
+        /* --- UI ELEMENTS --- */
         #xp-container {
             display: flex; align-items: center; gap: 8px; font-family: 'Cinzel'; color: var(--gold); font-size: 0.8rem;
             background: rgba(0,0,0,0.6); padding: 4px 10px; border-radius: 20px; border: 1px solid rgba(212, 175, 55, 0.3);
@@ -106,15 +103,6 @@
         .xp-bar { width: 60px; height: 4px; background: #333; border-radius: 2px; overflow: hidden; }
         .xp-fill { height: 100%; background: var(--gold); width: 0%; transition: width 0.5s; }
 
-        .note-marker {
-            position: absolute; top: 10px; right: 10px; z-index: 50;
-            color: var(--gold); font-size: 24px; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.3));
-            animation: float-mini 3s infinite ease-in-out; transition: transform 0.2s;
-        }
-        .note-marker:hover { transform: scale(1.2); color: #facc15; }
-        @keyframes float-mini { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
-
-        /* UI */
         .glass-panel { background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px); border-top: 1px solid #444; }
         .theme-menu { position: absolute; top: 60px; right: 10px; background: #111; border: 1px solid #444; padding: 10px; border-radius: 12px; display: none; grid-template-columns: repeat(3, 1fr); gap: 8px; box-shadow: 0 10px 30px black; }
         .theme-menu.show { display: grid; }
@@ -132,6 +120,8 @@
             display: none; opacity: 0; transition: all 0.3s;
         }
         #note-panel.show { display: block; opacity: 1; transform: translateX(-50%) scale(1); }
+        
+        .note-marker { position: absolute; top: 10px; right: 10px; color: var(--gold); font-size: 20px; z-index: 50; cursor: pointer; }
         .policy-content h2 { color: var(--gold); font-family: 'Cinzel', serif; font-size: 1.4rem; margin-top: 1.5rem; border-bottom: 1px solid #333; }
         .policy-content p { color: #ccc; font-size: 0.9rem; line-height: 1.5; margin-bottom: 0.5rem; }
         #music-input { display: none; }
@@ -151,14 +141,14 @@
         <i class="fas fa-book-open fa-2x mb-4 animate-bounce"></i>
         <h2 class="font-[Cinzel] text-xl tracking-widest">ARCHIVE</h2>
         <div class="progress-bar"><div id="loading-bar" class="progress-fill"></div></div>
-        <p class="text-xs text-gray-500 mt-2 font-mono">Tap anywhere to start</p>
+        <p class="text-xs text-gray-500 mt-2 font-mono">Loading Book...</p>
     </div>
 
     <div id="auth-section" class="hidden fixed inset-0 z-[900] flex items-center justify-center bg-black/95 p-6">
         <div class="w-full max-w-sm text-center">
             <i class="fas fa-dragon text-5xl text-[#d4af37] mb-4"></i>
             <h1 class="text-3xl font-[Cinzel] text-white mb-8">MYSTERIUM</h1>
-            <button id="google-login" class="w-full bg-white text-black font-bold py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-gray-200"><i class="fab fa-google"></i> Login</button>
+            <button id="google-login" class="w-full bg-white text-black font-bold py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-gray-200"><i class="fab fa-google"></i> Login with Google</button>
         </div>
     </div>
 
@@ -181,39 +171,29 @@
 
             <div class="flex gap-2 relative">
                 <input type="file" id="music-input" accept="audio/*">
-                <button onclick="document.getElementById('music-input').click()" class="w-9 h-9 rounded-full bg-pink-900/50 border border-pink-500 text-pink-300 flex items-center justify-center backdrop-blur-md" title="Upload Music">
-                    <i class="fas fa-music"></i>
-                </button>
-                <button onclick="stopUserMusic()" class="w-9 h-9 rounded-full bg-red-900/50 border border-red-500 text-red-300 flex items-center justify-center backdrop-blur-md" title="Stop Music">
-                    <i class="fas fa-stop"></i>
-                </button>
+                <button onclick="document.getElementById('music-input').click()" class="w-9 h-9 rounded-full bg-pink-900/50 border border-pink-500 text-pink-300 flex items-center justify-center backdrop-blur-md" title="Upload Music"><i class="fas fa-music"></i></button>
+                <button onclick="stopUserMusic()" class="w-9 h-9 rounded-full bg-red-900/50 border border-red-500 text-red-300 flex items-center justify-center backdrop-blur-md" title="Stop Music"><i class="fas fa-stop"></i></button>
 
-                <button onclick="toggleTorch()" id="torch-btn" class="w-9 h-9 rounded-full bg-orange-900/50 border border-orange-500 text-orange-300 flex items-center justify-center backdrop-blur-md" title="Torch Mode">
-                    <i class="fas fa-lightbulb"></i>
-                </button>
-                <button onclick="toggleZenMode()" class="w-9 h-9 rounded-full bg-teal-900/50 border border-teal-500 text-teal-300 flex items-center justify-center backdrop-blur-md" title="Zen Mode">
-                    <i class="fas fa-expand"></i>
-                </button>
-                <button onclick="toggleSepia()" class="w-9 h-9 rounded-full bg-amber-900/50 border border-amber-500 text-amber-300 flex items-center justify-center backdrop-blur-md" title="Old Paper">
-                    <i class="fas fa-scroll"></i>
-                </button>
+                <button onclick="toggleTorch()" id="torch-btn" class="w-9 h-9 rounded-full bg-orange-900/50 border border-orange-500 text-orange-300 flex items-center justify-center backdrop-blur-md" title="Torch Mode"><i class="fas fa-lightbulb"></i></button>
+                <button onclick="toggleZenMode()" class="w-9 h-9 rounded-full bg-teal-900/50 border border-teal-500 text-teal-300 flex items-center justify-center backdrop-blur-md" title="Zen Mode"><i class="fas fa-expand"></i></button>
+                <button onclick="toggleSepia()" class="w-9 h-9 rounded-full bg-amber-900/50 border border-amber-500 text-amber-300 flex items-center justify-center backdrop-blur-md" title="Old Paper"><i class="fas fa-scroll"></i></button>
 
                 <button onclick="toggleNotesVisibility()" id="note-vis-btn" class="w-9 h-9 rounded-full bg-blue-900/50 border border-blue-500 text-blue-300 flex items-center justify-center backdrop-blur-md"><i class="fas fa-eye"></i></button>
-                <button onclick="toggleWizardMode()" id="wiz-btn" class="w-9 h-9 rounded-full bg-gray-800 border border-gray-600 text-gray-400 flex items-center justify-center backdrop-blur-md" title="Guide"><i class="fas fa-hat-wizard"></i></button>
+                <button onclick="toggleWizardMode()" id="wiz-btn" class="w-9 h-9 rounded-full bg-gray-800 border border-gray-600 text-gray-400 flex items-center justify-center backdrop-blur-md"><i class="fas fa-hat-wizard"></i></button>
+                <button onclick="toggleAmbience()" id="ambience-btn" class="w-9 h-9 rounded-full bg-green-900/50 border border-green-500 text-green-300 flex items-center justify-center backdrop-blur-md"><i class="fas fa-volume-down"></i></button>
                 
-                <button onclick="toggleAmbience()" id="ambience-btn" class="w-9 h-9 rounded-full bg-green-900/50 border border-green-500 text-green-300 flex items-center justify-center backdrop-blur-md" title="Ambience"><i class="fas fa-volume-down"></i></button>
                 <button onclick="document.getElementById('bg-menu').classList.toggle('show')" class="w-9 h-9 rounded-full bg-gray-800 border border-gray-600 text-white flex items-center justify-center backdrop-blur-md"><i class="fas fa-palette"></i></button>
                 <button onclick="document.getElementById('policy-view').classList.remove('hidden')" class="w-9 h-9 rounded-full bg-gray-800 border border-gray-600 text-white flex items-center justify-center backdrop-blur-md"><i class="fas fa-scale-balanced"></i></button>
                 <button id="logout-btn" class="w-9 h-9 rounded-full bg-red-900/50 border border-red-500 text-red-300 flex items-center justify-center backdrop-blur-md"><i class="fas fa-sign-out-alt"></i></button>
 
                 <div id="bg-menu" class="theme-menu">
-                    <button onclick="setTheme('rain')" class="theme-btn bg-blue-900" title="Rain"><i class="fas fa-cloud-rain"></i></button>
-                    <button onclick="setTheme('library')" class="theme-btn bg-yellow-900" title="Library"><i class="fas fa-landmark"></i></button>
-                    <button onclick="setTheme('forest')" class="theme-btn bg-green-900" title="Forest"><i class="fas fa-tree"></i></button>
-                    <button onclick="setTheme('space')" class="theme-btn bg-purple-900" title="Space"><i class="fas fa-meteor"></i></button>
-                    <button onclick="setTheme('sunset')" class="theme-btn bg-orange-900" title="Sunset"><i class="fas fa-sun"></i></button>
-                    <button onclick="setTheme('mystic')" class="theme-btn bg-indigo-900" title="Mystic"><i class="fas fa-moon"></i></button>
-                    <button onclick="toggleDarkMode()" class="theme-btn bg-black" title="Dark Page"><i class="fas fa-adjust"></i></button>
+                    <button onclick="setTheme('rain')" class="theme-btn bg-blue-900"><i class="fas fa-cloud-rain"></i></button>
+                    <button onclick="setTheme('library')" class="theme-btn bg-yellow-900"><i class="fas fa-landmark"></i></button>
+                    <button onclick="setTheme('forest')" class="theme-btn bg-green-900"><i class="fas fa-tree"></i></button>
+                    <button onclick="setTheme('space')" class="theme-btn bg-purple-900"><i class="fas fa-meteor"></i></button>
+                    <button onclick="setTheme('sunset')" class="theme-btn bg-orange-900"><i class="fas fa-sun"></i></button>
+                    <button onclick="setTheme('mystic')" class="theme-btn bg-indigo-900"><i class="fas fa-moon"></i></button>
+                    <button onclick="toggleDarkMode()" class="theme-btn bg-black"><i class="fas fa-adjust"></i></button>
                 </div>
             </div>
         </div>
@@ -225,6 +205,7 @@
         <div id="note-panel">
             <div class="flex justify-between items-center mb-2">
                 <span class="text-xs font-bold uppercase text-gray-500">Margin Note</span>
+                <span id="note-status" class="text-[10px] text-green-600 hidden">Saved</span>
             </div>
             <textarea id="note-area" class="w-full h-24 border p-2 text-sm rounded font-[Merriweather]" placeholder="Write thoughts..."></textarea>
             <div class="flex justify-end mt-2">
@@ -245,18 +226,18 @@
     <div id="policy-view" class="hidden fixed inset-0 z-[950] bg-black/95 overflow-y-auto animate-fade-in">
         <div class="max-w-2xl mx-auto min-h-screen bg-[#0b0c10] shadow-2xl relative">
             <div class="sticky top-0 bg-[#0b0c10]/95 backdrop-blur-sm border-b border-gray-800 p-4 flex justify-between items-center z-10">
-                <h1 class="text-[#d4af37] font-[Cinzel] text-xl">LEGAL & SUPPORT</h1>
+                <h1 class="text-[#d4af37] font-[Cinzel] text-xl">LEGAL</h1>
                 <button onclick="document.getElementById('policy-view').classList.add('hidden')" class="w-8 h-8 rounded-full bg-gray-800 text-white flex items-center justify-center"><i class="fas fa-times"></i></button>
             </div>
             <div class="p-6 pb-32 policy-content">
-                <h2>Refund Policy</h2><p>We accept returns within 1 day.</p>
-                <h2>Privacy Policy</h2><p>We do not sell your data.</p>
-                <h2>Terms</h2><p>By using our website, you agree to comply with these terms.</p>
+                <h2>Refund Policy</h2><p>Returns accepted within 1 day.</p>
+                <h2>Privacy Policy</h2><p>We protect your data.</p>
+                <h2>Terms</h2><p>Standard terms apply.</p>
             </div>
-            <div class="fixed bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black via-black/90 to-transparent flex flex-col items-center gap-3 max-w-2xl mx-auto left-0 right-0">
+            <div class="fixed bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black via-black/90 to-transparent flex flex-col items-center gap-3">
                 <div class="flex gap-3 w-full max-w-sm">
-                    <a href="tel:+94787004239" class="flex-1 bg-green-700 hover:bg-green-600 text-white py-3 rounded-lg flex items-center justify-center gap-2 font-bold"><i class="fas fa-phone"></i> Call</a>
-                    <a href="mailto:yasodhasandeepa@gmail.com" class="flex-1 bg-indigo-700 hover:bg-indigo-600 text-white py-3 rounded-lg flex items-center justify-center gap-2 font-bold"><i class="fas fa-envelope"></i> Email</a>
+                    <a href="tel:+94787004239" class="flex-1 bg-green-700 text-white py-3 rounded-lg flex items-center justify-center gap-2 font-bold"><i class="fas fa-phone"></i> Call</a>
+                    <a href="mailto:yasodhasandeepa@gmail.com" class="flex-1 bg-indigo-700 text-white py-3 rounded-lg flex items-center justify-center gap-2 font-bold"><i class="fas fa-envelope"></i> Email</a>
                 </div>
             </div>
         </div>
@@ -265,7 +246,7 @@
     <div id="pay-modal" class="hidden fixed inset-0 z-[999] bg-black/90 flex items-center justify-center p-4">
         <div class="bg-gray-900 border border-yellow-600 p-6 rounded-xl text-center">
             <h3 class="text-white mb-2">LOCKED</h3>
-            <p class="text-gray-400 text-xs mb-4">Upload Rs.100 Receipt</p>
+            <p class="text-gray-400 text-xs mb-4">Rs.100 Receipt Needed</p>
             <input type="file" id="receipt-file" class="text-white text-xs mb-4">
             <button id="send-receipt" class="w-full bg-yellow-600 text-black font-bold py-2 rounded">Submit</button>
             <button onclick="document.getElementById('pay-modal').classList.add('hidden')" class="text-xs text-gray-500 mt-2 block w-full">Close</button>
@@ -292,12 +273,12 @@
         
         let user = null;
         let isUnlocked = false;
-        let lastLoadedPageDoc = null;
-        let isLoadingMore = false;
-        const BATCH_SIZE = 5;
+        let lastDoc = null;
+        let isLoading = false;
+        const BATCH_SIZE = 5; // Load 5 pages at a time
 
-        // --- STATE ---
-        let ambienceOn = false; // Default OFF for youtube
+        // --- FEATURES ---
+        let ambienceOn = false; 
         let wizardOn = false;
         let notesVisible = true;
         let userNotes = {};
@@ -314,26 +295,20 @@
             'library': document.getElementById('ambience-library')
         };
         const flipSfx = document.getElementById('sfx-flip');
-
-        // MUSIC PLAYER LOGIC
         const userAudio = document.getElementById('user-bgm');
-        document.getElementById('music-input').addEventListener('change', function(e) {
+
+        document.getElementById('music-input').addEventListener('change', (e) => {
             const file = e.target.files[0];
             if(file) {
-                const url = URL.createObjectURL(file);
-                userAudio.src = url;
+                userAudio.src = URL.createObjectURL(file);
                 userAudio.volume = 0.5;
                 userAudio.play();
-                alert("Playing your music! 🎵");
+                alert("Playing Music! 🎵");
             }
         });
-        window.stopUserMusic = () => {
-            userAudio.pause();
-            userAudio.currentTime = 0;
-            alert("Music Stopped.");
-        };
+        window.stopUserMusic = () => { userAudio.pause(); userAudio.currentTime = 0; };
 
-        // --- TORCH EFFECT ---
+        // --- VISUALS ---
         document.addEventListener('mousemove', (e) => {
             if(torchMode) {
                 document.body.style.setProperty('--x', e.clientX + 'px');
@@ -344,25 +319,18 @@
             torchMode = !torchMode;
             document.body.classList.toggle('torch-active');
             const btn = document.getElementById('torch-btn');
-            if(torchMode) {
-                btn.classList.replace('bg-orange-900/50', 'bg-white');
-                btn.classList.replace('text-orange-300', 'text-black');
-            } else {
-                btn.classList.replace('bg-white', 'bg-orange-900/50');
-                btn.classList.replace('text-black', 'text-orange-300');
-            }
+            btn.classList.toggle('bg-orange-900/50'); btn.classList.toggle('bg-white');
+            btn.classList.toggle('text-orange-300'); btn.classList.toggle('text-black');
         };
 
-        // --- AMBIENCE ---
-        window.setTheme = (themeName) => {
+        window.setTheme = (name) => {
             if(currentAmbience) { currentAmbience.pause(); currentAmbience.currentTime=0; }
-            document.body.className = `bg-${themeName}`;
+            document.body.className = `bg-${name}`;
             if(zenMode) document.body.classList.add('zen-mode');
             if(torchMode) document.body.classList.add('torch-active');
-            
-            currentTheme = themeName;
-            if(ambienceOn && audioTracks[themeName]) {
-                currentAmbience = audioTracks[themeName];
+            currentTheme = name;
+            if(ambienceOn && audioTracks[name]) {
+                currentAmbience = audioTracks[name];
                 currentAmbience.volume = 0.4;
                 currentAmbience.play().catch(()=>{});
             }
@@ -386,16 +354,10 @@
             }
         };
 
-        // --- FEATURES ---
-        window.toggleZenMode = () => {
-            zenMode = !zenMode;
-            document.body.classList.toggle('zen-mode');
-        };
-        window.handleBookClick = (e) => {
-            if(zenMode && e.target.classList.contains('book-scene')) toggleZenMode();
-        }
+        window.toggleZenMode = () => { zenMode = !zenMode; document.body.classList.toggle('zen-mode'); };
+        window.handleBookClick = (e) => { if(zenMode && e.target.classList.contains('book-scene')) toggleZenMode(); };
         window.toggleSepia = () => document.body.classList.toggle('sepia-mode');
-        window.toggleNotesVisibility = () => { notesVisible = !notesVisible; document.getElementById('note-vis-btn').classList.toggle('opacity-50'); loadInitialPages(); };
+        window.toggleNotesVisibility = () => { notesVisible = !notesVisible; document.getElementById('note-vis-btn').classList.toggle('opacity-50'); refreshPages(); };
         window.toggleWizardMode = () => {
             wizardOn = !wizardOn;
             const btn = document.getElementById('wiz-btn');
@@ -410,20 +372,17 @@
             }
         };
 
-        // --- LEVEL SYSTEM ---
         function updateXP(amount) {
             userXP += amount;
             const level = Math.floor(userXP / 50) + 1;
             const progress = (userXP % 50) / 50 * 100;
             document.getElementById('xp-fill').style.width = `${progress}%`;
             document.getElementById('user-lvl').innerText = `Lvl ${level}`;
-            
             const ranks = ["Novice", "Apprentice", "Scholar", "Scribe", "Grand Wizard"];
-            const rIndex = Math.min(Math.floor(level / 5), ranks.length - 1);
-            document.getElementById('user-rank').innerText = ranks[rIndex];
+            document.getElementById('user-rank').innerText = ranks[Math.min(Math.floor(level/5), 4)];
         }
 
-        // --- AUTH & LOAD ---
+        // --- AUTH & DATA ---
         onAuthStateChanged(auth, async (u) => {
             if(u){
                 user = u;
@@ -433,10 +392,10 @@
                         const d = docSnap.data();
                         isUnlocked = (d.status === 'approved');
                         userNotes = d.notes || {};
-                        userXP = d.xp || 0; // Load XP
-                        updateXP(0); // Init bar
+                        userXP = d.xp || 0;
+                        updateXP(0);
                     }
-                    initBookLoad();
+                    loadInitialBatch();
                 });
             } else {
                 document.getElementById('loading-screen').classList.add('opacity-0', 'pointer-events-none');
@@ -444,123 +403,134 @@
             }
         });
 
-        async function initBookLoad() {
-            document.getElementById('loading-bar').style.width = '50%';
-            await loadInitialPages();
+        // --- LAZY LOADING LOGIC ---
+        let pagesCache = [];
+
+        async function loadInitialBatch() {
             document.getElementById('loading-bar').style.width = '100%';
+            pagesCache = [];
+            const wrap = document.getElementById('pages-wrapper');
+            wrap.innerHTML = '';
+            
+            if(isUnlocked) {
+                // Fetch first batch
+                await fetchMorePages(); 
+            } else {
+                // Dummy pages
+                renderPage({pageNumber:0});
+                renderPage({pageNumber:1, isDummy:true});
+            }
+            
             setTimeout(() => {
                 document.getElementById('loading-screen').classList.add('opacity-0', 'pointer-events-none');
                 document.getElementById('book-container').classList.remove('hidden');
                 document.getElementById('book-container').style.display='flex';
-                // Trigger transition
+                resizeContent();
                 setTheme('mystic'); 
             }, 800);
         }
 
-        // --- BOOK LOGIC ---
-        async function loadInitialPages() {
+        async function fetchMorePages() {
+            if(isLoading) return;
+            isLoading = true;
+            let q = query(collection(db, "pages"), orderBy("pageNumber", "asc"), limit(BATCH_SIZE));
+            if(lastDoc) q = query(collection(db, "pages"), orderBy("pageNumber", "asc"), startAfter(lastDoc), limit(BATCH_SIZE));
+            
+            const snap = await getDocs(q);
+            if(!snap.empty) {
+                lastDoc = snap.docs[snap.docs.length-1];
+                snap.forEach(d => {
+                    const data = d.data();
+                    pagesCache.push(data);
+                    renderPage(data);
+                });
+            }
+            isLoading = false;
+        }
+
+        function refreshPages() {
             const wrap = document.getElementById('pages-wrapper');
             wrap.innerHTML = '';
-            if(isUnlocked) {
-                 const q = query(collection(db, "pages"), orderBy("pageNumber", "asc"), limit(BATCH_SIZE));
-                 const snap = await getDocs(q);
-                 if(!snap.empty) {
-                     lastLoadedPageDoc = snap.docs[snap.docs.length-1];
-                     renderBatch(snap.docs.map(d=>d.data()));
-                 }
-            } else {
-                const snap = await getDocs(query(collection(db, "pages"), where("pageNumber", "==", 0)));
-                if(!snap.empty) renderBatch([snap.docs[0].data()]);
-                renderBatch([{pageNumber:1, isDummy:true}, {pageNumber:2, isDummy:true}]);
-            }
-        }
-        
-        async function loadMorePages() {
-            if (!isUnlocked || isLoadingMore || !lastLoadedPageDoc) return;
-            isLoadingMore = true;
-            const q = query(collection(db, "pages"), orderBy("pageNumber", "asc"), startAfter(lastLoadedPageDoc), limit(1));
-            const snap = await getDocs(q);
-            if (!snap.empty) {
-                lastLoadedPageDoc = snap.docs[snap.docs.length - 1];
-                renderBatch(snap.docs.map(d => d.data()));
-            }
-            isLoadingMore = false;
+            pagesCache.forEach(p => renderPage(p));
         }
 
-        function renderBatch(dataList) {
+        function renderPage(data) {
             const wrap = document.getElementById('pages-wrapper');
-            dataList.forEach(data => {
-                let zIndex = 1000 - data.pageNumber;
-                if (data.pageNumber === 1000) zIndex = 0;
-                
-                const page = document.createElement('div');
-                page.className = `page shadow-2xl ${data.pageNumber===0?'hard-cover':''}`;
-                page.dataset.pn = data.pageNumber; page.style.zIndex = zIndex;
-                
-                const front = document.createElement('div'); front.className = 'front';
-                front.style.backgroundColor = data.backgroundColor || '#ffffff';
-                const content = document.createElement('div'); content.className = 'content-layer';
-                front.appendChild(content);
+            
+            const page = document.createElement('div');
+            // Z-Index Logic: Unflipped pages stack High->Low. Flipped pages stack Low->High.
+            // Simplified: Default z-index based on reverse order (High for page 0).
+            const initialZ = 1000 - data.pageNumber;
+            
+            page.className = `page shadow-2xl ${data.pageNumber===0?'hard-cover':''}`;
+            page.dataset.pn = data.pageNumber;
+            page.style.zIndex = initialZ;
+            
+            const front = document.createElement('div'); front.className = 'front';
+            front.style.backgroundColor = data.backgroundColor || '#ffffff';
+            const content = document.createElement('div'); content.className = 'content-layer';
+            front.appendChild(content);
 
-                if(data.elements && !data.isDummy) {
-                    data.elements.forEach(el => {
-                        const div = document.createElement('div');
-                        div.style.position='absolute'; div.style.left=el.left; div.style.top=el.top;
-                        if(el.type==='text'){
-                            div.innerText=el.content; Object.assign(div.style, el.style);
-                            div.style.width='max-content'; div.style.whiteSpace='pre';
-                        } else {
-                            div.innerHTML=`<img src="${el.content}" style="width:100%; height:100%; object-fit:cover;">`;
-                            div.style.width='100%'; div.style.height='100%';
-                        }
-                        content.appendChild(div);
-                    });
-                }
-
-                if(notesVisible && userNotes[data.pageNumber]) {
-                    const marker = document.createElement('div');
-                    marker.className = 'note-marker';
-                    marker.innerHTML = '<i class="fas fa-sticky-note"></i>';
-                    marker.onclick = (e) => { e.stopPropagation(); openNoteForPage(data.pageNumber); };
-                    front.appendChild(marker);
-                }
-
-                if(data.pageNumber===0 && !isUnlocked) front.innerHTML += `<div class="absolute inset-0 flex items-end justify-center pb-20 pointer-events-none"><div class="px-4 py-2 bg-black/80 text-yellow-500 rounded-full border border-yellow-500 animate-bounce">LOCKED</div></div>`;
-                if(data.isDummy) front.innerHTML = `<div class="flex items-center justify-center h-full text-gray-300 font-[Cinzel] text-2xl border-4 border-gray-100 m-8">LOCKED</div>`;
-
-                const back = document.createElement('div'); back.className = 'back';
-                page.appendChild(front); page.appendChild(back);
-                
-                page.onclick = (e) => {
-                    e.stopPropagation();
-                    if(!isUnlocked && data.pageNumber!==0) { document.getElementById('pay-modal').classList.remove('hidden'); return; }
-                    
-                    if(page.classList.contains('flipped')) {
-                        page.classList.remove('flipped');
-                        page.style.zIndex = zIndex + 50; 
-                        setTimeout(()=>page.style.zIndex = zIndex, 1200);
-                        if(ambienceOn) { flipSfx.currentTime=0; flipSfx.play().catch(()=>{}); }
+            if(data.elements && !data.isDummy) {
+                data.elements.forEach(el => {
+                    const div = document.createElement('div');
+                    div.style.position='absolute'; div.style.left=el.left; div.style.top=el.top;
+                    if(el.type==='text'){
+                        div.innerText=el.content; Object.assign(div.style, el.style);
+                        div.style.width='max-content'; div.style.whiteSpace='pre';
                     } else {
-                        page.classList.add('flipped');
-                        page.style.zIndex = 100;
-                        setTimeout(()=>page.style.zIndex = 1, 600);
-                        if(ambienceOn) { flipSfx.currentTime=0; flipSfx.play().catch(()=>{}); }
-                        
-                        // XP & Wizard Logic
-                        if(user) {
-                            updateXP(10); 
-                            updateDoc(doc(db,"users",user.uid), {xp: userXP}).catch(()=>{});
-                        }
-                        if(wizardOn && Math.random() < 0.2) showWizard(["Keep going!", "More knowledge!", "Excellent!"][Math.floor(Math.random()*3)]);
-                        loadMorePages();
+                        div.innerHTML=`<img src="${el.content}" style="width:100%; height:100%; object-fit:cover;">`;
+                        div.style.width='100%'; div.style.height='100%';
                     }
-                };
-                wrap.appendChild(page);
-            });
-            // Resize immediately after render
-            setTimeout(resizeContent, 100);
+                    content.appendChild(div);
+                });
+            }
+
+            if(notesVisible && userNotes[data.pageNumber]) {
+                const marker = document.createElement('div');
+                marker.className = 'note-marker';
+                marker.innerHTML = '<i class="fas fa-sticky-note"></i>';
+                marker.onclick = (e) => { e.stopPropagation(); openNoteForPage(data.pageNumber); };
+                front.appendChild(marker);
+            }
+
+            if(data.pageNumber===0 && !isUnlocked) front.innerHTML += `<div class="absolute inset-0 flex items-end justify-center pb-20 pointer-events-none"><div class="px-4 py-2 bg-black/80 text-yellow-500 rounded-full border border-yellow-500 animate-bounce">LOCKED</div></div>`;
+            if(data.isDummy) front.innerHTML = `<div class="flex items-center justify-center h-full text-gray-300 font-[Cinzel] text-2xl border-4 border-gray-100 m-8">LOCKED</div>`;
+
+            const back = document.createElement('div'); back.className = 'back';
+            page.appendChild(front); page.appendChild(back);
+            
+            page.onclick = (e) => {
+                e.stopPropagation();
+                if(!isUnlocked && data.pageNumber!==0) { document.getElementById('pay-modal').classList.remove('hidden'); return; }
+                
+                if(page.classList.contains('flipped')) {
+                    // FLIP BACK
+                    page.classList.remove('flipped');
+                    // Delay Z-index change so it slides under
+                    setTimeout(() => page.style.zIndex = initialZ, 600); 
+                    flipSfx.currentTime=0; flipSfx.play().catch(()=>{});
+                } else {
+                    // FLIP FORWARD
+                    page.classList.add('flipped');
+                    // Bring to top momentarily then push back in stack logic if needed
+                    // For simply stacking on left: zIndex needs to be higher than previous flipped page
+                    page.style.zIndex = 1000 + data.pageNumber; 
+                    flipSfx.currentTime=0; flipSfx.play().catch(()=>{});
+                    
+                    if(wizardOn && Math.random() < 0.2) showWizard("Keep reading!");
+                    if(user) { updateXP(10); updateDoc(doc(db,"users",user.uid), {xp: userXP}).catch(()=>{}); }
+                    
+                    // Lazy Load Trigger
+                    const totalPages = pagesCache.length;
+                    if(data.pageNumber >= totalPages - 2) fetchMorePages();
+                }
+            };
+            wrap.appendChild(page);
+            resizeContent();
         }
 
+        // --- HELPERS ---
         function showWizard(text) {
             const wiz = document.getElementById('wizard-container');
             document.getElementById('wizard-text').innerText = text;
@@ -589,7 +559,7 @@
             userNotes[area.dataset.pn] = area.value;
             await updateDoc(doc(db, "users", user.uid), { notes: userNotes });
             document.getElementById('note-panel').classList.remove('show');
-            loadInitialPages();
+            refreshPages();
         };
 
         function resizeContent() {
