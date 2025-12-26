@@ -15,7 +15,6 @@
         body { background-color: var(--bg-body); color: #e0e0e0; font-family: 'Inter', sans-serif; height: 100vh; overflow: hidden; transition: background 0.5s; touch-action: none; }
         
         /* DARK MODE (NEGATIVE EFFECT) */
-        /* මෙය මුළු පොතම නෙගටිව් කරයි (සුදු පිටු කළු වේ, කළු අකුරු සුදු වේ) */
         .reader-dark-mode .page { filter: invert(1) hue-rotate(180deg); }
         .reader-dark-mode { background-color: #000 !important; }
 
@@ -66,10 +65,12 @@
         <div class="flex items-center gap-2 text-[#d4af37] font-[Cinzel] font-bold text-lg cursor-pointer" onclick="showView('wall')">
             <i class="fas fa-dragon"></i> <span class="hidden md:inline">MYSTERIUM</span>
         </div>
+        
         <div class="flex-grow max-w-md relative">
-            <input type="text" id="search-input" placeholder="Search..." class="w-full bg-[#1a1a1a] border border-gray-700 rounded-full py-1.5 px-4 text-sm text-gray-300 focus:border-[#d4af37] outline-none">
+            <input type="text" id="search-input" placeholder="Search Books..." class="w-full bg-[#1a1a1a] border border-gray-700 rounded-full py-1.5 px-4 text-sm text-gray-300 focus:border-[#d4af37] outline-none transition-all">
             <i class="fas fa-search absolute right-3 top-2 text-gray-500 text-xs"></i>
         </div>
+
         <div class="flex gap-3 items-center">
             <button onclick="createNewBook()" class="bg-[#d4af37] text-black px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1"><i class="fas fa-plus"></i> CREATE</button>
             <img id="user-avatar" src="" class="w-8 h-8 rounded-full border border-gray-600">
@@ -82,7 +83,7 @@
     <main id="view-wall" class="hidden flex-grow overflow-y-auto p-6 pb-20">
         <h2 class="font-[Cinzel] text-[#d4af37] mb-6 border-b border-gray-800 pb-2">Library</h2>
         <div id="books-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6"></div>
-        <div id="empty-msg" class="hidden text-center text-gray-500 mt-10">No books available.</div>
+        <div id="empty-msg" class="hidden text-center text-gray-500 mt-10">No books found matching your search.</div>
     </main>
 
     <main id="view-studio" class="hidden flex-grow flex overflow-hidden bg-gray-900">
@@ -185,6 +186,7 @@
         let lastLoadedPageDoc = null;
         let isFetchingPages = false;
         let pendingAction = null;
+        let libraryBooks = []; // GLOBAL BOOK STORE FOR SEARCH
 
         onAuthStateChanged(auth, u => {
             if(u) {
@@ -195,31 +197,20 @@
                 showView('wall');
             } else {
                 document.getElementById('auth-section').classList.remove('hidden');
-                document.getElementById('main-nav').classList.add('hidden'); // Ensure Nav is hidden on login
+                document.getElementById('main-nav').classList.add('hidden'); 
                 document.getElementById('loading-screen').classList.add('opacity-0', 'pointer-events-none');
             }
         });
 
         document.getElementById('google-login').onclick = () => signInWithPopup(auth, new GoogleAuthProvider());
-        
-        // --- LOGOUT FUNCTION ---
-        window.handleLogout = () => {
-            if(confirm("Are you sure you want to logout?")) {
-                signOut(auth).then(() => window.location.reload());
-            }
-        };
+        window.handleLogout = () => { if(confirm("Logout?")) signOut(auth).then(() => window.location.reload()); };
 
-        // --- NAVIGATION FIX ---
         window.showView = (v) => {
-            // Hide all views first
             ['wall', 'reader', 'studio'].forEach(id => document.getElementById('view-'+id).classList.add('hidden'));
-            
-            // Manage Main Nav visibility
             if(v === 'reader') {
                 document.getElementById('main-nav').classList.add('hidden');
                 const reader = document.getElementById('view-reader');
-                reader.classList.remove('hidden');
-                reader.style.display = 'flex'; // Ensure flex layout for reader
+                reader.classList.remove('hidden'); reader.style.display = 'flex';
             } else {
                 document.getElementById('main-nav').classList.remove('hidden');
                 document.getElementById('view-'+v).classList.remove('hidden');
@@ -228,65 +219,91 @@
             }
         };
 
-        // --- READER BACK BUTTON LOGIC ---
         window.closeReader = () => { 
             activeBookId = null;
-            // Clear pages to free memory
             document.getElementById('pages-wrapper').innerHTML = '';
-            // Remove dark mode if active
             document.getElementById('view-reader').classList.remove('reader-dark-mode');
             showView('wall'); 
         };
 
-        // --- DARK MODE TOGGLE ---
         window.toggleReaderDarkMode = () => {
             const reader = document.getElementById('view-reader');
             reader.classList.toggle('reader-dark-mode');
             const btn = document.getElementById('dm-btn');
-            // Toggle Icon style
             if(reader.classList.contains('reader-dark-mode')) {
-                btn.innerHTML = '<i class="fas fa-sun"></i>';
-                btn.classList.add('bg-white', 'text-black');
+                btn.innerHTML = '<i class="fas fa-sun"></i>'; btn.classList.add('bg-white', 'text-black');
             } else {
-                btn.innerHTML = '<i class="fas fa-moon"></i>';
-                btn.classList.remove('bg-white', 'text-black');
+                btn.innerHTML = '<i class="fas fa-moon"></i>'; btn.classList.remove('bg-white', 'text-black');
             }
         };
 
-        // --- WALL LOADING ---
+        // --- IMPROVED WALL & SEARCH ---
         async function loadWall() {
             const grid = document.getElementById('books-grid');
-            if(grid.children.length > 0 && !document.getElementById('search-input').value) return; 
+            const searchVal = document.getElementById('search-input').value.trim();
             
-            grid.innerHTML = '';
-            document.getElementById('loading-screen').classList.remove('opacity-0', 'pointer-events-none');
-            document.getElementById('loading-text').innerText = "Fetching Books...";
-            
-            try {
-                const q = query(collection(db, "books"), where("status", "==", "approved"));
-                const snap = await getDocs(q);
+            // If books are already loaded and searching, just filter. Don't fetch again unless empty.
+            if(libraryBooks.length > 0 && searchVal !== "") {
+                performSearch(searchVal);
+                return;
+            }
+
+            // If empty grid or returning home, refresh data
+            if(libraryBooks.length === 0 || searchVal === "") {
+                grid.innerHTML = '';
+                document.getElementById('loading-screen').classList.remove('opacity-0', 'pointer-events-none');
+                document.getElementById('loading-text').innerText = "Fetching Books...";
                 
-                if(snap.empty) {
-                    document.getElementById('empty-msg').classList.remove('hidden');
-                } else {
-                    document.getElementById('empty-msg').classList.add('hidden');
-                    const books = [];
-                    snap.forEach(d => books.push({id:d.id, ...d.data()}));
-                    books.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+                try {
+                    const q = query(collection(db, "books"), where("status", "==", "approved"));
+                    const snap = await getDocs(q);
                     
-                    books.forEach(b => {
-                        grid.innerHTML += `
-                        <div onclick="checkAndOpenBook('${b.id}')" class="book-card cursor-pointer group">
-                            <div class="aspect-[2/3] bg-gray-800 relative mb-2">
-                                <img src="${b.coverUrl}" class="w-full h-full object-cover">
-                                <div class="absolute top-2 right-2 bg-black/70 text-[#d4af37] text-[10px] font-bold px-2 py-1 rounded">Rs.${b.price}</div>
-                            </div>
-                            <div class="text-sm font-bold truncate text-gray-200 px-2 pb-2 group-hover:text-[#d4af37]">${b.title}</div>
-                        </div>`;
-                    });
-                }
-            } catch(e) { console.error(e); }
-            document.getElementById('loading-screen').classList.add('opacity-0', 'pointer-events-none');
+                    libraryBooks = []; // Reset global store
+                    if(!snap.empty) {
+                        snap.forEach(d => libraryBooks.push({id:d.id, ...d.data()}));
+                        // Sort Newest First
+                        libraryBooks.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+                    }
+                    
+                    // Initial Render
+                    renderGrid(libraryBooks);
+                    
+                } catch(e) { console.error(e); }
+                document.getElementById('loading-screen').classList.add('opacity-0', 'pointer-events-none');
+            }
+        }
+
+        // Live Search Listener
+        document.getElementById('search-input').addEventListener('input', (e) => {
+            performSearch(e.target.value);
+        });
+
+        function performSearch(term) {
+            const lowerTerm = term.toLowerCase();
+            const filtered = libraryBooks.filter(b => b.title.toLowerCase().includes(lowerTerm));
+            renderGrid(filtered);
+        }
+
+        function renderGrid(books) {
+            const grid = document.getElementById('books-grid');
+            const emptyMsg = document.getElementById('empty-msg');
+            grid.innerHTML = '';
+            
+            if(books.length === 0) {
+                emptyMsg.classList.remove('hidden');
+            } else {
+                emptyMsg.classList.add('hidden');
+                books.forEach(b => {
+                    grid.innerHTML += `
+                    <div onclick="checkAndOpenBook('${b.id}')" class="book-card cursor-pointer group">
+                        <div class="aspect-[2/3] bg-gray-800 relative mb-2">
+                            <img src="${b.coverUrl}" class="w-full h-full object-cover">
+                            <div class="absolute top-2 right-2 bg-black/70 text-[#d4af37] text-[10px] font-bold px-2 py-1 rounded">Rs.${b.price}</div>
+                        </div>
+                        <div class="text-sm font-bold truncate text-gray-200 px-2 pb-2 group-hover:text-[#d4af37]">${b.title}</div>
+                    </div>`;
+                });
+            }
         }
 
         // --- READER ---
@@ -418,6 +435,7 @@
         };
 
         // --- STUDIO ---
+        let studioPages = [], currentStudioPageIndex = 0, studioBookId = null;
         window.createNewBook = () => {
             studioBookId = 'book_'+Date.now(); studioPages = []; currentStudioPageIndex=0;
             document.getElementById('editor-canvas').innerHTML = '<div class="text-gray-500">Upload PDF</div>';
