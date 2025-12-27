@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mysterium Archive - Immersive</title>
+    <title>Mysterium Archive - Final</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://unpkg.com/@panzoom/panzoom@4.5.1/dist/panzoom.min.js"></script>
@@ -17,7 +17,7 @@
         
         /* THEME BACKGROUNDS */
         body.bg-midnight { background: linear-gradient(to bottom, #0f2027, #203a43, #2c5364); }
-        body.bg-rain { background: radial-gradient(circle, #1a1c29 0%, #000000 100%); position: relative; }
+        body.bg-rain { background: radial-gradient(circle, #1a1c29 0%, #000000 100%); }
         body.bg-fire { background: linear-gradient(to bottom, #2c1e12, #1a0f00); }
         body.bg-zen { background: linear-gradient(to top, #134e5e, #71b280); }
 
@@ -26,7 +26,7 @@
         .reader-dark-mode { background-color: #050505 !important; }
 
         /* UI Elements */
-        .book-card { transition: transform 0.3s, box-shadow 0.3s; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; overflow: hidden; }
+        .book-card { transition: transform 0.3s, box-shadow 0.3s; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; overflow: hidden; position: relative; }
         .book-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(212, 175, 55, 0.2); border-color: var(--gold); }
         
         /* 3D BOOK SCENE */
@@ -40,19 +40,20 @@
         .front, .back { position: absolute; inset:0; backface-visibility: hidden; background: white; overflow: hidden; }
         .back { transform: rotateY(180deg); background: #eee; }
         .flipped { transform: rotateY(-180deg); }
-        
         .content-layer { position: absolute; top:50%; left:50%; width: 360px; height: 540px; transform: translate(-50%, -50%); pointer-events: none; }
 
-        /* THEME MENU */
-        .theme-menu { position: absolute; top: 60px; right: 10px; background: rgba(0,0,0,0.9); border: 1px solid #444; padding: 10px; border-radius: 12px; display: none; grid-template-columns: repeat(2, 1fr); gap: 8px; z-index: 100; }
-        .theme-menu.show { display: grid; }
-        .theme-btn { width: 40px; height: 40px; border-radius: 8px; border: 2px solid rgba(255,255,255,0.2); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
-        .theme-btn:hover { border-color: var(--gold); transform: scale(1.1); }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; } 
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        ::-webkit-scrollbar-track { background: transparent; }
 
-        /* SLIDER */
-        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #d4af37; cursor: pointer; margin-top: -6px; }
-        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: rgba(255,255,255,0.2); border-radius: 2px; }
+        /* Tabs */
+        .tab-btn { padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.3s; border: 1px solid transparent; }
+        .tab-btn.active { background: #d4af37; color: black; box-shadow: 0 0 10px rgba(212, 175, 55, 0.5); }
+        .tab-btn.inactive { background: transparent; color: gray; border-color: #333; }
+
+        /* Trending Badge */
+        .trending-badge { position: absolute; top: 0; left: 0; bg: red; background: linear-gradient(45deg, #ff0000, #ff8800); color: white; padding: 2px 8px; font-size: 9px; font-weight: bold; border-bottom-right-radius: 8px; z-index: 10; box-shadow: 2px 2px 5px rgba(0,0,0,0.5); }
     </style>
 </head>
 <body class="bg-midnight flex flex-col">
@@ -88,7 +89,17 @@
     </nav>
 
     <main id="view-wall" class="hidden flex-grow overflow-y-auto p-6 pb-20">
-        <h2 class="font-[Cinzel] text-[#d4af37] mb-6 border-b border-gray-800 pb-2">Library</h2>
+        
+        <div id="trending-container" class="mb-8 hidden">
+            <h2 class="font-[Cinzel] text-[#d4af37] mb-4 flex items-center gap-2"><i class="fas fa-fire text-red-500"></i> Trending This Week</h2>
+            <div id="trending-grid" class="flex gap-4 overflow-x-auto pb-4"></div>
+        </div>
+
+        <div class="flex gap-4 mb-6 border-b border-gray-800 pb-4">
+            <button id="tab-all" class="tab-btn active" onclick="switchLibraryTab('all')">All Books</button>
+            <button id="tab-my" class="tab-btn inactive" onclick="switchLibraryTab('my')">My Library</button>
+        </div>
+
         <div id="books-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6"></div>
         <div id="empty-msg" class="hidden text-center text-gray-500 mt-10">No books found.</div>
     </main>
@@ -127,6 +138,13 @@
     </main>
 
     <div id="view-reader" class="hidden fixed inset-0 z-50 bg-transparent w-full h-full flex-col">
+        
+        <div id="audio-overlay" class="absolute inset-0 z-[60] bg-black/80 flex items-center justify-center backdrop-blur-sm">
+            <button onclick="startImmersiveExperience()" class="bg-[#d4af37] text-black px-8 py-4 rounded-full font-bold text-lg animate-bounce shadow-[0_0_20px_#d4af37]">
+                <i class="fas fa-play mr-2"></i> ENTER WORLD
+            </button>
+        </div>
+
         <div id="top-bar" class="absolute top-0 w-full p-4 flex justify-between items-center z-50 transition-transform duration-300">
             <div class="bg-black/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 cursor-pointer hover:bg-black/60 transition" onclick="closeReader()">
                 <i class="fas fa-arrow-left text-[#d4af37] mr-2"></i><span class="text-[#d4af37] font-[Cinzel] text-xs tracking-widest">LIBRARY</span>
@@ -134,14 +152,12 @@
             <div class="flex gap-2 relative">
                 <button onclick="toggleMute()" id="mute-btn" class="w-9 h-9 rounded-full bg-black/60 border border-white/20 flex items-center justify-center text-white hover:bg-white hover:text-black transition"><i class="fas fa-volume-up"></i></button>
                 <button onclick="toggleReaderDarkMode()" id="dm-btn" class="w-9 h-9 rounded-full bg-black/60 border border-white/20 flex items-center justify-center text-yellow-500 hover:bg-white hover:text-black transition"><i class="fas fa-moon"></i></button>
-                
                 <button onclick="toggleBgMenu()" class="w-9 h-9 rounded-full bg-black/60 border border-white/20 flex items-center justify-center text-white animate-pulse"><i class="fas fa-swatchbook text-xs"></i></button>
-                
-                <div id="bg-menu" class="theme-menu">
-                    <button onclick="setTheme('midnight')" class="theme-btn bg-[#2c5364]" title="Midnight"><i class="fas fa-cloud-moon text-white"></i></button>
-                    <button onclick="setTheme('rain')" class="theme-btn bg-[#1a1c29]" title="Rainy"><i class="fas fa-cloud-rain text-blue-300"></i></button>
-                    <button onclick="setTheme('fire')" class="theme-btn bg-[#2c1e12]" title="Fireplace"><i class="fas fa-fire text-orange-500"></i></button>
-                    <button onclick="setTheme('zen')" class="theme-btn bg-[#71b280]" title="Zen Garden"><i class="fas fa-dove text-green-100"></i></button>
+                <div id="bg-menu" class="theme-menu hidden absolute top-12 right-0 bg-black/90 p-2 rounded border border-gray-700 grid grid-cols-2 gap-2">
+                    <button onclick="setTheme('midnight')" class="theme-btn bg-[#2c5364] text-white p-2 rounded"><i class="fas fa-cloud-moon"></i></button>
+                    <button onclick="setTheme('rain')" class="theme-btn bg-[#1a1c29] text-blue-300 p-2 rounded"><i class="fas fa-cloud-rain"></i></button>
+                    <button onclick="setTheme('fire')" class="theme-btn bg-[#2c1e12] text-orange-500 p-2 rounded"><i class="fas fa-fire"></i></button>
+                    <button onclick="setTheme('zen')" class="theme-btn bg-[#71b280] text-green-100 p-2 rounded"><i class="fas fa-dove"></i></button>
                 </div>
             </div>
         </div>
@@ -155,13 +171,13 @@
         <div id="controls-bar" class="absolute bottom-0 w-full bg-gradient-to-t from-black via-black/80 to-transparent p-4 z-50 transition-transform duration-300">
             <div class="flex flex-col gap-2 max-w-lg mx-auto">
                 <div class="flex items-center gap-3 px-2">
-                    <span class="text-[10px] text-gray-300 font-bold shadow-black drop-shadow-md">Pg</span>
+                    <span class="text-[10px] text-gray-300 font-bold drop-shadow-md">Pg</span>
                     <input type="range" id="page-slider" min="1" max="100" value="1" class="flex-grow" onchange="jumpToPage(this.value)" oninput="document.getElementById('slider-val').innerText=this.value">
                     <span id="slider-val" class="text-xs font-bold text-[#d4af37] w-6 text-center drop-shadow-md">1</span>
                 </div>
                 <div class="grid grid-cols-2 gap-4 items-center">
-                    <button onclick="prevPage()" class="h-10 bg-white/10 backdrop-blur rounded-lg text-white hover:bg-white/20 text-xs font-bold border border-white/10">PREV PAGE</button>
-                    <button onclick="nextPage()" class="h-10 bg-white/10 backdrop-blur rounded-lg text-white hover:bg-white/20 text-xs font-bold border border-white/10">NEXT PAGE</button>
+                    <button onclick="prevPage()" class="h-10 bg-white/10 backdrop-blur rounded-lg text-white hover:bg-white/20 text-xs font-bold border border-white/10">PREV</button>
+                    <button onclick="nextPage()" class="h-10 bg-white/10 backdrop-blur rounded-lg text-white hover:bg-white/20 text-xs font-bold border border-white/10">NEXT</button>
                 </div>
             </div>
         </div>
@@ -200,24 +216,33 @@
         let isFetchingPages = false;
         let pendingAction = null;
         let libraryBooks = [];
+        let myBooksIds = [];
         let panzoomInstance = null;
         let currentPageNum = 1;
+        let currentTab = 'all';
 
-        // --- IMMERSIVE AUDIO SYSTEM ---
+        // --- AUDIO SYSTEM ---
         const audioState = {
             muted: false,
             currentAmbience: null,
-            flip: new Audio('https://www.soundjay.com/books/sounds/book-page-turn-01.mp3')
+            flip: new Audio('https://www.soundjay.com/books/sounds/book-page-turn-01.mp3'),
+            initialized: false
         };
 
         const themes = {
-            'midnight': { class: 'bg-midnight', sound: 'https://cdn.pixabay.com/download/audio/2022/07/04/audio_341e33d014.mp3' }, // Night ambience
-            'rain': { class: 'bg-rain', sound: 'https://cdn.pixabay.com/download/audio/2021/08/09/audio_05d15c8983.mp3' }, // Rain
-            'fire': { class: 'bg-fire', sound: 'https://cdn.pixabay.com/download/audio/2021/09/06/audio_04e7602e1c.mp3' }, // Fireplace crackle
-            'zen': { class: 'bg-zen', sound: 'https://cdn.pixabay.com/download/audio/2022/02/16/audio_51474a58b2.mp3' } // Birds/Nature
+            'midnight': { class: 'bg-midnight', sound: 'https://cdn.pixabay.com/download/audio/2022/07/04/audio_341e33d014.mp3' },
+            'rain': { class: 'bg-rain', sound: 'https://cdn.pixabay.com/download/audio/2021/08/09/audio_05d15c8983.mp3' },
+            'fire': { class: 'bg-fire', sound: 'https://cdn.pixabay.com/download/audio/2021/09/06/audio_04e7602e1c.mp3' },
+            'zen': { class: 'bg-zen', sound: 'https://cdn.pixabay.com/download/audio/2022/02/16/audio_51474a58b2.mp3' }
         };
-
         let currentTheme = 'midnight';
+
+        window.startImmersiveExperience = () => {
+            // Unblocks audio context on user interaction
+            document.getElementById('audio-overlay').classList.add('hidden');
+            audioState.initialized = true;
+            playAmbience(themes[currentTheme].sound);
+        };
 
         window.toggleMute = () => {
             audioState.muted = !audioState.muted;
@@ -227,7 +252,7 @@
                 btn.innerHTML = '<i class="fas fa-volume-mute"></i>';
                 btn.classList.add('text-red-500');
             } else {
-                playAmbience(themes[currentTheme].sound);
+                if(audioState.initialized) playAmbience(themes[currentTheme].sound);
                 btn.innerHTML = '<i class="fas fa-volume-up"></i>';
                 btn.classList.remove('text-red-500');
             }
@@ -235,28 +260,30 @@
 
         function playAmbience(url) {
             if(audioState.muted) return;
-            // Stop old
             if(audioState.currentAmbience) {
                 audioState.currentAmbience.pause();
-                audioState.currentAmbience = null;
             }
-            // Start new
             audioState.currentAmbience = new Audio(url);
             audioState.currentAmbience.loop = true;
-            audioState.currentAmbience.volume = 0.4;
-            audioState.currentAmbience.play().catch(e => console.log("User interaction needed for audio"));
+            audioState.currentAmbience.volume = 0.5;
+            audioState.currentAmbience.play().catch(e=>console.log("Audio blocked until interaction"));
         }
 
         window.setTheme = (themeName) => {
             document.body.className = `${themes[themeName].class} flex flex-col`;
             currentTheme = themeName;
-            playAmbience(themes[themeName].sound);
-            document.getElementById('bg-menu').classList.remove('show');
+            if(audioState.initialized) playAmbience(themes[themeName].sound);
+            document.getElementById('bg-menu').classList.add('hidden');
         };
 
-        function playFlip() { if(!audioState.muted) { audioState.flip.currentTime=0; audioState.flip.play().catch(()=>{}); } }
+        function playFlip() { 
+            if(!audioState.muted && audioState.initialized) { 
+                audioState.flip.currentTime=0; 
+                audioState.flip.play().catch(()=>{}); 
+            } 
+        }
 
-        // --- AUTH & SETUP ---
+        // --- AUTH ---
         onAuthStateChanged(auth, u => {
             if(u) {
                 currentUser = u;
@@ -273,34 +300,28 @@
         document.getElementById('google-login').onclick = () => signInWithPopup(auth, new GoogleAuthProvider());
         window.handleLogout = () => { if(confirm("Logout?")) signOut(auth).then(()=>location.reload()); };
 
-        // --- NAVIGATION & FIX FOR BACK BUTTON ---
+        // --- NAVIGATION ---
         window.showView = (v) => {
-            // Hide all views
             ['wall', 'reader', 'studio'].forEach(id => {
                 const el = document.getElementById('view-'+id);
                 el.classList.add('hidden');
-                el.style.display = ''; // Reset inline styles
+                el.style.display = ''; 
             });
 
             if(v==='reader') {
                 document.getElementById('main-nav').classList.add('hidden');
-                const readerEl = document.getElementById('view-reader');
-                readerEl.classList.remove('hidden');
-                readerEl.style.display = 'flex'; // Force flex for reader
+                const reader = document.getElementById('view-reader');
+                reader.classList.remove('hidden');
+                reader.style.display = 'flex';
+                document.getElementById('audio-overlay').classList.remove('hidden'); // Reset overlay
                 
-                // Init Zoom
                 const el = document.getElementById('panzoom-container');
                 if(panzoomInstance) panzoomInstance.dispose();
                 panzoomInstance = Panzoom(el, { maxScale: 4, minScale: 0.8 });
                 el.parentElement.addEventListener('wheel', panzoomInstance.zoomWithWheel);
-                
-                // Init Audio
-                playAmbience(themes[currentTheme].sound);
 
             } else {
-                // Ensure audio stops if leaving reader
                 if(audioState.currentAmbience) audioState.currentAmbience.pause();
-                
                 document.getElementById('main-nav').classList.remove('hidden');
                 document.getElementById('view-'+v).classList.remove('hidden');
                 if(v==='studio') {
@@ -314,75 +335,139 @@
         window.closeReader = () => { 
             activeBookId = null; 
             document.getElementById('pages-wrapper').innerHTML = ''; 
-            // Reset theme to default for menu or keep? Let's reset sound only.
-            if(audioState.currentAmbience) audioState.currentAmbience.pause();
-            
-            // Explicitly force Wall View
             showView('wall'); 
         };
+        window.toggleReaderDarkMode = () => document.getElementById('view-reader').classList.toggle('reader-dark-mode');
+        window.toggleBgMenu = () => document.getElementById('bg-menu').classList.toggle('hidden');
 
-        window.toggleReaderDarkMode = () => {
-            document.getElementById('view-reader').classList.toggle('reader-dark-mode');
-            const btn = document.getElementById('dm-btn');
-            btn.classList.toggle('text-yellow-500');
-            btn.classList.toggle('text-white');
+        // --- WALL, TRENDING & LIBRARY TABS ---
+        window.switchLibraryTab = (tab) => {
+            currentTab = tab;
+            document.getElementById('tab-all').className = `tab-btn ${tab==='all'?'active':'inactive'}`;
+            document.getElementById('tab-my').className = `tab-btn ${tab==='my'?'active':'inactive'}`;
+            
+            // Hide trending if on 'my' tab
+            if(tab === 'my') document.getElementById('trending-container').classList.add('hidden');
+            else if(libraryBooks.some(b=>b.buyers>0)) document.getElementById('trending-container').classList.remove('hidden');
+
+            renderBooksGrid();
         };
 
-        // --- LIBRARY LOGIC ---
         async function loadWall() {
-            const grid = document.getElementById('books-grid');
-            if(libraryBooks.length && document.getElementById('search-input').value.trim()) { performSearch(document.getElementById('search-input').value); return; }
-            if(libraryBooks.length) return; 
-
-            grid.innerHTML = '';
             document.getElementById('loading-screen').classList.remove('opacity-0', 'pointer-events-none');
+            const grid = document.getElementById('books-grid');
+            grid.innerHTML = '';
             
             try {
+                // 1. Fetch All Books
                 const q = query(collection(db, "books"), where("status", "==", "approved"));
                 const snap = await getDocs(q);
                 libraryBooks = [];
                 snap.forEach(d => libraryBooks.push({id:d.id, ...d.data()}));
                 libraryBooks.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
-                performSearch("");
+
+                // 2. Fetch User Purchases
+                const pSnap = await getDocs(collection(db, "users", currentUser.uid, "purchases"));
+                myBooksIds = pSnap.docs.map(d => d.data().bookId);
+
+                // 3. Render Trending
+                renderTrending();
+
+                // 4. Render Grid
+                renderBooksGrid();
+
             } catch(e) { console.error(e); }
             document.getElementById('loading-screen').classList.add('opacity-0', 'pointer-events-none');
         }
 
-        document.getElementById('search-input').addEventListener('input', (e) => performSearch(e.target.value));
-        function performSearch(term) {
+        function renderTrending() {
+            const container = document.getElementById('trending-container');
+            const list = document.getElementById('trending-grid');
+            list.innerHTML = '';
+            
+            // Sort by buyers count (descending)
+            const trending = [...libraryBooks].sort((a,b) => (b.buyers || 0) - (a.buyers || 0)).slice(0, 5);
+            
+            if(trending.length > 0 && trending[0].buyers > 0) {
+                container.classList.remove('hidden');
+                trending.forEach(b => {
+                    list.innerHTML += `
+                    <div onclick="checkAndOpenBook('${b.id}')" class="min-w-[120px] w-[120px] cursor-pointer group relative">
+                         <div class="trending-badge"><i class="fas fa-fire"></i> #${(trending.indexOf(b)+1)}</div>
+                        <div class="aspect-[2/3] bg-gray-800 rounded overflow-hidden mb-2 border border-yellow-500/30">
+                            <img src="${b.coverUrl}" class="w-full h-full object-cover">
+                        </div>
+                        <div class="text-[10px] font-bold truncate text-gray-300 group-hover:text-[#d4af37]">${b.title}</div>
+                        <div class="text-[9px] text-gray-500">${b.buyers||0} Sold</div>
+                    </div>`;
+                });
+            } else {
+                container.classList.add('hidden');
+            }
+        }
+
+        function renderBooksGrid() {
             const grid = document.getElementById('books-grid');
             grid.innerHTML = '';
-            const filtered = libraryBooks.filter(b => b.title.toLowerCase().includes(term.toLowerCase()));
+            const term = document.getElementById('search-input').value.trim().toLowerCase();
+            
+            let filtered = libraryBooks.filter(b => b.title.toLowerCase().includes(term));
+            
+            // Filter if My Library
+            if(currentTab === 'my') {
+                filtered = filtered.filter(b => myBooksIds.includes(b.id) || b.author === currentUser.uid);
+            }
+
             if(!filtered.length) document.getElementById('empty-msg').classList.remove('hidden');
             else document.getElementById('empty-msg').classList.add('hidden');
-            
+
             filtered.forEach(b => {
+                const isOwned = myBooksIds.includes(b.id) || b.author === currentUser.uid || b.price == 0;
                 grid.innerHTML += `
                 <div onclick="checkAndOpenBook('${b.id}')" class="book-card cursor-pointer group">
                     <div class="aspect-[2/3] bg-gray-800 relative mb-2">
                         <img src="${b.coverUrl}" class="w-full h-full object-cover">
+                        ${isOwned ? '<div class="absolute top-2 left-2 bg-green-600 text-white text-[9px] font-bold px-2 py-1 rounded"><i class="fas fa-check"></i> OWNED</div>' : ''}
                         <div class="absolute top-2 right-2 bg-black/70 text-[#d4af37] text-[10px] font-bold px-2 py-1 rounded">Rs.${b.price}</div>
                     </div>
-                    <div class="text-sm font-bold truncate text-gray-200 px-2 pb-2 group-hover:text-[#d4af37]">${b.title}</div>
+                    <div class="text-sm font-bold truncate text-gray-200 px-2 group-hover:text-[#d4af37]">${b.title}</div>
+                    <div class="px-2 pb-2 text-[10px] text-gray-500">${b.buyers||0} Readers</div>
                 </div>`;
             });
         }
+        document.getElementById('search-input').addEventListener('input', renderBooksGrid);
 
-        // --- READER LOGIC ---
+        // --- STRICT SECURITY READER CHECK ---
         window.checkAndOpenBook = async (bookId) => {
             document.getElementById('loading-screen').classList.remove('opacity-0', 'pointer-events-none');
-            const b = (await getDoc(doc(db, "books", bookId))).data();
-            const p = await getDoc(doc(db, "users", currentUser.uid, "purchases", bookId));
+            document.getElementById('loading-text').innerText = "Verifying Access...";
             
-            if (p.exists() || b.price == 0) {
-                let savedPage = 1;
-                if(p.exists() && p.data().lastReadPage) savedPage = p.data().lastReadPage;
-                await openReader(bookId, savedPage);
-                document.getElementById('loading-screen').classList.add('opacity-0', 'pointer-events-none');
-            } else {
-                document.getElementById('loading-screen').classList.add('opacity-0', 'pointer-events-none');
-                openPayModal(bookId, b, 'buy_book');
-            }
+            try {
+                const bSnap = await getDoc(doc(db, "books", bookId));
+                if(!bSnap.exists()) throw new Error("Book not found");
+                const b = bSnap.data();
+
+                // 1. Check if user is author
+                const isAuthor = b.author === currentUser.uid;
+                
+                // 2. Check if user purchased
+                const pSnap = await getDoc(doc(db, "users", currentUser.uid, "purchases", bookId));
+                const isPurchased = pSnap.exists();
+
+                // 3. Check if free
+                const isFree = parseFloat(b.price) === 0;
+
+                if (isAuthor || isPurchased || isFree) {
+                    document.getElementById('loading-text').innerText = "Opening Book...";
+                    let savedPage = 1;
+                    if(isPurchased && pSnap.data().lastReadPage) savedPage = pSnap.data().lastReadPage;
+                    await openReader(bookId, savedPage);
+                } else {
+                    openPayModal(bookId, b, 'buy_book');
+                }
+            } catch(e) { alert(e.message); }
+            
+            document.getElementById('loading-screen').classList.add('opacity-0', 'pointer-events-none');
         };
 
         async function openReader(bookId, startPage) {
@@ -450,17 +535,13 @@
                         loadMorePages();
                         currentPageNum = p.pageNumber + 1;
                     }
-                    updateSliderAndSave(currentPageNum);
+                    saveProgress(currentPageNum);
+                    document.getElementById('page-slider').value = currentPageNum;
+                    document.getElementById('slider-val').innerText = currentPageNum;
                 };
                 wrap.appendChild(el);
             });
             resizeContent();
-        }
-
-        function updateSliderAndSave(pageNum) {
-            document.getElementById('page-slider').value = pageNum;
-            document.getElementById('slider-val').innerText = pageNum;
-            saveProgress(pageNum);
         }
 
         async function saveProgress(pageNum) {
@@ -476,9 +557,8 @@
         window.prevPage = () => { const f = document.querySelectorAll('.page.flipped'); if(f.length) f[f.length-1].click(); };
         window.nextPage = () => { const u = document.querySelectorAll('.page:not(.flipped)'); if(u.length) u[0].click(); };
         window.toggleControls = () => { document.getElementById('top-bar').classList.toggle('-translate-y-full'); document.getElementById('controls-bar').classList.toggle('translate-y-full'); };
-        window.toggleBgMenu = () => document.getElementById('bg-menu').classList.toggle('show');
 
-        // --- SUBMISSION (Standard) ---
+        // --- SUBMISSION & UTILS ---
         function openPayModal(id, data, type) {
             pendingAction = { id, data, type };
             document.getElementById('pay-title').innerText = type==='publish_fee' ? 'PUBLISH FEE' : (type==='replace' ? 'REPLACE CONTENT' : 'UNLOCK BOOK');
@@ -533,7 +613,7 @@
                          coverUrl: studioPages[0].imageUrl
                     });
                     await batch.commit();
-                    alert("Book Content Replaced Successfully!");
+                    alert("Content Updated!");
                     window.location.reload();
                 } else {
                     const f = document.getElementById('pay-receipt').files[0];
@@ -546,8 +626,9 @@
                     if(pendingAction.type === 'buy_book') {
                         reqData.bookId = pendingAction.id;
                         reqData.amount = document.getElementById('pay-price').innerText.replace('Rs. ','');
+                        reqData.bookTitle = pendingAction.data.title; 
                         await addDoc(collection(db, "requests"), reqData);
-                        alert("Receipt Sent!");
+                        alert("Receipt Sent! Wait for approval.");
                     } else if (pendingAction.type === 'publish_fee') {
                         const bookData = pendingAction.data;
                         await setDoc(doc(db, "books", pendingAction.id), {
@@ -568,6 +649,7 @@
             btn.innerText = "SUBMIT";
         };
 
+        // --- STUDIO ---
         let studioPages = [], currentStudioPageIndex = 0, studioBookId = null;
         window.createNewBook = () => {
             studioBookId = 'book_'+Date.now(); studioPages = []; currentStudioPageIndex=0;
