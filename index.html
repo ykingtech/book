@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mysterium Archive - Final</title>
+    <title>Mysterium Archive - Final Fixed</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://unpkg.com/@panzoom/panzoom@4.5.1/dist/panzoom.min.js"></script>
@@ -238,7 +238,6 @@
         let currentTheme = 'midnight';
 
         window.startImmersiveExperience = () => {
-            // Unblocks audio context on user interaction
             document.getElementById('audio-overlay').classList.add('hidden');
             audioState.initialized = true;
             playAmbience(themes[currentTheme].sound);
@@ -316,7 +315,8 @@
                 document.getElementById('audio-overlay').classList.remove('hidden'); // Reset overlay
                 
                 const el = document.getElementById('panzoom-container');
-                if(panzoomInstance) panzoomInstance.dispose();
+                // FIXED ERROR HERE: Use destroy() instead of dispose()
+                if(panzoomInstance) panzoomInstance.destroy();
                 panzoomInstance = Panzoom(el, { maxScale: 4, minScale: 0.8 });
                 el.parentElement.addEventListener('wheel', panzoomInstance.zoomWithWheel);
 
@@ -346,7 +346,6 @@
             document.getElementById('tab-all').className = `tab-btn ${tab==='all'?'active':'inactive'}`;
             document.getElementById('tab-my').className = `tab-btn ${tab==='my'?'active':'inactive'}`;
             
-            // Hide trending if on 'my' tab
             if(tab === 'my') document.getElementById('trending-container').classList.add('hidden');
             else if(libraryBooks.some(b=>b.buyers>0)) document.getElementById('trending-container').classList.remove('hidden');
 
@@ -385,7 +384,6 @@
             const list = document.getElementById('trending-grid');
             list.innerHTML = '';
             
-            // Sort by buyers count (descending)
             const trending = [...libraryBooks].sort((a,b) => (b.buyers || 0) - (a.buyers || 0)).slice(0, 5);
             
             if(trending.length > 0 && trending[0].buyers > 0) {
@@ -413,7 +411,6 @@
             
             let filtered = libraryBooks.filter(b => b.title.toLowerCase().includes(term));
             
-            // Filter if My Library
             if(currentTab === 'my') {
                 filtered = filtered.filter(b => myBooksIds.includes(b.id) || b.author === currentUser.uid);
             }
