@@ -7,7 +7,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://unpkg.com/@panzoom/panzoom@4.5.1/dist/panzoom.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
@@ -16,12 +15,13 @@
         :root { --bg-body: #0b0c10; --gold: #d4af37; }
         body { background-color: var(--bg-body); color: #e0e0e0; font-family: 'Inter', sans-serif; height: 100vh; overflow: hidden; transition: background 0.5s; }
         
+        /* THEMES */
         body.bg-midnight { background: linear-gradient(to bottom, #0f2027, #203a43, #2c5364); }
         body.bg-rain { background: radial-gradient(circle, #1a1c29 0%, #000000 100%); }
         body.bg-fire { background: linear-gradient(to bottom, #2c1e12, #1a0f00); }
         body.bg-zen { background: linear-gradient(to top, #134e5e, #71b280); }
 
-        #view-reader { touch-action: none; }
+        #view-reader { touch-action: none; } /* Only block touch in reader */
         .reader-dark-mode .page { filter: invert(1) hue-rotate(180deg) contrast(0.9); }
         .reader-dark-mode { background-color: #050505 !important; }
 
@@ -36,21 +36,21 @@
         .flipped { transform: rotateY(-180deg); }
         .content-layer { position: absolute; top:50%; left:50%; width: 360px; height: 540px; transform: translate(-50%, -50%); pointer-events: none; }
 
+        ::-webkit-scrollbar { width: 6px; height: 6px; } 
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+
         .tab-btn { padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.3s; border: 1px solid transparent; }
         .tab-btn.active { background: #d4af37; color: black; box-shadow: 0 0 10px rgba(212, 175, 55, 0.5); }
         .tab-btn.inactive { background: transparent; color: gray; border-color: #333; }
         .trending-badge { position: absolute; top: 0; left: 0; background: linear-gradient(45deg, #ff0000, #ff8800); color: white; padding: 2px 8px; font-size: 9px; font-weight: bold; border-bottom-right-radius: 8px; z-index: 10; box-shadow: 2px 2px 5px rgba(0,0,0,0.5); }
         
+        .logo-rating i { transition: color 0.2s; }
         .logo-rating i.active { color: #d4af37; text-shadow: 0 0 10px #d4af37; }
         .logo-rating i.inactive { color: #444; }
 
-        /* Comment Bubble */
-        .comment-item { background: rgba(255,255,255,0.03); border: 1px solid rgba(212, 175, 55, 0.1); border-radius: 12px; padding: 10px; margin-bottom: 8px; }
-
-        /* Quote Card Design */
-        #quote-preview-container { background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); border: 2px solid #d4af37; padding: 40px; border-radius: 15px; position: relative; width: 500px; color: white; display: flex; flex-direction: column; align-items: center; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.8); }
-        #quote-text-display { font-family: 'Cinzel', serif; font-size: 20px; font-style: italic; margin-bottom: 25px; line-height: 1.6; }
-        .quote-info { border-top: 1px solid rgba(212, 175, 55, 0.3); padding-top: 15px; width: 100%; font-size: 12px; opacity: 0.8; }
+        /* Comment style */
+        .comment-bubble { background: rgba(255,255,255,0.05); border-radius: 8px; padding: 8px; margin-bottom: 8px; border-left: 2px solid #d4af37; }
     </style>
 </head>
 <body class="bg-midnight flex flex-col">
@@ -143,8 +143,8 @@
                 <i class="fas fa-arrow-left text-[#d4af37] mr-2"></i><span class="text-[#d4af37] font-[Cinzel] text-xs tracking-widest">LIBRARY</span>
             </div>
             <div class="flex gap-2 relative">
-                <button onclick="openQuoteModal()" class="w-9 h-9 rounded-full bg-[#d4af37]/20 border border-[#d4af37] flex items-center justify-center text-[#d4af37] hover:bg-[#d4af37] hover:text-black transition" title="Quote & Share"><i class="fas fa-quote-left text-xs"></i></button>
-                <button onclick="openReviewModal()" class="w-9 h-9 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white hover:bg-white hover:text-black transition" title="Review & Comments"><i class="fas fa-comments"></i></button>
+                <button onclick="shareBook()" class="w-9 h-9 rounded-full bg-black/60 border border-white/20 flex items-center justify-center text-blue-400 hover:bg-white hover:text-black transition" title="Share Book"><i class="fas fa-share-nodes"></i></button>
+                <button onclick="openReviewModal()" class="w-9 h-9 rounded-full bg-[#d4af37]/20 border border-[#d4af37] flex items-center justify-center text-[#d4af37] hover:bg-[#d4af37] hover:text-black transition" title="Review Book"><i class="fas fa-pen-nib"></i></button>
                 <button onclick="toggleMute()" id="mute-btn" class="w-9 h-9 rounded-full bg-black/60 border border-white/20 flex items-center justify-center text-white hover:bg-white hover:text-black transition"><i class="fas fa-volume-up"></i></button>
                 <button onclick="toggleReaderDarkMode()" id="dm-btn" class="w-9 h-9 rounded-full bg-black/60 border border-white/20 flex items-center justify-center text-yellow-500 hover:bg-white hover:text-black transition"><i class="fas fa-moon"></i></button>
                 <button onclick="toggleBgMenu()" class="w-9 h-9 rounded-full bg-black/60 border border-white/20 flex items-center justify-center text-white animate-pulse"><i class="fas fa-swatchbook text-xs"></i></button>
@@ -176,49 +176,25 @@
         </div>
     </div>
 
-    <div id="quote-modal" class="hidden fixed inset-0 z-[2000] bg-black/90 flex items-center justify-center p-4 overflow-y-auto">
-        <div class="w-full max-w-lg bg-[#1a1a1a] border border-[#d4af37] rounded-2xl p-6 text-center">
-            <h3 class="text-white font-[Cinzel] text-lg mb-4">CREATE QUOTE POST</h3>
-            <textarea id="quote-input" class="w-full bg-black border border-gray-700 rounded p-4 text-sm text-white mb-4" rows="4" placeholder="Enter text or sentence from the book..."></textarea>
-            
-            <div id="quote-preview-area" class="mb-6 flex justify-center hidden">
-                <div id="quote-preview-container">
-                    <i class="fas fa-quote-left text-[#d4af37] text-2xl mb-4"></i>
-                    <div id="quote-text-display">"Your quote will appear here"</div>
-                    <div class="quote-info">
-                        <div id="quote-book-title" class="font-bold text-[#d4af37] uppercase">Book Title</div>
-                        <div id="quote-author-name" class="text-[10px] tracking-widest mt-1">Author Name</div>
-                        <div class="mt-3 text-[9px] text-gray-400">Discover on <span class="text-white">postkina.online</span></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="flex gap-2">
-                <button onclick="generateQuotePreview()" class="flex-grow bg-[#d4af37] text-black font-bold py-2 rounded-xl">PREVIEW</button>
-                <button id="share-quote-btn" onclick="shareQuoteCard()" class="hidden flex-grow bg-blue-600 text-white font-bold py-2 rounded-xl">SHARE POST</button>
-            </div>
-            <button onclick="document.getElementById('quote-modal').classList.add('hidden')" class="text-xs text-gray-500 mt-4 underline">Close</button>
-        </div>
-    </div>
-
     <div id="review-modal" class="hidden fixed inset-0 z-[2000] bg-black/90 flex items-center justify-center p-4">
-        <div class="w-full max-w-sm bg-[#1a1a1a] border border-[#d4af37] rounded-2xl p-6 flex flex-col h-[80vh]">
-            <h3 class="text-white font-[Cinzel] text-lg text-center mb-4">COMMENTS & REVIEWS</h3>
+        <div class="w-full max-w-sm bg-[#1a1a1a] border border-[#d4af37] rounded-2xl p-6 text-center">
+            <h3 class="text-white font-[Cinzel] text-lg mb-4">RATE & COMMENT</h3>
             <div class="flex justify-center gap-2 mb-4 logo-rating">
-                <i onclick="setRating(1)" class="fas fa-dragon text-xl cursor-pointer inactive" id="star-1"></i>
-                <i onclick="setRating(2)" class="fas fa-dragon text-xl cursor-pointer inactive" id="star-2"></i>
-                <i onclick="setRating(3)" class="fas fa-dragon text-xl cursor-pointer inactive" id="star-3"></i>
-                <i onclick="setRating(4)" class="fas fa-dragon text-xl cursor-pointer inactive" id="star-4"></i>
-                <i onclick="setRating(5)" class="fas fa-dragon text-xl cursor-pointer inactive" id="star-5"></i>
+                <i onclick="setRating(1)" class="fas fa-dragon text-2xl cursor-pointer inactive" id="star-1"></i>
+                <i onclick="setRating(2)" class="fas fa-dragon text-2xl cursor-pointer inactive" id="star-2"></i>
+                <i onclick="setRating(3)" class="fas fa-dragon text-2xl cursor-pointer inactive" id="star-3"></i>
+                <i onclick="setRating(4)" class="fas fa-dragon text-2xl cursor-pointer inactive" id="star-4"></i>
+                <i onclick="setRating(5)" class="fas fa-dragon text-2xl cursor-pointer inactive" id="star-5"></i>
             </div>
-            <textarea id="review-text" class="w-full bg-black border border-gray-700 rounded p-2 text-xs text-white mb-2" rows="2" placeholder="Write a comment..."></textarea>
-            <button onclick="submitReview()" class="w-full bg-[#d4af37] text-black font-bold py-2 rounded-xl mb-4 text-xs">POST COMMENT</button>
+            <textarea id="review-text" class="w-full bg-black border border-gray-700 rounded p-2 text-xs text-white mb-4" rows="3" placeholder="Write your thoughts..."></textarea>
+            <button onclick="submitReview()" class="w-full bg-[#d4af37] text-black font-bold py-2 rounded-xl mb-4">SUBMIT REVIEW</button>
             
-            <div id="comments-container" class="flex-grow overflow-y-auto pr-2 space-y-3 custom-scroll">
-                <div id="comments-list"></div>
+            <div class="border-t border-gray-800 pt-4 text-left max-h-48 overflow-y-auto">
+                <p class="text-[10px] text-gray-500 font-bold uppercase mb-2">Comments</p>
+                <div id="comments-list" class="space-y-2"></div>
             </div>
-            
-            <button onclick="document.getElementById('review-modal').classList.add('hidden')" class="text-xs text-center text-gray-500 mt-4 underline">Close</button>
+
+            <button onclick="document.getElementById('review-modal').classList.add('hidden')" class="text-xs text-gray-500 mt-4 underline">Cancel</button>
         </div>
     </div>
 
@@ -251,7 +227,6 @@
 
         let currentUser = null;
         let activeBookId = null;
-        let activeBookData = null;
         let lastLoadedPageDoc = null;
         let isFetchingPages = false;
         let pendingAction = null;
@@ -306,7 +281,7 @@
                 if(v==='wall') loadWall();
             }
         };
-        window.closeReader = () => { activeBookId = null; activeBookData = null; document.getElementById('pages-wrapper').innerHTML = ''; showView('wall'); };
+        window.closeReader = () => { activeBookId = null; document.getElementById('pages-wrapper').innerHTML = ''; showView('wall'); };
         window.toggleReaderDarkMode = () => document.getElementById('view-reader').classList.toggle('reader-dark-mode');
         window.toggleBgMenu = () => document.getElementById('bg-menu').classList.toggle('hidden');
 
@@ -339,6 +314,7 @@
             const container = document.getElementById('trending-container');
             const list = document.getElementById('trending-grid');
             list.innerHTML = '';
+            // TRENDING: Sort by Clicks, LIMIT 2
             const trending = [...libraryBooks].sort((a,b) => (b.clicks || 0) - (a.clicks || 0)).slice(0, 2);
             
             if(trending.length > 0 && (trending[0].clicks > 0 || trending[0].buyers > 0)) {
@@ -394,23 +370,31 @@
 
         window.checkAndOpenBook = async (bookId) => {
             document.getElementById('loading-screen').classList.remove('opacity-0', 'pointer-events-none');
+            document.getElementById('loading-text').innerText = "Verifying Access...";
             try {
+                // INCREMENT CLICK (TRENDING LOGIC)
                 await updateDoc(doc(db, "books", bookId), { clicks: increment(1) });
+
                 const bSnap = await getDoc(doc(db, "books", bookId));
-                activeBookData = bSnap.data();
-                const b = activeBookData;
+                if(!bSnap.exists()) throw new Error("Book not found");
+                const b = bSnap.data();
                 const isAuthor = b.author === currentUser.uid;
+                
+                // Check if already purchased/owned
                 const pRef = doc(db, "users", currentUser.uid, "purchases", bookId);
                 const pSnap = await getDoc(pRef);
                 const isPurchased = pSnap.exists();
                 const isFree = parseFloat(b.price) === 0;
 
+                // SPECIAL LOGIC FOR FREE BOOKS READER COUNT
                 if(isFree && !isPurchased) {
+                    // Mark as "purchased" (free claim) and increment buyers
                     await setDoc(pRef, { unlockedAt: new Date().toISOString(), bookId: bookId });
                     await updateDoc(doc(db, "books", bookId), { buyers: increment(1) });
                 }
 
                 if (isAuthor || isPurchased || isFree) {
+                    document.getElementById('loading-text').innerText = "Opening Book...";
                     let savedPage = 1;
                     if(isPurchased && pSnap.data().lastReadPage) savedPage = pSnap.data().lastReadPage;
                     await openReader(bookId, savedPage);
@@ -465,7 +449,7 @@
                         playFlip(); el.classList.remove('flipped'); setTimeout(() => el.style.zIndex = z, 500); currentPageNum = p.pageNumber; 
                     } else { 
                         playFlip(); el.classList.add('flipped'); setTimeout(() => el.style.zIndex = p.pageNumber, 600); 
-                        loadMorePages();
+                        loadMorePages(); // Lazy Load Trigger
                         currentPageNum = p.pageNumber + 1;
                     }
                     saveProgress(currentPageNum);
@@ -482,14 +466,12 @@
         };
         async function saveProgress(pageNum) { if(!activeBookId || !currentUser) return; try { await setDoc(doc(db, "users", currentUser.uid, "purchases", activeBookId), { lastReadPage: pageNum }, { merge: true }); } catch(e) {} }
 
-        /* Comment Section Logic */
         window.openReviewModal = () => { 
             document.getElementById('review-modal').classList.remove('hidden'); 
             currentRating = 0; 
             updateStars(); 
             loadComments(); 
         };
-
         window.setRating = (n) => { currentRating = n; updateStars(); };
         function updateStars() {
             for(let i=1; i<=5; i++) {
@@ -501,92 +483,54 @@
 
         async function loadComments() {
             const list = document.getElementById('comments-list');
-            list.innerHTML = '<div class="text-[10px] text-gray-500 text-center py-4">Seeking spirits...</div>';
+            list.innerHTML = '<div class="text-[10px] text-gray-600">Loading comments...</div>';
             try {
-                const q = query(collection(db, "books", activeBookId, "reviews"), orderBy("timestamp", "desc"));
+                const q = query(collection(db, "books", activeBookId, "reviews"), orderBy("timestamp", "desc"), limit(10));
                 const snap = await getDocs(q);
                 list.innerHTML = '';
-                if(snap.empty) {
-                    list.innerHTML = '<div class="text-[10px] text-gray-600 text-center py-4">No words whispered yet.</div>';
+                if (snap.empty) {
+                    list.innerHTML = '<div class="text-[10px] text-gray-600">No comments yet.</div>';
                     return;
                 }
                 snap.forEach(d => {
                     const r = d.data();
-                    let stars = '';
-                    for(let i=0; i<5; i++) stars += `<i class="fas fa-dragon text-[7px] ${i < r.rating ? 'text-[#d4af37]' : 'text-gray-800'}"></i>`;
-                    
                     list.innerHTML += `
-                        <div class="comment-item">
+                        <div class="comment-bubble">
                             <div class="flex justify-between items-center mb-1">
-                                <div class="flex gap-1">${stars}</div>
+                                <span class="text-[9px] text-[#d4af37] font-bold">Reader</span>
                                 <span class="text-[8px] text-gray-600">${new Date(r.timestamp).toLocaleDateString()}</span>
                             </div>
-                            <p class="text-[11px] text-gray-200 leading-relaxed">${r.text || ''}</p>
+                            <p class="text-[11px] text-gray-300">${r.text || ''}</p>
                         </div>`;
                 });
-            } catch(e) { list.innerHTML = 'Error loading.'; }
+            } catch(e) { list.innerHTML = '<div class="text-[10px] text-red-500">Error loading.</div>'; }
         }
 
         window.submitReview = async () => {
-            const txt = document.getElementById('review-text').value.trim();
-            if(!txt) return alert("Please write something.");
-            if(currentRating === 0) return alert("Select a rating.");
+            if(currentRating === 0) return alert("Select a rating!");
+            const txt = document.getElementById('review-text').value;
+            const ref = doc(db, "books", activeBookId);
             try {
                 await addDoc(collection(db, "books", activeBookId, "reviews"), { userId: currentUser.uid, rating: currentRating, text: txt, timestamp: new Date().toISOString() });
-                const ref = doc(db, "books", activeBookId);
                 const bData = (await getDoc(ref)).data();
                 const oldRating = bData.avgRating || 0;
                 const oldCount = bData.ratingCount || 0;
                 const newAvg = ((oldRating * oldCount) + currentRating) / (oldCount + 1);
                 await updateDoc(ref, { avgRating: newAvg, ratingCount: increment(1) });
+                alert("Review Submitted! 🐉");
                 document.getElementById('review-text').value = '';
                 loadComments();
-            } catch(e) { alert("Error."); }
+            } catch(e) { alert("Error submitting review"); }
         };
 
-        /* Quote Share Logic */
-        window.openQuoteModal = () => {
-            if(!activeBookData) return;
-            document.getElementById('quote-modal').classList.remove('hidden');
-            document.getElementById('quote-preview-area').classList.add('hidden');
-            document.getElementById('share-quote-btn').classList.add('hidden');
-            document.getElementById('quote-input').value = "";
-            document.getElementById('quote-book-title').innerText = activeBookData.title;
-            document.getElementById('quote-author-name').innerText = "Mystery Author"; // Change if author name available
+        window.shareBook = async () => {
+            const shareData = { title: 'Mysterium Archive', text: 'Explore this mysterious book on Mysterium Archive!', url: window.location.href };
+            try {
+                if (navigator.share) await navigator.share(shareData);
+                else { navigator.clipboard.writeText(window.location.href); alert("Link copied to clipboard!"); }
+            } catch (err) { console.log('Share failed'); }
         };
 
-        window.generateQuotePreview = () => {
-            const text = document.getElementById('quote-input').value.trim();
-            if(!text) return alert("Please enter some text.");
-            document.getElementById('quote-text-display').innerText = `"${text}"`;
-            document.getElementById('quote-preview-area').classList.remove('hidden');
-            document.getElementById('share-quote-btn').classList.remove('hidden');
-        };
-
-        window.shareQuoteCard = async () => {
-            const element = document.getElementById('quote-preview-container');
-            const canvas = await html2canvas(element, { scale: 2, backgroundColor: null });
-            canvas.toBlob(async (blob) => {
-                const file = new File([blob], "mysterium-quote.png", { type: "image/png" });
-                if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                    try {
-                        await navigator.share({
-                            files: [file],
-                            title: 'Mysterium Quote',
-                            text: 'Read more on postkina.online'
-                        });
-                    } catch (err) { console.error("Share failed", err); }
-                } else {
-                    const link = document.createElement('a');
-                    link.download = 'mysterium-quote.png';
-                    link.href = canvas.toDataURL();
-                    link.click();
-                    alert("Sharing not supported. Image downloaded instead!");
-                }
-            });
-        };
-
-        /* Remaining System Logic */
         function openPayModal(id, data, type) {
             pendingAction = { id, data, type };
             document.getElementById('pay-title').innerText = type==='publish_fee' ? 'PUBLISH FEE' : (type==='replace' ? 'REPLACE CONTENT' : 'UNLOCK BOOK');
@@ -602,7 +546,6 @@
             else { document.getElementById('pay-receipt').classList.remove('hidden'); document.getElementById('pay-btn').innerText = "SUBMIT"; }
             document.getElementById('pay-modal').classList.remove('hidden');
         }
-
         const compressImage = (file) => {
             return new Promise((resolve) => {
                 const reader = new FileReader(); reader.readAsDataURL(file);
@@ -612,7 +555,6 @@
                 };
             });
         };
-
         document.getElementById('pay-btn').onclick = async () => {
             const btn = document.getElementById('pay-btn'); btn.innerText = "Processing...";
             try {
@@ -641,29 +583,26 @@
 
         let studioPages = [], currentStudioPageIndex = 0, studioBookId = null;
         window.createNewBook = () => { studioBookId = 'book_'+Date.now(); studioPages = []; currentStudioPageIndex=0; document.getElementById('editor-canvas').innerHTML = '<div class="text-gray-500">Upload PDF</div>'; showView('studio'); };
-        
         async function loadMyBooks() {
-            const list = document.getElementById('my-books-list'); list.innerHTML = '...';
-            const q = query(collection(db, "books"), where("author", "==", currentUser.uid));
-            const snap = await getDocs(q); list.innerHTML = '';
+            const list = document.getElementById('my-books-list'); list.innerHTML = '<div class="text-xs text-gray-500">Loading...</div>';
+            const q = query(collection(db, "books"), where("author", "==", currentUser.uid)); const snap = await getDocs(q); list.innerHTML = '';
             snap.forEach(d => {
                 const b = d.data(); const div = document.createElement('div');
                 div.className = "bg-black/50 p-2 rounded flex justify-between items-center";
-                div.innerHTML = `<div class="truncate text-xs text-gray-300 w-24">${b.title}</div><button class="text-red-500 text-xs">DEL</button>`;
+                div.innerHTML = `<div class="truncate text-xs text-gray-300 w-24">${b.title}</div><button class="text-red-500 hover:text-red-400 text-xs font-bold px-2">DELETE</button>`;
                 div.querySelector('button').onclick = () => handleDelete(d.id, b); list.appendChild(div);
             });
         }
-
         async function handleDelete(id, b) {
             const q = query(collection(db, "requests"), where("bookId", "==", id), where("type", "==", "buy_book"), where("status", "==", "approved")); const buyersSnap = await getDocs(q);
             if(!buyersSnap.empty) {
-                if(confirm("Paid readers exist! Replace content?")) {
+                if(confirm("Paid readers exist! Replace content instead?")) {
                     studioBookId = id; document.getElementById('new-book-title').value = b.title; document.getElementById('new-book-price').value = b.price;
-                    showView('studio');
+                    document.getElementById('studio-title').innerText = "REPLACE MODE"; document.getElementById('main-publish-btn').innerText = "UPLOAD & REPLACE CONTENT";
+                    document.getElementById('main-publish-btn').onclick = () => { if(!studioPages.length) return alert("Upload new PDF first"); openPayModal(id, b, 'replace'); };
                 }
-            } else { if(confirm("Delete?")) { await deleteDoc(doc(db, "books", id)); loadMyBooks(); } }
+            } else { if(confirm("Delete this book permanently?")) { await deleteDoc(doc(db, "books", id)); loadMyBooks(); alert("Deleted."); } }
         }
-
         window.handlePdfUpload = async (inp) => {
             const f = inp.files[0]; if(!f) return; document.getElementById('pdf-status').classList.remove('hidden');
             const pdf = await pdfjsLib.getDocument(await f.arrayBuffer()).promise; studioPages = [];
@@ -672,25 +611,15 @@
                 const p = await pdf.getPage(i); const vp = p.getViewport({scale:1.5}); const c = document.createElement('canvas'); c.width=vp.width; c.height=vp.height;
                 await p.render({canvasContext:c.getContext('2d'), viewport:vp}).promise; studioPages.push({pageNumber:i, imageUrl:c.toDataURL('image/jpeg',0.8)});
             }
-            document.getElementById('editor-canvas').innerHTML = `<img src="${studioPages[0].imageUrl}" class="w-full h-full object-contain">`; 
-            document.getElementById('pdf-status').classList.add('hidden');
+            const d = studioPages[0]; document.getElementById('editor-canvas').innerHTML = `<img src="${d.imageUrl}" class="w-full h-full object-contain">`; 
         };
-
-        window.changeStudioPage = (n) => { 
-            if(studioPages[currentStudioPageIndex+n]) { 
-                currentStudioPageIndex+=n; 
-                document.getElementById('editor-canvas').innerHTML = `<img src="${studioPages[currentStudioPageIndex].imageUrl}" class="w-full h-full object-contain">`; 
-                document.getElementById('studio-page-num').innerText = currentStudioPageIndex + 1; 
-            } 
-        };
-
+        window.changeStudioPage = (n) => { if(studioPages[currentStudioPageIndex+n]) { currentStudioPageIndex+=n; document.getElementById('editor-canvas').innerHTML = `<img src="${studioPages[currentStudioPageIndex].imageUrl}" class="w-full h-full object-contain">`; document.getElementById('studio-page-num').innerText = currentStudioPageIndex + 1; } };
         window.openPublishModal = () => {
             const title = document.getElementById('new-book-title').value; const price = document.getElementById('new-book-price').value; const bAcc = document.getElementById('bank-acc').value;
-            if(!title || !studioPages.length || !bAcc) return alert("Fill all fields.");
+            if(!title || !studioPages.length || !bAcc) return alert("Please fill all fields and upload PDF");
             const bookData = { title, price, bankHolder: document.getElementById('bank-holder').value, bankName: document.getElementById('bank-name').value, bankAcc: bAcc, bankBranch: document.getElementById('bank-branch').value };
             openPayModal(studioBookId, bookData, 'publish_fee');
         };
-
         function resizeContent() { const bookEl = document.getElementById('the-book'); if(bookEl) { const s = bookEl.offsetHeight / 540; document.querySelectorAll('.content-layer').forEach(l => l.style.transform = `translate(-50%, -50%) scale(${s})`); } }
         window.onresize = resizeContent;
         window.prevPage = () => { const f = document.querySelectorAll('.page.flipped'); if(f.length) f[f.length-1].click(); };
