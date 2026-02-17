@@ -948,7 +948,30 @@
             </div>
         </div>
     </div>
-
+<div id="editExpenseModal" class="hidden fixed inset-0 bg-black/50 z-[90] flex items-center justify-center backdrop-blur-sm">
+        <div class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-sm mx-4 relative">
+            <button onclick="document.getElementById('editExpenseModal').classList.add('hidden')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500"><i class="fas fa-times"></i></button>
+            <h3 class="font-bold text-lg mb-4 text-blue-600">Edit Project Expense</h3>
+            
+            <input type="hidden" id="editExpId">
+            
+            <label class="block text-xs font-bold text-gray-500 mb-1">Description</label>
+            <input type="text" id="editExpDesc" class="w-full p-2 border rounded mb-3 text-sm">
+            
+            <label class="block text-xs font-bold text-gray-500 mb-1">Amount</label>
+            <input type="number" id="editExpAmount" class="w-full p-2 border rounded mb-4 text-sm font-bold">
+            
+            <div class="bg-red-50 p-3 rounded-lg border border-red-100 mb-4">
+                <label class="block text-xs font-bold text-red-600 mb-1"><i class="fas fa-lock mr-1"></i> Admin Password Required</label>
+                <input type="password" id="editExpAdminPass" placeholder="Enter Password" class="w-full p-2 border border-red-200 rounded text-center text-sm focus:border-red-500 outline-none">
+            </div>
+            
+            <div class="flex justify-end gap-2">
+                <button onclick="document.getElementById('editExpenseModal').classList.add('hidden')" class="px-4 py-2 text-gray-500 font-bold text-sm">Cancel</button>
+                <button onclick="saveEditedProjectExpense()" class="px-4 py-2 bg-blue-600 text-white rounded-lg font-bold shadow hover:bg-blue-700 text-sm">Update</button>
+            </div>
+        </div>
+    </div>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
@@ -1373,7 +1396,7 @@
                     
                     if (inLog) {
                         const inTimeObj = new Date(inLog.timestamp.seconds * 1000);
-                        if (inTimeObj.getHours() > 8 || (inTimeObj.getHours() === 8 && inTimeObj.getMinutes() > 30)) {
+                        if (inTimeObj.getHours() > 8 || (inTimeObj.getHours() === 9 && inTimeObj.getMinutes() > 00)) {
                             inText = "Late IN";
                             inColor = "text-red-600 font-bold";
                         }
@@ -3199,8 +3222,24 @@ window.downloadPaymentReceipt = async () => {
                 snap.forEach(d => { 
                     const e = d.data(); 
                     totalExp += e.amount; 
-                    list.innerHTML += `<tr class="border-b hover:bg-gray-50"><td class="p-3">${e.date}</td><td class="p-3">${e.description}</td><td class="p-3 font-bold text-red-600">Rs. ${e.amount.toLocaleString()}</td></tr>`; 
-                }); 
+                    // Script එක ඇතුලේ loadExpensesAndProfit function එකේ list.innerHTML කොටස මේකෙන් replace කරන්න:
+
+list.innerHTML += `
+    <tr class="border-b hover:bg-gray-50">
+        <td class="p-3">${e.date}</td>
+        <td class="p-3">
+            ${e.description}
+            <div class="text-[10px] text-gray-400 cursor-pointer hover:text-blue-500 mt-1" onclick="openEditProjectExpense('${d.id}', '${e.description}', ${e.amount})">
+                <i class="fas fa-edit mr-1"></i> Edit
+            </div>
+        </td>
+        <td class="p-3 font-bold text-red-600">Rs. ${e.amount.toLocaleString()}</td>
+        <td class="p-3 text-right">
+            <button onclick="deleteProjectExpense('${d.id}')" class="text-red-400 hover:text-red-600 p-2" title="Delete Expense">
+                <i class="fas fa-trash"></i>
+            </button>
+        </td>
+    </tr>`;
                 if(document.getElementById('finExpense')) { 
                     document.getElementById('finExpense').innerText = "Rs. " + totalExp.toLocaleString(); 
                     updateNet(null, totalExp); 
@@ -3692,7 +3731,82 @@ window.downloadPaymentReceipt = async () => {
         } else {
             initApp();
         }
+// 1. Edit Modal එක Open කරන Function එක
+        window.openEditProjectExpense = (id, desc, amount) => {
+            document.getElementById('editExpId').value = id;
+            document.getElementById('editExpDesc').value = desc;
+            document.getElementById('editExpAmount').value = amount;
+            document.getElementById('editExpAdminPass').value = ""; // පාස්වර්ඩ් එක හිස් කරන්න
+            document.getElementById('editExpenseModal').classList.remove('hidden');
+        };
 
+        // 2. Edit කරපු එක Save කරන Function එක (Admin Pass check කරලා)
+        window.saveEditedProjectExpense = async () => {
+            const id = document.getElementById('editExpId').value;
+            const desc = document.getElementById('editExpDesc').value;
+            const amount = parseFloat(document.getElementById('editExpAmount').value);
+            const pass = document.getElementById('editExpAdminPass').value;
+
+            if (!desc || !amount) return alert("Description and Amount required!");
+            if (!pass) return alert("Admin Password is required to edit expenses!");
+
+            // Admin Password Check
+            let correct = "Sandeep@1116"; // Default
+            try {
+                const snap = await getDoc(doc(db, "settings", "config"));
+                if(snap.exists() && snap.data().adminPassword) correct = snap.data().adminPassword;
+            } catch(e) {}
+
+            if (pass !== correct) {
+                alert("Incorrect Admin Password!");
+                return;
+            }
+
+            // Update Firebase
+            try {
+                await updateDoc(doc(db, `projects/${currentProjId}/expenses/${id}`), {
+                    description: desc,
+                    amount: amount
+                });
+                
+                // Transaction Log එකත් Update කරමු (Optional - අවශ්‍ය නම් විතරක් තියාගන්න)
+                // සරලව තියන්න දැනට expense එක විතරක් update කරමු.
+                
+                alert("Expense Updated Successfully!");
+                document.getElementById('editExpenseModal').classList.add('hidden');
+            } catch (error) {
+                console.error(error);
+                alert("Error updating expense: " + error.message);
+            }
+        };
+
+        // 3. Delete කරන Function එක
+        window.deleteProjectExpense = async (id) => {
+            const pass = prompt("ADMIN SECURITY CHECK:\nEnter Admin Password to DELETE this expense:");
+            if (pass === null) return; // Cancel කරොත්
+
+            // Admin Password Check
+            let correct = "Sandeep@1116"; 
+            try {
+                const snap = await getDoc(doc(db, "settings", "config"));
+                if(snap.exists() && snap.data().adminPassword) correct = snap.data().adminPassword;
+            } catch(e) {}
+
+            if (pass !== correct) {
+                alert("Incorrect Password! Access Denied.");
+                return;
+            }
+
+            if(confirm("Are you sure you want to permanently DELETE this expense record?")) {
+                try {
+                    await deleteDoc(doc(db, `projects/${currentProjId}/expenses/${id}`));
+                    alert("Expense Deleted!");
+                } catch (error) {
+                    console.error(error);
+                    alert("Error deleting: " + error.message);
+                }
+            }
+        };
     </script>
 </body>
 </html>
