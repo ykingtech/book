@@ -3214,6 +3214,8 @@ window.downloadPaymentReceipt = async () => {
 
         function loadExpensesAndProfit(pid) { 
             if(!pid) return; 
+            
+            // 1. Load Expenses
             onSnapshot(collection(db, `projects/${pid}/expenses`), (snap) => { 
                 const list = document.getElementById('expenseList'); 
                 if(!list) return; 
@@ -3222,29 +3224,31 @@ window.downloadPaymentReceipt = async () => {
                 snap.forEach(d => { 
                     const e = d.data(); 
                     totalExp += e.amount; 
-                    // Script එක ඇතුලේ loadExpensesAndProfit function එකේ list.innerHTML කොටස මේකෙන් replace කරන්න:
-
-list.innerHTML += `
-    <tr class="border-b hover:bg-gray-50">
-        <td class="p-3">${e.date}</td>
-        <td class="p-3">
-            ${e.description}
-            <div class="text-[10px] text-gray-400 cursor-pointer hover:text-blue-500 mt-1" onclick="openEditProjectExpense('${d.id}', '${e.description}', ${e.amount})">
-                <i class="fas fa-edit mr-1"></i> Edit
-            </div>
-        </td>
-        <td class="p-3 font-bold text-red-600">Rs. ${e.amount.toLocaleString()}</td>
-        <td class="p-3 text-right">
-            <button onclick="deleteProjectExpense('${d.id}')" class="text-red-400 hover:text-red-600 p-2" title="Delete Expense">
-                <i class="fas fa-trash"></i>
-            </button>
-        </td>
-    </tr>`;
+                    list.innerHTML += `
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="p-3">${e.date}</td>
+                            <td class="p-3">
+                                ${e.description}
+                                <div class="text-[10px] text-gray-400 cursor-pointer hover:text-blue-500 mt-1" onclick="openEditProjectExpense('${d.id}', '${e.description}', ${e.amount})">
+                                    <i class="fas fa-edit mr-1"></i> Edit
+                                </div>
+                            </td>
+                            <td class="p-3 font-bold text-red-600">Rs. ${e.amount.toLocaleString()}</td>
+                            <td class="p-3 text-right">
+                                <button onclick="deleteProjectExpense('${d.id}')" class="text-red-400 hover:text-red-600 p-2" title="Delete Expense">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>`; 
+                }); 
+                
                 if(document.getElementById('finExpense')) { 
                     document.getElementById('finExpense').innerText = "Rs. " + totalExp.toLocaleString(); 
                     updateNet(null, totalExp); 
                 } 
-            }); 
+            }); // <-- මේ වරහන තමයි කලින් කෝඩ් එකේ මඟහැරිලා තිබ්බේ
+
+            // 2. Load Incomes (Blocks)
             onSnapshot(collection(db, `projects/${pid}/blocks`), (snap) => { 
                 let inc = 0; 
                 snap.forEach(b => { 
